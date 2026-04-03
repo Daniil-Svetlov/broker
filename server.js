@@ -5,16 +5,17 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-    cors: { origin: "*" }
+const io = new Server(server, { cors: { origin: "*" } });
+
+// Если твой HTML лежит в той же папке, что и server.js:
+app.use(express.static(__dirname));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Абсолютный путь к папке public для Mac
-const publicPath = path.join(__dirname, 'public');
-app.use(express.static(publicPath));
-
+// Генерация цен
 let currentPrice = 0.65420;
-
 setInterval(() => {
     currentPrice += (Math.random() - 0.5) * 0.00012;
     io.emit('price_update', {
@@ -23,11 +24,8 @@ setInterval(() => {
     });
 }, 1000);
 
-io.on('connection', (socket) => 
-{
-    console.log('User connected');
-    socket.on('make_trade', (data) => 
-    {
+io.on('connection', (socket) => {
+    socket.on('make_trade', (data) => {
         const { type, amount, time } = data;
         const entryPrice = currentPrice;
         setTimeout(() => {
