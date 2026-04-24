@@ -7,7 +7,7 @@ CREATE TABLE users (
     date_joined TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 2. Pay (счета)
+-- 2. Pay 
 CREATE TYPE account_type AS ENUM ('DEMO', 'REAL');
 
 CREATE TABLE pay (
@@ -18,7 +18,7 @@ CREATE TABLE pay (
     currency     VARCHAR(10) NOT NULL DEFAULT 'USD'
 );
 
--- 3. Traders (сделки)
+-- 3. Traders 
 CREATE TYPE trade_direction AS ENUM ('UP', 'DOWN');
 CREATE TYPE trade_status AS ENUM ('OPEN', 'WIN', 'LOSS');
 
