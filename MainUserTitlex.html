@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>LUMIT Trade - Торговая платформа</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0e17 0%, #0f131c 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Хедер */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(15, 20, 30, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(240, 185, 11, 0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #f0b90b, #ffd700);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            color: #0a0e17;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #f0b90b, #ffd700);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-login {
+            background: transparent;
+            border: 1px solid #f0b90b;
+            color: #f0b90b;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-login:hover {
+            background: rgba(240, 185, 11, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn-register-header {
+            background: linear-gradient(135deg, #f0b90b, #ffd700);
+            border: none;
+            color: #0a0e17;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-register-header:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(240, 185, 11, 0.4);
+        }
+
+        /* Hero секция */
+        .hero {
+            padding: 140px 40px 80px;
+            text-align: center;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff, #f0b90b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: #a0a5b0;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-top: 50px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #f0b90b;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #777;
+        }
+
+        /* Преимущества */
+        .features {
+            padding: 60px 40px;
+            background: rgba(20, 25, 35, 0.5);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 50px;
+            color: #f0b90b;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: rgba(30, 35, 45, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 1px solid rgba(240, 185, 11, 0.1);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(240, 185, 11, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 15px;
+            color: #f0b90b;
+        }
+
+        .feature-card p {
+            color: #a0a5b0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Тарифы (без информации) */
+        .pricing {
+            padding: 60px 40px;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            background: rgba(30, 35, 45, 0.8);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 1px solid rgba(240, 185, 11, 0.1);
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            border-color: #f0b90b;
+        }
+
+        .pricing-card.highlight {
+            border: 2px solid #f0b90b;
+            transform: scale(1.02);
+        }
+
+        .pricing-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .pricing-price {
+            font-size: 36px;
+            font-weight: bold;
+            color: #f0b90b;
+            margin-bottom: 20px;
+        }
+
+        .pricing-price span {
+            font-size: 14px;
+            color: #777;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .pricing-features li {
+            padding: 8px 0;
+            color: #a0a5b0;
+        }
+
+        .btn-pricing {
+            background: linear-gradient(135deg, #f0b90b, #ffd700);
+            border: none;
+            color: #0a0e17;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .btn-pricing:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(240, 185, 11, 0.4);
+        }
+
+        /* Футер */
+        .footer {
+            background: rgba(10, 14, 23, 0.95);
+            padding: 40px;
+            text-align: center;
+            border-top: 1px solid rgba(240, 185, 11, 0.2);
+        }
+
+        .footer p {
+            color: #777;
+            font-size: 14px;
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1f2a, #0f131c);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 450px;
+            padding: 30px;
+            border: 1px solid rgba(240, 185, 11, 0.3);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #f0b90b;
+        }
+
+        .modal-title {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #f0b90b;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a0a5b0;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(40, 45, 55, 0.8);
+            border: 1px solid rgba(240, 185, 11, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #f0b90b;
+            box-shadow: 0 0 10px rgba(240, 185, 11, 0.3);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #f0b90b, #ffd700);
+            border: none;
+            color: #0a0e17;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(240, 185, 11, 0.4);
+        }
+
+        .modal-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .modal-footer a {
+            color: #f0b90b;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .error-message {
+            color: #f6465d;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            color: #2ebd85;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+        }
+
+        /* Адаптив */
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+            }
+            
+            .logo-text {
+                font-size: 18px;
+            }
+            
+            .hero h1 {
+                font-size: 32px;
+            }
+            
+            .hero-stats {
+                gap: 25px;
+            }
+            
+            .features, .pricing, .hero {
+                padding: 100px 20px 50px;
+            }
+            
+            .nav-buttons {
+                gap: 8px;
+            }
+            
+            .btn-login, .btn-register-header {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">L</div>
+            <div class="logo-text">LUMIT TRADE</div>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn-login" id="loginBtn">Вход</button>
+            <button class="btn-register-header" id="registerBtn">Регистрация</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Торгуйте с уверенностью</h1>
+            <p>LUMIT Trade — современная платформа для торговли активами. Интуитивный интерфейс, реальное время и полная безопасность ваших средств.</p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <div class="stat-number">10,000+</div>
+                    <div class="stat-label">Активных трейдеров</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">$50M+</div>
+                    <div class="stat-label">Ежедневный оборот</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">99.9%</div>
+                    <div class="stat-label">Время работы</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="features">
+            <h2 class="section-title">Почему выбирают LUMIT Trade</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Мгновенные сделки</h3>
+                    <p>Исполнение ордеров в реальном времени без задержек</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Безопасность</h3>
+                    <p>Современные технологии шифрования данных</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Аналитика</h3>
+                    <p>Профессиональные инструменты для анализа рынка</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Доступность</h3>
+                    <p>Торгуйте с любого устройства, где бы вы ни были</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="pricing">
+            <h2 class="section-title">Тарифы</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-name">Тариф 1</div>
+                    <div class="pricing-price">—</div>
+                    <ul class="pricing-features">
+                        <li>•</li>
+                        <li>•</li>
+                        <li>•</li>
+                        <li>•</li>
+                    </ul>
+                    <button class="btn-pricing" onclick="openRegister()">Выбрать</button>
+                </div>
+                <div class="pricing-card highlight">
+                    <div class="pricing-name">Тариф 2</div>
+                    <div class="pricing-price">—</div>
+                    <ul class="pricing-features">
+                        <li>•</li>
+                        <li>•</li>
+                        <li>•</li>
+                        <li>•</li>
+                    </ul>
+                    <button class="btn-pricing" onclick="openRegister()">Выбрать</button>
+                </div>
+                <div class="pricing-card">
+                    <div class="pricing-name">Тариф 3</div>
+                    <div class="pricing-price">—</div>
+                    <ul class="pricing-features">
+                        <li>•</li>
+                        <li>•</li>
+                        <li>•</li>
+                        <li>•</li>
+                    </ul>
+                    <button class="btn-pricing" onclick="openRegister()">Выбрать</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>© 2024 LUMIT Trade. Все права защищены. Торговля на финансовых рынках сопряжена с рисками.</p>
+    </footer>
+
+    <!-- Модальное окно регистрации -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <span class="modal-close" id="closeModal">&times;</span>
+            <h2 class="modal-title">Регистрация</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Имя пользователя</label>
+                    <input type="text" id="regUsername" placeholder="Введите имя пользователя">
+                    <div class="error-message" id="usernameError">Имя пользователя должно содержать минимум 3 символа</div>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" placeholder="example@mail.com">
+                    <div class="error-message" id="emailError">Введите корректный email</div>
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" id="regPassword" placeholder="Минимум 6 символов">
+                    <div class="error-message" id="passwordError">Пароль должен содержать минимум 6 символов</div>
+                </div>
+                <div class="form-group">
+                    <label>Подтверждение пароля</label>
+                    <input type="password" id="regConfirmPassword" placeholder="Повторите пароль">
+                    <div class="error-message" id="confirmError">Пароли не совпадают</div>
+                </div>
+                <button type="submit" class="btn-submit">Создать аккаунт</button>
+                <div class="success-message" id="successMessage">Аккаунт успешно создан! Перенаправление...</div>
+            </form>
+            <div class="modal-footer">
+                Уже есть аккаунт? <a id="switchToLogin">Войти</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно входа -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <span class="modal-close" id="closeLoginModal">&times;</span>
+            <h2 class="modal-title">Вход</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email или имя пользователя</label>
+                    <input type="text" id="loginEmail" placeholder="Введите email или имя">
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" id="loginPassword" placeholder="Введите пароль">
+                </div>
+                <button type="submit" class="btn-submit">Войти</button>
+                <div class="success-message" id="loginSuccessMessage">Вход выполнен! Перенаправление...</div>
+            </form>
+            <div class="modal-footer">
+                Нет аккаунта? <a id="switchToRegister">Зарегистрироваться</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Элементы модальных окон
+        const registerModal = document.getElementById('registerModal');
+        const loginModal = document.getElementById('loginModal');
+        const registerBtn = document.getElementById('registerBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        
+        // Функции открытия
+        function openRegisterModal() {
+            registerModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function openLoginModal() {
+            loginModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Закрытие модальных окон
+        function closeModals() {
+            registerModal.classList.remove('active');
+            loginModal.classList.remove('active');
+            document.body.style.overflow = '';
+            resetForms();
+        }
+        
+        function resetForms() {
+            document.getElementById('registerForm').reset();
+            document.getElementById('loginForm').reset();
+            document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('loginSuccessMessage').style.display = 'none';
+        }
+        
+        // Валидация регистрации
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('regConfirmPassword').value;
+            
+            let isValid = true;
+            
+            // Валидация имени
+            if (username.length < 3) {
+                document.getElementById('usernameError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('usernameError').style.display = 'none';
+            }
+            
+            // Валидация email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                document.getElementById('emailError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('emailError').style.display = 'none';
+            }
+            
+            // Валидация пароля
+            if (password.length < 6) {
+                document.getElementById('passwordError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('passwordError').style.display = 'none';
+            }
+            
+            // Проверка совпадения паролей
+            if (password !== confirm) {
+                document.getElementById('confirmError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('confirmError').style.display = 'none';
+            }
+            
+            if (isValid) {
+                // Сохраняем пользователя в localStorage
+                const users = JSON.parse(localStorage.getItem('lumit_users') || '[]');
+                const existingUser = users.find(u => u.email === email || u.username === username);
+                
+                if (existingUser) {
+                    alert('Пользователь с таким email или именем уже существует');
+                    return;
+                }
+                
+                users.push({ username, email, password });
+                localStorage.setItem('lumit_users', JSON.stringify(users));
+                
+                const successMsg = document.getElementById('successMessage');
+                successMsg.style.display = 'block';
+                
+                setTimeout(() => {
+                    closeModals();
+                    alert('Регистрация успешна! Теперь вы можете войти.');
+                }, 2000);
+            }
+        });
+        
+        // Вход
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const login = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const users = JSON.parse(localStorage.getItem('lumit_users') || '[]');
+            const user = users.find(u => (u.email === login || u.username === login) && u.password === password);
+            
+            if (user) {
+                localStorage.setItem('lumit_current_user', JSON.stringify(user));
+                const successMsg = document.getElementById('loginSuccessMessage');
+                successMsg.style.display = 'block';
+                
+                setTimeout(() => {
+                    closeModals();
+                    alert('Добро пожаловать в LUMIT Trade, ' + user.username + '!');
+                    window.location.href = 'index.html';
+                }, 1500);
+            } else {
+                alert('Неверный email/имя пользователя или пароль');
+            }
+        });
+        
+        // Обработчики кнопок
+        registerBtn.onclick = openRegisterModal;
+        loginBtn.onclick = openLoginModal;
+        
+        document.getElementById('closeModal').onclick = closeModals;
+        document.getElementById('closeLoginModal').onclick = closeModals;
+        
+        document.getElementById('switchToLogin').onclick = () => {
+            closeModals();
+            openLoginModal();
+        };
+        
+        document.getElementById('switchToRegister').onclick = () => {
+            closeModals();
+            openRegisterModal();
+        };
+        
+        // Закрытие по клику вне окна
+        window.onclick = function(event) {
+            if (event.target === registerModal || event.target === loginModal) {
+                closeModals();
+            }
+        };
+        
+        // Анимация при скролле
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.style.background = 'rgba(10, 14, 23, 0.98)';
+            } else {
+                header.style.background = 'rgba(15, 20, 30, 0.95)';
+            }
+        });
+        
+        function openRegister() {
+            openRegisterModal();
+        }
+    </script>
+</body>
+</html>
