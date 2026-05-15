@@ -51,3 +51,34 @@ CREATE INDEX idx_pay_user_id ON pay(user_id);
 CREATE INDEX idx_traders_user_id ON traders(user_id);
 CREATE INDEX idx_traders_status ON traders(status);
 CREATE INDEX idx_transactions_account_id ON transactions(account_id);
+
+-- 5. Assets (валютные пары)
+CREATE TABLE assets (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    symbol          VARCHAR(20) UNIQUE NOT NULL,
+    name            VARCHAR(100) NOT NULL,
+    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    payout_percent  INTEGER NOT NULL DEFAULT 80
+);
+
+-- 6. Quotes (котировки)
+CREATE TABLE quotes (
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    asset_id   UUID NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+    bid        NUMERIC(18, 8) NOT NULL,
+    ask        NUMERIC(18, 8) NOT NULL,
+    timestamp  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_quotes_asset_id ON quotes(asset_id);
+CREATE INDEX idx_quotes_timestamp ON quotes(timestamp);
+
+INSERT INTO assets (symbol, name) VALUES
+    ('EUR/USD', 'Euro / US Dollar'),
+    ('USD/CAD', 'US Dollar / Canadian Dollar'),
+    ('GBP/USD', 'British Pound / US Dollar'),
+    ('USD/JPY', 'US Dollar / Japanese Yen'),
+    ('AUD/USD', 'Australian Dollar / US Dollar'),
+    ('USD/CHF', 'US Dollar / Swiss Franc'),
+    ('NZD/USD', 'New Zealand Dollar / US Dollar'),
+    ('EUR/GBP', 'Euro / British Pound');
