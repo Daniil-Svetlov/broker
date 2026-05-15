@@ -1,7 +1,3 @@
-# Binary Trading Platform — Backend
-
-Закрытый бэкенд для платформы бинарных опционов.
-
 ## Стек
 
 - **Python 3.14**
