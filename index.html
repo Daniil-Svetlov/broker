@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMIT Trade — Binary Options Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg-hover: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-border-light: rgba(255, 255, 255, 0.25);
+  --glass-shadow: rgba(0, 0, 0, 0.3);
+  --accent: #007AFF;
+  --accent-glow: rgba(0, 122, 255, 0.4);
+  --accent-secondary: #5856D6;
+  --green: #30D158;
+  --red: #FF453A;
+  --orange: #FF9F0A;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-tertiary: rgba(255, 255, 255, 0.4);
+  --bg-deep: #000000;
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-xl: 40px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- AMBIENT BACKGROUND --- */
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.5;
+  animation: float 20s ease-in-out infinite;
+}
+
+.ambient-orb:nth-child(1) {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+  top: -200px; left: -100px;
+  animation-delay: 0s;
+}
+
+.ambient-orb:nth-child(2) {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, var(--accent-secondary) 0%, transparent 70%);
+  top: 40%; right: -150px;
+  animation-delay: -7s;
+}
+
+.ambient-orb:nth-child(3) {
+  width: 450px; height: 450px;
+  background: radial-gradient(circle, #00d4aa 0%, transparent 70%);
+  bottom: -100px; left: 30%;
+  animation-delay: -14s;
+}
+
+.ambient-orb:nth-child(4) {
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, var(--orange) 0%, transparent 70%);
+  top: 20%; left: 50%;
+  animation-delay: -3s;
+  opacity: 0.3;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(50px, -30px) scale(1.05); }
+  50% { transform: translate(-30px, 50px) scale(0.95); }
+  75% { transform: translate(40px, 20px) scale(1.02); }
+}
+
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* --- GLASS UTILITIES --- */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 
+    0 8px 32px var(--glass-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(60px) saturate(200%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* --- HEADER --- */
+header {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 48px);
+  max-width: 1400px;
+  padding: 14px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  border-radius: var(--radius-lg);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+header.scrolled {
+  top: 8px;
+  width: calc(100% - 32px);
+  background: rgba(20, 20, 20, 0.7);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+.logo-text {
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.5px;
+}
+
+.logo-text span {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+nav { display: flex; gap: 32px; align-items: center; }
+
+nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+nav a:hover { color: var(--text-primary); }
+
+.btn-header {
+  padding: 10px 22px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+.btn-header:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 24px var(--accent-glow);
+}
+
+/* --- HERO --- */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120px 24px 80px;
+  text-align: center;
+  position: relative;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  margin-bottom: 40px;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.hero-badge::before {
+  content: '';
+  width: 8px; height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.5); }
+}
+
+.hero h1 {
+  font-size: clamp(36px, 6vw, 72px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  margin-bottom: 24px;
+  animation: fadeInUp 0.8s ease-out 0.1s both;
+}
+
+.hero h1 .gradient-text {
+  background: linear-gradient(135deg, var(--accent) 0%, #00d4ff 50%, var(--accent-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero p {
+  color: var(--text-secondary);
+  font-size: clamp(16px, 2vw, 20px);
+  max-width: 600px;
+  margin: 0 auto 48px;
+  line-height: 1.6;
+  font-weight: 400;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  animation: fadeInUp 0.8s ease-out 0.3s both;
+}
+
+.btn-primary {
+  padding: 18px 36px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 32px var(--accent-glow);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 40px var(--accent-glow);
+}
+
+.btn-secondary {
+  padding: 18px 36px;
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border-light);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-secondary:hover {
+  background: var(--glass-bg);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- HERO VISUAL --- */
+.hero-visual {
+  margin-top: 80px;
+  width: 100%;
+  max-width: 1100px;
+  animation: fadeInUp 1s ease-out 0.5s both;
+}
+
+.trading-card {
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.trading-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+}
+
+.trading-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.trading-pair {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pair-icon {
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, #f7931a, #ff9500);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.pair-info h3 {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.pair-info span {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.trading-price {
+  text-align: right;
+}
+
+.trading-price .price {
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.trading-price .change {
+  font-size: 14px;
+  color: var(--green);
+  font-weight: 600;
+}
+
+.chart-placeholder {
+  height: 200px;
+  background: linear-gradient(180deg, rgba(0, 122, 255, 0.1) 0%, transparent 100%);
+  border-radius: var(--radius-md);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.chart-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+}
+
+.trading-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.btn-trade {
+  padding: 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-call {
+  background: linear-gradient(135deg, #30d158, #28a745);
+  color: white;
+  box-shadow: 0 8px 24px rgba(48, 209, 88, 0.3);
+}
+
+.btn-call:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(48, 209, 88, 0.4);
+}
+
+.btn-put {
+  background: linear-gradient(135deg, #ff453a, #d32f2f);
+  color: white;
+  box-shadow: 0 8px 24px rgba(255, 69, 58, 0.3);
+}
+
+.btn-put:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(255, 69, 58, 0.4);
+}
+
+/* --- STATS BAR --- */
+.stats-bar {
+  padding: 60px 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  width: 100%;
+  max-width: 1100px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.stat-item {
+  padding: 40px 32px;
+  text-align: center;
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  transition: background 0.3s;
+}
+
+.stat-item:hover {
+  background: var(--glass-bg-hover);
+}
+
+.stat-value {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #fff, rgba(255,255,255,0.7));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* --- SECTIONS --- */
+section {
+  padding: 120px 24px;
+  position: relative;
+  z-index: 2;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 72px;
+}
+
+.section-label {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent);
+  margin-bottom: 20px;
+  background: rgba(0, 122, 255, 0.1);
+  border: 1px solid rgba(0, 122, 255, 0.2);
+}
+
+.section-header h2 {
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 800;
+  letter-spacing: -2px;
+  line-height: 1.1;
+}
+
+.section-header p {
+  color: var(--text-secondary);
+  font-size: 18px;
+  max-width: 560px;
+  margin: 20px auto 0;
+  line-height: 1.6;
+}
+
+/* --- FEATURES GRID --- */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  border-radius: var(--radius-lg);
+  padding: 40px 32px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.feature-card:hover::before { opacity: 1; }
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  background: var(--glass-bg-hover);
+}
+
+.feature-icon {
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin-bottom: 24px;
+}
+
+.feature-icon.blue { background: rgba(0, 122, 255, 0.15); }
+.feature-icon.purple { background: rgba(88, 86, 214, 0.15); }
+.feature-icon.green { background: rgba(48, 209, 88, 0.15); }
+.feature-icon.orange { background: rgba(255, 159, 10, 0.15); }
+.feature-icon.red { background: rgba(255, 69, 58, 0.15); }
+.feature-icon.teal { background: rgba(0, 212, 170, 0.15); }
+
+.feature-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.feature-card p {
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* --- ASSETS SECTION --- */
+.assets-section {
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 122, 255, 0.03) 50%, transparent 100%);
+}
+
+.assets-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.asset-card {
+  border-radius: var(--radius-md);
+  padding: 24px;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.asset-card:hover {
+  transform: translateY(-2px);
+  background: var(--glass-bg-hover);
+}
+
+.asset-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.asset-icon {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.asset-icon.btc { background: linear-gradient(135deg, #f7931a, #ff9500); }
+.asset-icon.eth { background: linear-gradient(135deg, #627eea, #8c9eff); }
+.asset-icon.sol { background: linear-gradient(135deg, #9945ff, #14f195); }
+.asset-icon.eur { background: linear-gradient(135deg, #003399, #0052cc); }
+
+.asset-change {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.asset-change.up {
+  background: rgba(48, 209, 88, 0.15);
+  color: var(--green);
+}
+
+.asset-change.down {
+  background: rgba(255, 69, 58, 0.15);
+  color: var(--red);
+}
+
+.asset-name {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.asset-price {
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 16px;
+}
+
+.asset-chart {
+  height: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- HOW IT WORKS --- */
+.steps-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  max-width: 1000px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.steps-container::before {
+  content: '';
+  position: absolute;
+  top: 44px;
+  left: 15%;
+  right: 15%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+}
+
+.step {
+  text-align: center;
+  position: relative;
+}
+
+.step-number {
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  font-size: 32px;
+  font-weight: 800;
+  position: relative;
+  z-index: 1;
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px var(--glass-shadow);
+}
+
+.step h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.step p {
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* --- CTA SECTION --- */
+.cta-section {
+  padding: 120px 24px;
+}
+
+.cta-card {
+  max-width: 900px;
+  margin: 0 auto;
+  border-radius: var(--radius-xl);
+  padding: 80px 60px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.15), rgba(88, 86, 214, 0.15));
+  backdrop-filter: blur(60px) saturate(200%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  border: 1px solid rgba(0, 122, 255, 0.2);
+  box-shadow: 0 24px 80px rgba(0, 122, 255, 0.2);
+}
+
+.cta-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+}
+
+.cta-card h2 {
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 800;
+  letter-spacing: -2px;
+  margin-bottom: 16px;
+}
+
+.cta-card p {
+  color: var(--text-secondary);
+  font-size: 18px;
+  margin-bottom: 40px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+.cta-card .btn-primary {
+  font-size: 18px;
+  padding: 20px 48px;
+}
+
+/* --- MODAL --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal {
+  width: 100%;
+  max-width: 440px;
+  border-radius: var(--radius-xl);
+  padding: 48px 40px;
+  margin: 24px;
+  position: relative;
+  transform: translateY(20px) scale(0.95);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.active .modal {
+  transform: translateY(0) scale(1);
+}
+
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: var(--text-secondary);
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.modal-header h2 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+
+.modal-header p {
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 15px;
+  font-family: inherit;
+  transition: all 0.3s;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: var(--accent);
+  background: rgba(0, 122, 255, 0.06);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+.form-group input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.modal-btn {
+  width: 100%;
+  margin-top: 8px;
+  font-size: 16px;
+}
+
+.modal-footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.modal-footer a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.modal-footer a:hover {
+  text-decoration: underline;
+}
+
+/* --- FOOTER --- */
+footer {
+  padding: 60px 24px 40px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-links {
+  display: flex;
+  gap: 32px;
+}
+
+.footer-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.footer-links a:hover { color: var(--text-primary); }
+
+.footer-copy {
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+/* --- REVEAL ANIMATION --- */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+  .features-grid { grid-template-columns: repeat(2, 1fr); }
+  .assets-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-container { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  header { 
+    width: calc(100% - 24px);
+    padding: 12px 20px;
+  }
+  nav { display: none; }
+  .hero h1 { letter-spacing: -1px; }
+  .features-grid { grid-template-columns: 1fr; }
+  .assets-grid { grid-template-columns: 1fr; }
+  .stats-container { grid-template-columns: 1fr; }
+  .steps-container { grid-template-columns: 1fr; gap: 48px; }
+  .steps-container::before { display: none; }
+  .cta-card { padding: 48px 24px; }
+  .footer-content { flex-direction: column; gap: 24px; text-align: center; }
+  .trading-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .trading-price { text-align: left; }
+  .modal { padding: 36px 24px; margin: 16px; }
+  .modal-header h2 { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+
+<div class="ambient-bg">
+  <div class="ambient-orb"></div>
+  <div class="ambient-orb"></div>
+  <div class="ambient-orb"></div>
+  <div class="ambient-orb"></div>
+</div>
+<div class="noise-overlay"></div>
+
+<header class="glass" id="header">
+  <a href="#" class="logo">
+    <div class="logo-icon">L</div>
+    <div class="logo-text">LUMIT <span>Trade</span></div>
+  </a>
+  <nav>
+    <a href="#features">Возможности</a>
+    <a href="#assets">Активы</a>
+    <a href="#how">Как начать</a>
+    <button class="btn-header" onclick="openModal()">Начать торговлю</button>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-badge glass">Платформа нового поколения</div>
+  <h1>
+    Торгуй<br>
+    <span class="gradient-text">на скорости света</span>
+  </h1>
+  <p>Премиальная платформа для бинарных опционов с мгновенным исполнением, аналитикой в реальном времени и интуитивным интерфейсом</p>
+  <div class="hero-buttons">
+    <button class="btn-primary" onclick="openModal()">Открыть счёт</button>
+    <button class="btn-secondary" onclick="window.location.href='http://localhost:3030/term'">Демо-режим</button>
+  </div>
+
+  <div class="hero-visual">
+    <div class="trading-card glass-strong">
+      <div class="trading-header">
+        <div class="trading-pair">
+          <div class="pair-icon">B</div>
+          <div class="pair-info">
+            <h3>BTC / USD</h3>
+            <span>Bitcoin • Binary Option</span>
+          </div>
+        </div>
+        <div class="trading-price">
+          <div class="price" id="live-price">$68,241.50</div>
+          <div class="change">+3.24% сегодня</div>
+        </div>
+      </div>
+      <div class="chart-placeholder">
+        <canvas id="hero-chart"></canvas>
+      </div>
+      <div class="trading-actions">
+        <button class="btn-trade btn-call">CALL ↑</button>
+        <button class="btn-trade btn-put">PUT ↓</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal glass-strong">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-header">
+      <h2>Создать аккаунт</h2>
+      <p>Начните торговать за 30 секунд</p>
+    </div>
+    <form onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label>Имя</label>
+        <input type="text" placeholder="Ваше имя" required>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" placeholder="name@email.com" required>
+      </div>
+      <div class="form-group">
+        <label>Пароль</label>
+        <input type="password" placeholder="Минимум 8 символов" required minlength="8">
+      </div>
+      <button type="submit" class="btn-primary modal-btn">Зарегистрироваться</button>
+    </form>
+    <div class="modal-footer">
+      Уже есть аккаунт? <a href="#">Войти</a>
+    </div>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stats-container">
+    <div class="stat-item">
+      <div class="stat-value" data-count="150">0</div>
+      <div class="stat-label">Тысяч трейдеров</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" data-count="30">0</div>
+      <div class="stat-label">мс исполнение</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" data-count="98">0</div>
+      <div class="stat-label">% аптайм</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" data-count="50">0</div>
+      <div class="stat-label">+ активов</div>
+    </div>
+  </div>
+</div>
+
+<section id="features">
+  <div class="section-header reveal">
+    <div class="section-label">Преимущества</div>
+    <h2>Всё для успешной<br>торговли</h2>
+    <p>Технологии институционального уровня в элегантном интерфейсе</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card glass reveal">
+      <div class="feature-icon blue">⚡</div>
+      <h3>Мгновенное исполнение</h3>
+      <p>Ордера исполняются за 30мс благодаря серверам в Лондоне, Нью-Йорке и Токио</p>
+    </div>
+    <div class="feature-card glass reveal">
+      <div class="feature-icon purple">📊</div>
+      <h3>Живая аналитика</h3>
+      <p>Графики в реальном времени, технические индикаторы и сигналы на основе AI</p>
+    </div>
+    <div class="feature-card glass reveal">
+      <div class="feature-icon green">🛡️</div>
+      <h3>Защита депозитов</h3>
+      <p>Мультиподпись, холодное хранение и полное страхование всех средств</p>
+    </div>
+    <div class="feature-card glass reveal">
+      <div class="feature-icon orange">💎</div>
+      <h3>До 95% прибыли</h3>
+      <p>Лучшие коэффициенты в индустрии для всех типов бинарных опционов</p>
+    </div>
+    <div class="feature-card glass reveal">
+      <div class="feature-icon red">🎯</div>
+      <h3>Копи-трейдинг</h3>
+      <p>Подписывайтесь на успешных трейдеров и копируйте их сделки автоматически</p>
+    </div>
+    <div class="feature-card glass reveal">
+      <div class="feature-icon teal">🌐</div>
+      <h3>50+ активов</h3>
+      <p>Валютные пары, криптовалюты, акции и товары — всё в одном терминале</p>
+    </div>
+  </div>
+</section>
+
+<section id="assets" class="assets-section">
+  <div class="section-header reveal">
+    <div class="section-label">Рынки</div>
+    <h2>Популярные активы</h2>
+    <p>Торгуйте самыми ликвидными инструментами мировых рынков</p>
+  </div>
+
+  <div class="assets-grid" id="assets-grid">
+  </div>
+</section>
+
+<section id="how">
+  <div class="section-header reveal">
+    <div class="section-label">Быстрый старт</div>
+    <h2>Начните за 3 шага</h2>
+    <p>От регистрации до первой сделки — менее 2 минут</p>
+  </div>
+
+  <div class="steps-container">
+    <div class="step reveal">
+      <div class="step-number">1</div>
+      <h3>Регистрация</h3>
+      <p>Создайте аккаунт за 30 секунд. Верификация не требуется для демо-счёта</p>
+    </div>
+    <div class="step reveal">
+      <div class="step-number">2</div>
+      <h3>Пополнение</h3>
+      <p>Внесите депозит любым удобным способом: карта, крипто или банковский перевод</p>
+    </div>
+    <div class="step reveal">
+      <div class="step-number">3</div>
+      <h3>Торговля</h3>
+      <p>Выберите актив, направление и сумму. Прибыль до 95% от суммы сделки</p>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <div class="cta-card reveal">
+    <h2>Готовы начать?</h2>
+    <p>Присоединяйтесь к 150,000+ трейдеров по всему миру</p>
+    <button class="btn-primary" style="font-size: 18px; padding: 20px 48px;" onclick="openModal()">Создать бесплатный аккаунт</button>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-content">
+    <a href="#" class="logo">
+      <div class="logo-icon">L</div>
+      <div class="logo-text">LUMIT <span>Trade</span></div>
+    </a>
+    <div class="footer-links">
+      <a href="#">Условия</a>
+      <a href="#">Конфиденциальность</a>
+      <a href="#">Поддержка</a>
+      <a href="#">API</a>
+    </div>
+    <div class="footer-copy">© 2026 LUMIT Trade</div>
+  </div>
+</footer>
+
+<script>
+// --- CHART ---
+const chartCanvas = document.getElementById('hero-chart');
+const chartCtx = chartCanvas.getContext('2d');
+let chartData = [];
+
+function initChart() {
+  chartCanvas.width = chartCanvas.offsetWidth * 2;
+  chartCanvas.height = chartCanvas.offsetHeight * 2;
+  chartCtx.scale(2, 2);
+  
+  chartData = [];
+  let val = 68000;
+  for (let i = 0; i < 100; i++) {
+    val += (Math.random() - 0.48) * 200;
+    chartData.push(val);
+  }
+}
+
+function drawChart() {
+  const w = chartCanvas.offsetWidth;
+  const h = chartCanvas.offsetHeight;
+  chartCtx.clearRect(0, 0, w, h);
+  
+  const min = Math.min(...chartData);
+  const max = Math.max(...chartData);
+  const range = max - min;
+  
+  // Gradient fill
+  const gradient = chartCtx.createLinearGradient(0, 0, 0, h);
+  gradient.addColorStop(0, 'rgba(0, 122, 255, 0.3)');
+  gradient.addColorStop(1, 'rgba(0, 122, 255, 0)');
+  
+  chartCtx.beginPath();
+  chartCtx.moveTo(0, h);
+  
+  chartData.forEach((val, i) => {
+    const x = (i / (chartData.length - 1)) * w;
+    const y = h - ((val - min) / range) * (h - 20) - 10;
+    if (i === 0) chartCtx.lineTo(x, y);
+    else {
+      const prevX = ((i - 1) / (chartData.length - 1)) * w;
+      const prevY = h - ((chartData[i - 1] - min) / range) * (h - 20) - 10;
+      const cpX = (prevX + x) / 2;
+      chartCtx.bezierCurveTo(cpX, prevY, cpX, y, x, y);
+    }
+  });
+  
+  chartCtx.lineTo(w, h);
+  chartCtx.closePath();
+  chartCtx.fillStyle = gradient;
+  chartCtx.fill();
+  
+  // Line
+  chartCtx.beginPath();
+  chartData.forEach((val, i) => {
+    const x = (i / (chartData.length - 1)) * w;
+    const y = h - ((val - min) / range) * (h - 20) - 10;
+    if (i === 0) chartCtx.moveTo(x, y);
+    else {
+      const prevX = ((i - 1) / (chartData.length - 1)) * w;
+      const prevY = h - ((chartData[i - 1] - min) / range) * (h - 20) - 10;
+      const cpX = (prevX + x) / 2;
+      chartCtx.bezierCurveTo(cpX, prevY, cpX, y, x, y);
+    }
+  });
+  chartCtx.strokeStyle = '#007AFF';
+  chartCtx.lineWidth = 2;
+  chartCtx.stroke();
+  
+  // Dot at end
+  const lastX = w;
+  const lastY = h - ((chartData[chartData.length - 1] - min) / range) * (h - 20) - 10;
+  chartCtx.beginPath();
+  chartCtx.arc(lastX - 2, lastY, 5, 0, Math.PI * 2);
+  chartCtx.fillStyle = '#007AFF';
+  chartCtx.fill();
+  chartCtx.beginPath();
+  chartCtx.arc(lastX - 2, lastY, 10, 0, Math.PI * 2);
+  chartCtx.fillStyle = 'rgba(0, 122, 255, 0.2)';
+  chartCtx.fill();
+}
+
+function updateChart() {
+  chartData.shift();
+  const last = chartData[chartData.length - 1];
+  chartData.push(last + (Math.random() - 0.48) * 150);
+  drawChart();
+  
+  // Update price
+  const priceEl = document.getElementById('live-price');
+  if (priceEl) {
+    priceEl.textContent = '$' + last.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+}
+
+initChart();
+drawChart();
+setInterval(updateChart, 1500);
+window.addEventListener('resize', () => { initChart(); drawChart(); });
+
+// --- ASSETS ---
+const assets = [
+  { name: 'BTC/USD', icon: 'btc', letter: 'B', price: 68241.50, change: '+3.24%', up: true },
+  { name: 'ETH/USD', icon: 'eth', letter: 'E', price: 3812.12, change: '+1.82%', up: true },
+  { name: 'SOL/USD', icon: 'sol', letter: 'S', price: 146.88, change: '+8.51%', up: true },
+  { name: 'EUR/USD', icon: 'eur', letter: '€', price: 1.0847, change: '-0.12%', up: false }
+];
+
+const assetsGrid = document.getElementById('assets-grid');
+assets.forEach(a => {
+  const card = document.createElement('div');
+  card.className = 'asset-card glass reveal';
+  card.innerHTML = `
+    <div class="asset-header">
+      <div class="asset-icon ${a.icon}">${a.letter}</div>
+      <div class="asset-change ${a.up ? 'up' : 'down'}">${a.change}</div>
+    </div>
+    <div class="asset-name">${a.name}</div>
+    <div class="asset-price" data-base="${a.price}">$${a.price.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+    <div class="asset-chart"><canvas class="mini-chart" data-up="${a.up}"></canvas></div>
+  `;
+  assetsGrid.appendChild(card);
+});
+
+// Mini charts
+function drawMiniCharts() {
+  document.querySelectorAll('.mini-chart').forEach(canvas => {
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth * 2;
+    canvas.height = canvas.offsetHeight * 2;
+    ctx.scale(2, 2);
+    
+    const w = canvas.offsetWidth;
+    const h = canvas.offsetHeight;
+    const isUp = canvas.dataset.up === 'true';
+    const color = isUp ? '#30D158' : '#FF453A';
+    
+    let data = [];
+    let val = 50;
+    for (let i = 0; i < 30; i++) {
+      val += (Math.random() - (isUp ? 0.4 : 0.6)) * 10;
+      val = Math.max(10, Math.min(90, val));
+      data.push(val);
+    }
+    
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const range = max - min || 1;
+    
+    const gradient = ctx.createLinearGradient(0, 0, 0, h);
+    gradient.addColorStop(0, isUp ? 'rgba(48, 209, 88, 0.2)' : 'rgba(255, 69, 58, 0.2)');
+    gradient.addColorStop(1, 'transparent');
+    
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    data.forEach((v, i) => {
+      const x = (i / (data.length - 1)) * w;
+      const y = h - ((v - min) / range) * (h - 4) - 2;
+      ctx.lineTo(x, y);
+    });
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    ctx.beginPath();
+    data.forEach((v, i) => {
+      const x = (i / (data.length - 1)) * w;
+      const y = h - ((v - min) / range) * (h - 4) - 2;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+}
+
+setTimeout(drawMiniCharts, 100);
+window.addEventListener('resize', drawMiniCharts);
+
+// --- COUNTER ANIMATION ---
+function animateCounters() {
+  document.querySelectorAll('.stat-value[data-count]').forEach(el => {
+    const target = parseInt(el.dataset.count);
+    let current = 0;
+    const step = target / 60;
+    const timer = setInterval(() => {
+      current += step;
+      if (current >= target) {
+        current = target;
+        clearInterval(timer);
+      }
+      el.textContent = Math.round(current);
+    }, 16);
+  });
+}
+
+// --- SCROLL REVEAL ---
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      if (entry.target.closest('.stats-bar')) animateCounters();
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// --- HEADER SCROLL ---
+window.addEventListener('scroll', () => {
+  document.getElementById('header').classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// --- LIVE PRICE UPDATE ---
+setInterval(() => {
+  document.querySelectorAll('.asset-price[data-base]').forEach(el => {
+    const base = parseFloat(el.dataset.base);
+    const change = (Math.random() - 0.5) * base * 0.002;
+    const newPrice = base + change;
+    el.textContent = '$' + newPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  });
+}, 3000);
+
+function openModal() {
+  document.getElementById('modal-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function handleRegister(e) {
+  e.preventDefault();
+  alert('Аккаунт создан! Добро пожаловать в LUMIT Trade.');
+  closeModal();
+}
+
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>
