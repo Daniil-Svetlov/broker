@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Торговля — LUMIT Trade</title>
+    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg-hover: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-border-light: rgba(255, 255, 255, 0.25);
+  --glass-shadow: rgba(0, 0, 0, 0.3);
+  --accent: #007AFF;
+  --accent-glow: rgba(0, 122, 255, 0.4);
+  --accent-secondary: #5856D6;
+  --green: #30D158;
+  --red: #FF453A;
+  --orange: #FF9F0A;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-tertiary: rgba(255, 255, 255, 0.4);
+  --bg-deep: #000000;
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --sidebar-w: 240px;
+  --trade-w: 300px;
+  --header-h: 64px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.35;
+  animation: float 20s ease-in-out infinite;
+}
+
+.ambient-orb:nth-child(1) {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+  top: -150px; left: 20%;
+}
+
+.ambient-orb:nth-child(2) {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, var(--accent-secondary) 0%, transparent 70%);
+  bottom: -100px; right: 10%;
+  animation-delay: -7s;
+}
+
+.ambient-orb:nth-child(3) {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, #00d4aa 0%, transparent 70%);
+  top: 50%; left: 50%;
+  animation-delay: -14s;
+  opacity: 0.2;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(40px, -20px) scale(1.05); }
+  50% { transform: translate(-20px, 40px) scale(0.95); }
+  75% { transform: translate(30px, 10px) scale(1.02); }
+}
+
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.025;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(60px) saturate(200%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* --- HEADER --- */
+header {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 24px);
+  max-width: 1600px;
+  height: var(--header-h);
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  border-radius: var(--radius-lg);
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+.logo-text {
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.5px;
+}
+
+.logo-text span {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.right-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stats-block {
+  display: flex;
+  gap: 16px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.stat-value {
+  font-weight: 700;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-value.profit { color: var(--green); }
+.stat-value.loss { color: var(--red); }
+
+.balance-block {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(48, 209, 88, 0.1);
+  border: 1px solid rgba(48, 209, 88, 0.2);
+}
+
+.balance-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.balance-amount {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+
+.right-btn {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.right-btn:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-light);
+}
+
+.deposit-btn {
+  width: auto;
+  padding: 0 20px;
+  background: var(--accent);
+  border: none;
+  color: white;
+  font-weight: 600;
+  font-size: 13px;
+  font-family: inherit;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+.deposit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px var(--accent-glow);
+}
+
+/* --- LAYOUT --- */
+.main {
+  display: flex;
+  height: 100vh;
+  padding-top: calc(var(--header-h) + 20px);
+}
+
+/* --- LEFT SIDEBAR --- */
+.left-bar {
+  width: var(--sidebar-w);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  flex-shrink: 0;
+  border-right: 1px solid var(--glass-border);
+  background: rgba(10, 10, 10, 0.4);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+}
+
+.left-bar::-webkit-scrollbar { width: 4px; }
+.left-bar::-webkit-scrollbar-track { background: transparent; }
+.left-bar::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 2px; }
+
+.category-item { margin-bottom: 4px; }
+
+.main-category {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  width: 100%;
+  font-family: inherit;
+  transition: all 0.3s;
+}
+
+.main-category:hover {
+  background: var(--glass-bg-hover);
+}
+
+.main-category .arrow {
+  transition: transform 0.3s;
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.main-category.open .arrow { transform: rotate(90deg); }
+
+.submenu {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+  padding-left: 4px;
+}
+
+.submenu.open { display: flex; }
+
+.sub-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  width: 100%;
+  font-family: inherit;
+  text-align: left;
+  transition: all 0.3s;
+}
+
+.sub-btn:hover {
+  background: var(--glass-bg);
+  color: var(--text-primary);
+}
+
+.sub-btn.active {
+  background: rgba(0, 122, 255, 0.12);
+  color: var(--accent);
+  border-color: rgba(0, 122, 255, 0.2);
+}
+
+.sub-icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background: var(--glass-bg);
+  flex-shrink: 0;
+}
+
+.sub-btn.active .sub-icon {
+  background: rgba(0, 122, 255, 0.15);
+}
+
+.category-divider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: 12px 8px;
+}
+
+/* --- CHART --- */
+#chart {
+  flex: 1;
+  position: relative;
+  z-index: 5;
+  min-width: 0;
+}
+
+/* --- TRADE PANEL --- */
+.sidebar {
+  width: var(--trade-w);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-left: 1px solid var(--glass-border);
+  flex-shrink: 0;
+  overflow-y: auto;
+  background: rgba(10, 10, 10, 0.4);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+}
+
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 2px; }
+
+.trade-info-card {
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+}
+
+.trade-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.trade-info-row:last-child { padding-bottom: 0; }
+
+.trade-info-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.trade-info-value {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.input-group label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.3s;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.input-group input::-webkit-outer-spin-button,
+.input-group input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input-group input:focus {
+  border-color: var(--accent);
+  background: rgba(0, 122, 255, 0.06);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+#status-bar {
+  text-align: center;
+  color: var(--orange);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 159, 10, 0.08);
+  border: 1px solid rgba(255, 159, 10, 0.15);
+}
+
+.active-trades {
+  max-height: 160px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.active-trades::-webkit-scrollbar { width: 4px; }
+.active-trades::-webkit-scrollbar-track { background: transparent; }
+.active-trades::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 2px; }
+
+.active-trade-item {
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  font-size: 12px;
+}
+
+.active-trade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.countdown {
+  color: var(--orange);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.trade-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-trade {
+  padding: 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  letter-spacing: 0.5px;
+}
+
+.btn-trade:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.btn-trade:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-up {
+  background: linear-gradient(135deg, #30d158, #28a745);
+  color: white;
+  box-shadow: 0 8px 24px rgba(48, 209, 88, 0.3);
+}
+
+.btn-up:hover:not(:disabled) {
+  box-shadow: 0 12px 32px rgba(48, 209, 88, 0.4);
+}
+
+.btn-down {
+  background: linear-gradient(135deg, #ff453a, #d32f2f);
+  color: white;
+  box-shadow: 0 8px 24px rgba(255, 69, 58, 0.3);
+}
+
+.btn-down:hover:not(:disabled) {
+  box-shadow: 0 12px 32px rgba(255, 69, 58, 0.4);
+}
+
+.btn-reset {
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: inherit;
+}
+
+.btn-reset:hover {
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  border-color: var(--glass-border-light);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1100px) {
+  :root { --sidebar-w: 200px; --trade-w: 260px; }
+  .stats-block { display: none; }
+}
+
+@media (max-width: 900px) {
+  :root { --sidebar-w: 0px; --trade-w: 0px; }
+  .left-bar { position: fixed; left: 0; top: 0; bottom: 0; z-index: 500; width: 260px; transform: translateX(-100%); transition: transform 0.4s; }
+  .left-bar.open { transform: translateX(0); }
+  .sidebar { position: fixed; right: 0; top: 0; bottom: 0; z-index: 500; width: 300px; transform: translateX(100%); transition: transform 0.4s; }
+  .sidebar.open { transform: translateX(0); }
+  .mobile-btn { display: flex !important; }
+}
+
+.mobile-btn {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  z-index: 400;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  color: white;
+  font-size: 20px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px var(--accent-glow);
+}
+
+#mobile-left { left: 20px; }
+#mobile-right { right: 20px; }
+
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 450;
+}
+
+.overlay.active { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="ambient-bg">
+  <div class="ambient-orb"></div>
+  <div class="ambient-orb"></div>
+  <div class="ambient-orb"></div>
+</div>
+<div class="noise-overlay"></div>
+
+<div class="overlay" id="overlay" onclick="closePanels()"></div>
+
+<header class="glass">
+  <div class="logo-area">
+    <div class="logo-icon">L</div>
+    <div class="logo-text">LUMIT <span>Trade</span></div>
+  </div>
+  <div class="right-buttons">
+    <div class="stats-block">
+      <div class="stat-item">
+        <span class="stat-label">Профит</span>
+        <span class="stat-value profit" id="total-profit">+$0.00</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Винрейт</span>
+        <span class="stat-value" id="win-rate">0%</span>
+      </div>
+    </div>
+    <div class="balance-block">
+      <span class="balance-label">Демо-баланс</span>
+      <span class="balance-amount" id="balance-amount-header">$10,000.00</span>
+    </div>
+    <button class="right-btn" title="Уведомления">🔔</button>
+    <button class="right-btn profile-icon" onclick="window.location.href='http://localhost:3030/profile'" title="Профиль">👤</button>
+    <button class="right-btn deposit-btn">Пополнить</button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="left-bar" id="left-bar">
+    <div class="category-item">
+      <button class="main-category"><span>⏱️ Таймфрейм</span><span class="arrow">▶</span></button>
+      <div class="submenu">
+        <button class="sub-btn"><span class="sub-icon">1м</span> 1 минута</button>
+        <button class="sub-btn"><span class="sub-icon">5м</span> 5 минут</button>
+      </div>
+    </div>
+
+    <div class="category-item">
+      <button class="main-category open"><span>🪙 Криптовалюта</span><span class="arrow">▶</span></button>
+      <div class="submenu open">
+        <button class="sub-btn active" data-pair="BTC/USDT"><span class="sub-icon">₿</span> Bitcoin</button>
+        <button class="sub-btn" data-pair="ETH/USDT"><span class="sub-icon">Ξ</span> Ethereum</button>
+        <button class="sub-btn" data-pair="LUMIT/OTC"><span class="sub-icon">💎</span> LUMIT OTC</button>
+      </div>
+    </div>
+
+    <div class="category-item">
+      <button class="main-category"><span>📊 Вид графика</span><span class="arrow">▶</span></button>
+      <div class="submenu">
+        <button class="sub-btn"><span class="sub-icon">📈</span> Линия</button>
+        <button class="sub-btn"><span class="sub-icon">📊</span> Свечи</button>
+      </div>
+    </div>
+
+    <div class="category-divider"></div>
+
+    <div class="category-item">
+      <button class="main-category"><span>📜 История</span><span class="arrow">▶</span></button>
+      <div class="submenu">
+        <button class="sub-btn" onclick="socket.emit('get_history')"><span class="sub-icon">📊</span> Мои сделки</button>
+      </div>
+    </div>
+
+    <div class="category-item">
+      <button class="main-category"><span>🗑️ Действия</span><span class="arrow">▶</span></button>
+      <div class="submenu">
+        <button class="sub-btn" onclick="resetDemo()"><span class="sub-icon">🔄</span> Сбросить счет</button>
+      </div>
+    </div>
+
+    <div style="margin-top:auto; padding: 12px;">
+      <a href="http://localhost:3030/profile" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--glass-bg);border:1px solid var(--glass-border);text-decoration:none;color:var(--text-secondary);font-size:13px;font-weight:500;transition:all 0.3s;">
+        <span style="font-size:16px;">⚙️</span> Настройки
+      </a>
+    </div>
+  </div>
+
+  <div id="chart"></div>
+
+  <div class="sidebar" id="sidebar">
+    <div class="trade-info-card">
+      <div class="trade-info-row">
+        <span class="trade-info-label">Текущая цена</span>
+        <span class="trade-info-value" id="current-price">—</span>
+      </div>
+      <div class="trade-info-row">
+        <span class="trade-info-label">Пара</span>
+        <span class="trade-info-value" id="current-pair">BTC/USDT</span>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label>Сумма ставки ($)</label>
+      <input type="number" id="amount" value="10" min="1" step="1">
+    </div>
+
+    <div class="input-group">
+      <label>Время экспирации (сек)</label>
+      <input type="number" id="time" value="60" min="5" max="300" step="5">
+    </div>
+
+    <div id="status-bar">Подключение...</div>
+
+    <div class="active-trades" id="active-trades-container"></div>
+
+    <div class="trade-actions">
+      <button class="btn-trade btn-up" id="btnUp">ВЫШЕ ▲</button>
+      <button class="btn-trade btn-down" id="btnDown">НИЖЕ ▼</button>
+    </div>
+
+    <button class="btn-reset" onclick="resetDemo()">🔄 Сбросить демо-счет</button>
+  </div>
+</div>
+
+<button class="mobile-btn" id="mobile-left" onclick="toggleLeft()">☰</button>
+<button class="mobile-btn" id="mobile-right" onclick="toggleRight()">💹</button>
+
+<script>
+let currentPair = 'BTC/USDT';
+let lineSeries = null;
+let chart = null;
+let socket = null;
+let balance = 10000.00;
+let activeTrades = [];
+let countdownIntervals = [];
+let tradeMarkers = [];
+
+document.querySelectorAll('.main-category').forEach(button => {
+  button.addEventListener('click', () => {
+    const submenu = button.nextElementSibling;
+    button.classList.toggle('open');
+    submenu.classList.toggle('open');
+  });
+});
+
+document.querySelectorAll('.sub-btn[data-pair]').forEach(btn => {
+  btn.addEventListener('click', function() {
+    currentPair = this.getAttribute('data-pair');
+    document.querySelectorAll('.sub-btn[data-pair]').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    if (lineSeries) {
+      lineSeries.setData([]);
+      tradeMarkers = [];
+      lineSeries.setMarkers([]);
+    }
+    document.getElementById('current-pair').innerText = currentPair;
+    document.getElementById('status-bar').innerText = "Рынок: " + currentPair;
+  });
+});
+
+function toggleLeft() {
+  document.getElementById('left-bar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('active');
+}
+
+function toggleRight() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('active');
+}
+
+function closePanels() {
+  document.getElementById('left-bar').classList.remove('open');
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('active');
+}
+
+window.addEventListener('load', function() {
+  console.log('Загрузка LUMIT Trading Engine...');
+  const chartElement = document.getElementById('chart');
+
+  if (typeof LightweightCharts === 'undefined') {
+    console.error('LightweightCharts не загружена!');
+    document.getElementById('status-bar').innerText = "Ошибка загрузки графика";
+    return;
+  }
+
+  try {
+    chart = LightweightCharts.createChart(chartElement, {
+      layout: {
+        background: { color: 'transparent' },
+        textColor: 'rgba(255,255,255,0.6)'
+      },
+      grid: {
+        vertLines: { color: 'rgba(255,255,255,0.06)' },
+        horzLines: { color: 'rgba(255,255,255,0.06)' }
+      },
+      width: chartElement.clientWidth,
+      height: chartElement.clientHeight,
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: true,
+        borderColor: 'rgba(255,255,255,0.1)'
+      },
+      rightPriceScale: {
+        borderColor: 'rgba(255,255,255,0.1)'
+      },
+      crosshair: {
+        mode: LightweightCharts.CrosshairMode.Normal
+      }
+    });
+
+    lineSeries = chart.addLineSeries({
+      color: '#007AFF',
+      lineWidth: 2,
+      priceLineVisible: false
+    });
+
+    console.log('✅ График создан');
+  } catch (error) {
+    console.error('Ошибка создания графика:', error);
+    return;
+  }
+
+  socket = io();
+
+  socket.on('connect', () => {
+    console.log('✅ Подключено к серверу');
+    document.getElementById('status-bar').innerText = "Рынок: " + currentPair;
+  });
+
+  socket.on('price_update', (data) => {
+    try {
+      if (data.pairs && data.pairs[currentPair]) {
+        const price = parseFloat(data.pairs[currentPair]);
+        if (price > 0 && !isNaN(price)) {
+          lineSeries.update({ time: data.time, value: price });
+          document.getElementById('current-price').innerText = `$${price.toFixed(2)}`;
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка обновления графика:', error);
+    }
+  });
+
+  socket.on('balance_update', (data) => {
+    balance = data.balance;
+    document.getElementById('balance-amount-header').innerText = `$${balance.toFixed(2)}`;
+    const profit = data.totalProfit - data.totalLoss;
+    document.getElementById('total-profit').innerText = `${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`;
+    document.getElementById('total-profit').className = `stat-value ${profit >= 0 ? 'profit' : 'loss'}`;
+    document.getElementById('win-rate').innerText = `${data.winRate}%`;
+  });
+
+  socket.on('trade_opened', (data) => {
+    activeTrades.push(data);
+    renderActiveTrades();
+    const currentTime = Math.floor(Date.now() / 1000);
+    const newMarker = {
+      time: currentTime,
+      position: 'inBar',
+      color: data.type === 'higher' ? '#30D158' : '#FF453A',
+      shape: data.type === 'higher' ? 'arrowUp' : 'arrowDown',
+      text: `${data.type === 'higher' ? '▲' : '▼'} $${data.amount} @ $${data.startPrice.toFixed(2)}`,
+      id: data.tradeId
+    };
+    tradeMarkers.push(newMarker);
+    lineSeries.setMarkers(tradeMarkers);
+    console.log('📍 Маркер добавлен на график:', newMarker);
+    document.getElementById('status-bar').innerText = `Сделка открыта: ${data.type === 'higher' ? '▲' : '▼'} $${data.amount}`;
+  });
+
+  socket.on('trade_result', (data) => {
+    activeTrades = activeTrades.filter(t => t.tradeId !== data.tradeId);
+    renderActiveTrades();
+    const markerIndex = tradeMarkers.findIndex(m => m.id === data.tradeId);
+    if (markerIndex !== -1) {
+      tradeMarkers[markerIndex].color = data.result === 'WIN' ? '#30D158' : '#FF453A';
+      tradeMarkers[markerIndex].text = `${data.result === 'WIN' ? '✅' : '❌'} ${data.profit >= 0 ? '+' : ''}$${data.profit.toFixed(2)}`;
+      const exitMarker = {
+        time: Math.floor(Date.now() / 1000),
+        position: 'inBar',
+        color: data.result === 'WIN' ? '#30D158' : '#FF453A',
+        shape: 'circle',
+        text: `Exit: $${data.endPrice}`,
+        id: `${data.tradeId}_exit`
+      };
+      tradeMarkers.push(exitMarker);
+      lineSeries.setMarkers(tradeMarkers);
+      console.log('📍 Маркер выхода добавлен:', exitMarker);
+    }
+    const resultText = data.result === 'WIN' ? '✅ ВЫИГРЫШ' : '❌ ПРОИГРЫШ';
+    document.getElementById('status-bar').innerText = `${resultText}: ${data.profit >= 0 ? '+' : ''}$${data.profit.toFixed(2)}`;
+    setTimeout(() => {
+      document.getElementById('status-bar').innerText = "Рынок: " + currentPair;
+    }, 4000);
+  });
+
+  socket.on('trade_error', (data) => {
+    alert(data.message);
+  });
+
+  socket.on('demo_reset', (data) => {
+    activeTrades = [];
+    tradeMarkers = [];
+    if (lineSeries) lineSeries.setMarkers([]);
+    renderActiveTrades();
+    alert('Демо-счет сброшен до $10,000');
+  });
+
+  socket.on('disconnect', () => {
+    console.log('⚠️ Отключено от серверу');
+    document.getElementById('status-bar').innerText = "Нет соединения";
+  });
+
+  window.addEventListener('resize', () => {
+    if (chart) {
+      chart.applyOptions({
+        width: chartElement.clientWidth,
+        height: chartElement.clientHeight
+      });
+    }
+  });
+
+  document.getElementById('btnUp').addEventListener('click', () => sendTrade('higher'));
+  document.getElementById('btnDown').addEventListener('click', () => sendTrade('lower'));
+});
+
+function sendTrade(type) {
+  const amount = parseFloat(document.getElementById('amount').value);
+  const time = parseInt(document.getElementById('time').value);
+  if (amount > balance) { alert("Недостаточно средств на балансе"); return; }
+  if (amount < 1) { alert("Минимальная ставка: $1"); return; }
+  if (!socket || !socket.connected) { alert("Нет подключения к серверу"); return; }
+  socket.emit('make_trade', { type, amount, time, pair: currentPair });
+}
+
+function resetDemo() {
+  if (confirm('Вы уверены, что хотите сбросить демо-счет до $10,000? Вся история будет удалена.')) {
+    socket.emit('reset_demo');
+  }
+}
+
+function renderActiveTrades() {
+  const container = document.getElementById('active-trades-container');
+  countdownIntervals.forEach(interval => clearInterval(interval));
+  countdownIntervals = [];
+  if (activeTrades.length === 0) { container.innerHTML = ''; return; }
+  container.innerHTML = activeTrades.map((trade, index) => {
+    const timeLeft = Math.max(0, trade.expirationTime - Math.floor((Date.now() - new Date().getTime()) / 1000));
+    return `
+      <div class="active-trade-item" id="trade-${index}">
+        <div class="active-trade-header">
+          <span>${trade.pair} ${trade.type === 'higher' ? '▲' : '▼'}</span>
+          <span class="countdown" id="countdown-${index}">${timeLeft}s</span>
+        </div>
+        <div>Ставка: $${trade.amount} | Цена: $${trade.startPrice.toFixed(2)}</div>
+      </div>
+    `;
+  }).join('');
+  activeTrades.forEach((trade, index) => {
+    let timeLeft = trade.expirationTime;
+    const interval = setInterval(() => {
+      timeLeft--;
+      const el = document.getElementById(`countdown-${index}`);
+      if (el) el.innerText = `${Math.max(0, timeLeft)}s`;
+      if (timeLeft <= 0) clearInterval(interval);
+    }, 1000);
+    countdownIntervals.push(interval);
+  });
+}
+</script>
+</body>
+</html>
