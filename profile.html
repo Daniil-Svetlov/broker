@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>LUMIT Trade - Профиль пользователя</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e2329;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #f0b90b;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ffd700;
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #f0b90b #1e2329;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0a0e17 0%, #0f131c 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .profile-container {
+            background: rgba(22, 26, 30, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 900px;
+            overflow: hidden;
+            border: 1px solid rgba(240, 185, 11, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, #1a1f2a, #0f131c);
+            padding: 25px 30px;
+            border-bottom: 1px solid rgba(240, 185, 11, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .profile-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .profile-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #f0b90b, #ffd700);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #0a0e17;
+        }
+
+        .profile-name h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            color: #f0b90b;
+        }
+
+        .profile-name p {
+            color: #848e9c;
+            font-size: 14px;
+        }
+
+        .close-btn {
+            background: rgba(43, 49, 57, 0.8);
+            border: none;
+            color: #eaecef;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: #f6465d;
+            transform: rotate(90deg);
+        }
+
+        .profile-body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+        }
+
+        .profile-left {
+            flex: 1.2;
+            min-width: 250px;
+            background: rgba(15, 20, 30, 0.5);
+            padding: 25px;
+            border-right: 1px solid rgba(240, 185, 11, 0.2);
+        }
+
+        .info-section {
+            margin-bottom: 25px;
+        }
+
+        .info-section h3 {
+            font-size: 14px;
+            color: #f0b90b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(240, 185, 11, 0.3);
+        }
+
+        .info-item {
+            margin-bottom: 15px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #848e9c;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .starred-value {
+            font-family: monospace;
+            font-size: 18px;
+            letter-spacing: 2px;
+            background: #1e2329;
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .reveal-btn {
+            background: rgba(240, 185, 11, 0.2);
+            border: 1px solid rgba(240, 185, 11, 0.5);
+            color: #f0b90b;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.2s;
+        }
+
+        .reveal-btn:hover {
+            background: rgba(240, 185, 11, 0.4);
+        }
+
+        .profile-right {
+            flex: 1;
+            min-width: 250px;
+            padding: 25px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: rgba(30, 35, 45, 0.6);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #f0b90b;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #848e9c;
+            margin-top: 5px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn-edit {
+            flex: 1;
+            background: linear-gradient(135deg, #f0b90b, #ffd700);
+            border: none;
+            color: #0a0e17;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-logout {
+            flex: 1;
+            background: transparent;
+            border: 1px solid #f6465d;
+            color: #f6465d;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-edit:hover, .btn-logout:hover {
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 700px) {
+            .profile-left {
+                border-right: none;
+                border-bottom: 1px solid rgba(240, 185, 11, 0.2);
+            }
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            .profile-title {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="profile-title">
+                <div class="profile-avatar">👤</div>
+                <div class="profile-name">
+                    <h2 id="profileUsername">AlexTrader</h2>
+                    <p>ID: <span id="profileUserId">LUMIT-2471</span></p>
+                </div>
+            </div>
+            <button class="close-btn" id="closeProfileBtn">✕</button>
+        </div>
+
+        <div class="profile-body">
+            <div class="profile-left">
+                <div class="info-section">
+                    <h3>🔐 ЛИЧНЫЕ ДАННЫЕ</h3>
+                    <div class="info-item">
+                        <div class="info-label">Полное имя</div>
+                        <div class="info-value" id="fullName">Алексей Трейдеров</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Email</div>
+                        <div class="info-value" id="emailDisplay">alex@lumit.trade</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">📞 Телефон</div>
+                        <div class="info-value starred-info" data-real="+7 (999) 123-45-67">
+                            <span class="starred-value" id="phoneStars">★★★★★★★★★★</span>
+                            <button class="reveal-btn" onclick="revealInfo(this, 'phone')">Показать</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>💳 ФИНАНСОВЫЕ ДАННЫЕ</h3>
+                    <div class="info-item">
+                        <div class="info-label">Номер карты</div>
+                        <div class="info-value starred-info" data-real="4532 1234 5678 9012">
+                            <span class="starred-value" id="cardStars">★★★★ ★★★★ ★★★★ ★★★★</span>
+                            <button class="reveal-btn" onclick="revealInfo(this, 'card')">Показать</button>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">CVV / CVC</div>
+                        <div class="info-value starred-info" data-real="***">
+                            <span class="starred-value" id="cvvStars">★★★</span>
+                            <button class="reveal-btn" onclick="revealInfo(this, 'cvv')">Показать</button>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">API ключ доступа</div>
+                        <div class="info-value starred-info" data-real="lumit_api_7f3k9d2m1x5v8">
+                            <span class="starred-value" id="apiStars">••••••••••••••••••••</span>
+                            <button class="reveal-btn" onclick="revealInfo(this, 'api')">Показать</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>🔑 БЕЗОПАСНОСТЬ</h3>
+                    <div class="info-item">
+                        <div class="info-label">Пароль</div>
+                        <div class="info-value starred-info" data-real="MySecurePass123!">
+                            <span class="starred-value" id="passwordStars">★★★★★★★★★★★★</span>
+                            <button class="reveal-btn" onclick="revealInfo(this, 'password')">Показать</button>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">2FA Код</div>
+                        <div class="info-value starred-info" data-real="A3F8 K2M9">
+                            <span class="starred-value" id="faStars">★★★★ ★★★★</span>
+                            <button class="reveal-btn" onclick="revealInfo(this, '2fa')">Показать</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-right">
+                <div class="info-section">
+                    <h3>📊 СТАТИСТИКА АККАУНТА</h3>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalTrades">247</div>
+                            <div class="stat-label">Всего сделок</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="winRate">68.5%</div>
+                            <div class="stat-label">Процент побед</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalProfit">+$4,280</div>
+                            <div class="stat-label">Общая прибыль</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="currentBalance">$1,250</div>
+                            <div class="stat-label">Текущий баланс</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>⭐ УРОВЕНЬ</h3>
+                    <div class="stat-card" style="margin-top: 10px;">
+                        <div class="stat-value" id="userLevel">Золотой трейдер</div>
+                        <div class="stat-label">Следующий уровень: 500 сделок</div>
+                        <div style="margin-top: 10px; height: 6px; background: #2b3139; border-radius: 3px; overflow: hidden;">
+                            <div style="width: 49%; height: 100%; background: #f0b90b; border-radius: 3px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn-edit" onclick="editProfile()">✏️ Редактировать</button>
+                    <button class="btn-logout" onclick="logout()">🚪 Выйти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadProfileData() {
+            const user = JSON.parse(localStorage.getItem('lumit_current_user'));
+            if (user) {
+                document.getElementById('profileUsername').textContent = user.username || 'Trader';
+                document.getElementById('profileUserId').textContent = user.userId || 'LUMIT-2471';
+                document.getElementById('fullName').textContent = user.fullName || 'Алексей Трейдеров';
+                document.getElementById('emailDisplay').textContent = user.email || 'user@lumit.trade';
+            }
+            const stats = JSON.parse(localStorage.getItem('lumit_user_stats')) || {
+                totalTrades: 247, winRate: 68.5, totalProfit: 4280, currentBalance: 1250, level: 'Золотой трейдер'
+            };
+            document.getElementById('totalTrades').textContent = stats.totalTrades;
+            document.getElementById('winRate').textContent = stats.winRate + '%';
+            document.getElementById('totalProfit').textContent = (stats.totalProfit > 0 ? '+' : '') + '$' + stats.totalProfit.toLocaleString();
+            document.getElementById('currentBalance').textContent = '$' + stats.currentBalance.toLocaleString();
+            document.getElementById('userLevel').textContent = stats.level;
+        }
+
+        window.revealInfo = function(btn, type) {
+            const starredDiv = btn.closest('.starred-info');
+            const realValue = starredDiv.getAttribute('data-real');
+            const starredSpan = starredDiv.querySelector('.starred-value');
+            if (btn.textContent === 'Показать') {
+                starredSpan.setAttribute('data-starred', starredSpan.textContent);
+                starredSpan.textContent = realValue;
+                btn.textContent = 'Скрыть';
+                btn.style.background = 'rgba(246, 70, 93, 0.3)';
+                btn.style.borderColor = '#f6465d';
+            } else {
+                const starredValue = starredSpan.getAttribute('data-starred') || '★★★★★★★★★★★★';
+                starredSpan.textContent = starredValue;
+                btn.textContent = 'Показать';
+                btn.style.background = 'rgba(240, 185, 11, 0.2)';
+                btn.style.borderColor = 'rgba(240, 185, 11, 0.5)';
+            }
+        };
+
+        function closeProfile() {
+            window.parent.postMessage('closeProfileModal', '*');
+        }
+
+        function editProfile() {
+            alert('Функция редактирования профиля будет доступна в следующей версии');
+        }
+
+        function logout() {
+            localStorage.removeItem('lumit_current_user');
+            alert('Вы вышли из системы');
+            window.parent.location.href = 'index.html';
+        }
+
+        document.getElementById('closeProfileBtn').addEventListener('click', closeProfile);
+        loadProfileData();
+    </script>
+</body>
+</html>
