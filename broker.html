@@ -1,180 +1,900 @@
-<!-- основная страничка для бо -->
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>LUMIT Broker на рабочем столе</title>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>LUMIT Broker - Торговая платформа</title>
+    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <style>
-        :root { --bg: #0b0e11; --panel: #161a1e; --accent: #ffffff; --green: #2ebd85; --red: #f6465d; --border: #2b3139; }
-        
-        * { outline: none !important; -webkit-tap-highlight-color: transparent; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none !important;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        body { background: var(--bg); color: #eaecef; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        header { background: var(--panel); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: relative; z-index: 20; }
-        
-        .logo-area { display: flex; align-items: center; gap: 12px; }
-        .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .logo-icon img { width: 100%; height: 100%; object-fit: cover; }
-        .logo-text { color: var(--accent); font-weight: bold; font-size: 20px; letter-spacing: 2px; }
+        /* ========== КАСТОМНЫЙ СКРОЛЛБАР ========== */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
 
-        .main { display: flex; flex: 1; overflow: hidden; background: var(--bg); position: relative; }
+        ::-webkit-scrollbar-track {
+            background: #1e2329;
+            border-radius: 10px;
+        }
 
-        .left-bar { 
-            width: 60px; 
-            background: var(--panel); 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding-top: 20px; 
-            gap: 20px;
+        ::-webkit-scrollbar-thumb {
+            background: #f0b90b;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ffd700;
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #f0b90b #1e2329;
+        }
+
+        :root {
+            --bg: #0b0e11;
+            --panel: #161a1e;
+            --accent: #ffffff;
+            --green: #2ebd85;
+            --red: #f6465d;
+            --border: #2b3139;
+            --gold: #f0b90b;
+        }
+
+        body {
+            background: var(--bg);
+            color: #eaecef;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background: var(--panel);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            z-index: 20;
+            flex-shrink: 0;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--gold);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            color: #0a0e17;
+        }
+
+        .logo-text {
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 20px;
+            letter-spacing: 2px;
+        }
+
+        .right-buttons {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(43, 49, 57, 0.5);
+            padding: 5px 15px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+        }
+
+        .right-btn {
+            background: transparent;
+            border: none;
+            color: #eaecef;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 30px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .right-btn:hover {
+            background: #2b3139;
+        }
+
+        .stats-block {
+            display: flex;
+            gap: 15px;
+            padding-right: 15px;
             border-right: 1px solid var(--border);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .stat-label {
+            color: #848e9c;
+            font-size: 9px;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .stat-value.profit {
+            color: var(--green);
+        }
+
+        .stat-value.loss {
+            color: var(--red);
+        }
+
+        .balance-block {
+            display: flex;
+            flex-direction: column;
+            background: #2b3139;
+            padding: 4px 14px;
+            border-radius: 20px;
+        }
+
+        .balance-label {
+            font-size: 9px;
+            color: #848e9c;
+        }
+
+        .balance-amount {
+            font-weight: bold;
+            font-size: 16px;
+            color: var(--green);
+        }
+
+        .deposit-btn {
+            background: var(--gold);
+            color: #0b0e11;
+            font-weight: bold;
+        }
+
+        .main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .left-bar {
+            width: 240px;
+            background: var(--panel);
+            display: flex;
+            flex-direction: column;
+            padding: 15px 10px;
+            gap: 8px;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .category-item {
+            margin-bottom: 4px;
+        }
+
+        .main-category {
+            width: 100%;
+            background: #2b3139;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: #eaecef;
+            font-family: inherit;
+            transition: 0.2s;
+        }
+
+        .main-category:hover {
+            background: #3b424b;
+        }
+
+        .main-category .arrow {
+            transition: transform 0.2s;
+            font-size: 12px;
+            color: #848e9c;
+        }
+
+        .main-category.open .arrow {
+            transform: rotate(90deg);
+        }
+
+        .submenu {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 8px;
+            padding-left: 8px;
+        }
+
+        .submenu.open {
+            display: flex;
+        }
+
+        .sub-btn {
+            background: #1e2329;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            color: #c8ccd1;
+            cursor: pointer;
+            width: 100%;
+            font-family: inherit;
+            text-align: left;
+            transition: 0.2s;
+        }
+
+        .sub-btn:hover {
+            background: #2b3139;
+            color: var(--gold);
+        }
+
+        .sub-btn.active {
+            background: #2b3139;
+            color: var(--gold);
+            border-left: 3px solid var(--gold);
+        }
+
+        .sub-icon {
+            font-size: 16px;
+            min-width: 28px;
+            text-align: center;
+        }
+
+        .category-divider {
+            height: 1px;
+            background: #2b3139;
+            margin: 12px 0;
+        }
+
+        #chart {
+            flex: 1;
             position: relative;
-            z-index: 10; 
+            min-width: 0;
         }
 
-        .tool-btn { 
-            width: 35px; height: 35px; 
-            background: #2b3139; border-radius: 6px; 
-            display: flex; align-items: center; justify-content: center;
-            font-size: 10px; font-weight: bold; color: #848e9c; cursor: pointer;
-        }
-
-        #chart { 
-            flex: 1; 
-            position: relative; 
-            margin-left: -2px; /* Спрятали ту самую линию */
-            z-index: 5; 
-        }
-
-        .sidebar { 
-            width: 260px; 
-            background: var(--panel); 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 20px; 
+        .sidebar {
+            width: 300px;
+            background: var(--panel);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
             border-left: 1px solid var(--border);
-            position: relative;
-            z-index: 10;
+            flex-shrink: 0;
+            overflow-y: auto;
         }
-        
-        label { font-size: 11px; color: #848e9c; font-weight: bold; }
-        input { background: #2b3139; border: 1px solid #474d57; color: white; padding: 12px; border-radius: 4px; width: 100%; box-sizing: border-box; }
-        
-        .btn { padding: 18px; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
-        .btn:active { transform: scale(0.98); }
-        .btn-up { background: var(--green); }
-        .btn-down { background: var(--red); }
-        
-        #status-bar { text-align: center; color: #f0b90b; font-size: 13px; min-height: 20px; padding: 10px; border: 1px solid var(--border); border-radius: 4px; }
+
+        .trade-info {
+            background: #1e2329;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .trade-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .trade-info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .trade-info-label {
+            color: #848e9c;
+            font-size: 12px;
+        }
+
+        .trade-info-value {
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        label {
+            font-size: 11px;
+            color: #848e9c;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        input {
+            background: #2b3139;
+            border: 1px solid #474d57;
+            color: white;
+            padding: 10px 12px;
+            border-radius: 6px;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        input:focus {
+            border-color: var(--gold);
+        }
+
+        .btn {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .btn:hover:not(:disabled) {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-up {
+            background: var(--green);
+        }
+
+        .btn-down {
+            background: var(--red);
+        }
+
+        .btn-reset {
+            background: #474d57;
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        #status-bar {
+            text-align: center;
+            color: var(--gold);
+            font-size: 12px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #1e2329;
+        }
+
+        .active-trades {
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .active-trade-item {
+            background: #2b3139;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+
+        .active-trade-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .countdown {
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        .profile-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .profile-modal.active {
+            display: flex;
+        }
+
+        .profile-iframe {
+            width: 90%;
+            max-width: 1000px;
+            height: 85%;
+            border: none;
+            border-radius: 20px;
+            background: transparent;
+            animation: fadeInScale 0.3s ease;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .left-bar {
+                width: 200px;
+            }
+            .sidebar {
+                width: 270px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .left-bar {
+                display: none;
+            }
+            .sidebar {
+                width: 100%;
+                max-width: 320px;
+            }
+            .right-buttons {
+                gap: 8px;
+                padding: 5px 10px;
+            }
+            .stats-block {
+                gap: 8px;
+                padding-right: 8px;
+            }
+        }
     </style>
 </head>
 <body>
     <header>
         <div class="logo-area">
-            <div class="logo-icon">
-                <img src="https://cdn-icons-png.flaticon.com/512/2502/2502160.png" alt="L">
-            </div>
-            <div class="logo-text">LUMIT_TRADE</div>
+            <div class="logo-icon">L</div>
+            <div class="logo-text">LUMIT TRADE</div>
         </div>
-        <div style="font-weight: bold; font-size: 18px;">Баланс: <span id="balance-amount">1000.00</span> $</div>
+        <div class="right-buttons">
+            <div class="stats-block">
+                <div class="stat-item">
+                    <span class="stat-label">Профит</span>
+                    <span class="stat-value profit" id="total-profit">+$0.00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Винрейт</span>
+                    <span class="stat-value" id="win-rate">0%</span>
+                </div>
+            </div>
+            <div class="balance-block">
+                <span class="balance-label">Демо-баланс</span>
+                <span class="balance-amount" id="balance-amount-header">$10,000.00</span>
+            </div>
+            <button class="right-btn" id="notificationsBtn" title="Уведомления">🔔</button>
+            <button class="right-btn" id="profileBtn" title="Профиль">👤</button>
+            <button class="right-btn deposit-btn" id="depositBtn">💳 Пополнить</button>
+        </div>
     </header>
 
     <div class="main">
         <div class="left-bar">
-            <div class="tool-btn">ТФ</div>
-            <div class="tool-btn">ГР</div>
-            <div class="tool-btn">ИН</div>
+            <div class="category-item">
+                <button class="main-category"><span>⏱️ Таймфрейм</span><span class="arrow">▶</span></button>
+                <div class="submenu">
+                    <button class="sub-btn" data-timeframe="1">1 минута</button>
+                    <button class="sub-btn" data-timeframe="5">5 минут</button>
+                    <button class="sub-btn" data-timeframe="15">15 минут</button>
+                    <button class="sub-btn" data-timeframe="60">1 час</button>
+                </div>
+            </div>
+
+            <div class="category-item">
+                <button class="main-category open"><span>🪙 Криптовалюта</span><span class="arrow">▶</span></button>
+                <div class="submenu open">
+                    <button class="sub-btn active" data-pair="BTC/USDT"><span class="sub-icon">₿</span> Bitcoin</button>
+                    <button class="sub-btn" data-pair="ETH/USDT"><span class="sub-icon">Ξ</span> Ethereum</button>
+                    <button class="sub-btn" data-pair="BNB/USDT"><span class="sub-icon">🟡</span> Binance Coin</button>
+                    <button class="sub-btn" data-pair="SOL/USDT"><span class="sub-icon">◎</span> Solana</button>
+                </div>
+            </div>
+
+            <div class="category-item">
+                <button class="main-category"><span>📊 Вид графика</span><span class="arrow">▶</span></button>
+                <div class="submenu">
+                    <button class="sub-btn" data-chart-type="line"><span class="sub-icon">📈</span> Линия</button>
+                    <button class="sub-btn" data-chart-type="area"><span class="sub-icon">📉</span> Область</button>
+                </div>
+            </div>
+
+            <div class="category-divider"></div>
+
+            <div class="category-item">
+                <button class="main-category"><span>📜 История</span><span class="arrow">▶</span></button>
+                <div class="submenu">
+                    <button class="sub-btn" id="getHistoryBtn"><span class="sub-icon">📋</span> Мои сделки</button>
+                </div>
+            </div>
+
+            <div class="category-item">
+                <button class="main-category"><span>🗑️ Действия</span><span class="arrow">▶</span></button>
+                <div class="submenu">
+                    <button class="sub-btn" id="resetDemoBtn"><span class="sub-icon">🔄</span> Сбросить счет</button>
+                </div>
+            </div>
         </div>
 
         <div id="chart"></div>
 
         <div class="sidebar">
+            <div class="trade-info">
+                <div class="trade-info-row">
+                    <span class="trade-info-label">Текущая цена:</span>
+                    <span class="trade-info-value" id="current-price">—</span>
+                </div>
+                <div class="trade-info-row">
+                    <span class="trade-info-label">Пара:</span>
+                    <span class="trade-info-value" id="current-pair">BTC/USDT</span>
+                </div>
+                <div class="trade-info-row">
+                    <span class="trade-info-label">Изменение:</span>
+                    <span class="trade-info-value" id="price-change">—</span>
+                </div>
+            </div>
+
             <div>
-                <label>СУММА ($)</label>
-                <input type="number" id="amount" value="10">
+                <label>💰 СУММА СТАВКИ ($)</label>
+                <input type="number" id="amount" value="10" min="1" step="5">
             </div>
             <div>
-                <label>ВРЕМЯ (СЕК)</label>
-                <input type="number" id="time" value="5">
+                <label>⏱️ ВРЕМЯ ЭКСПИРАЦИИ (СЕК)</label>
+                <input type="number" id="time" value="60" min="5" max="300" step="5">
             </div>
-            <div id="status-bar">Рынок открыт</div>
-            <button class="btn btn-up" onclick="sendTrade('higher')">ВЫШЕ ▲</button>
-            <button class="btn btn-down" onclick="sendTrade('lower')">НИЖЕ ▼</button>
+
+            <div id="status-bar">🔄 Подключение к серверу...</div>
+
+            <div class="active-trades" id="active-trades-container"></div>
+
+            <button class="btn btn-up" id="btnUp">🚀 ВЫШЕ ▲</button>
+            <button class="btn btn-down" id="btnDown">📉 НИЖЕ ▼</button>
+
+            <button class="btn btn-reset" id="resetDemoBtnSidebar">🔄 Сбросить демо-счет</button>
         </div>
     </div>
 
+    <div class="profile-modal" id="profileModal">
+        <iframe class="profile-iframe" src="profile.html" id="profileIframe"></iframe>
+    </div>
+
     <script>
-        window.onload = () => {
+        let chart = null;
+        let lineSeries = null;
+        let socket = null;
+        
+        let currentPair = 'BTC/USDT';
+        let currentChartType = 'line';
+        let balance = 10000.00;
+        let totalProfit = 0;
+        let winRate = 0;
+        let activeTrades = [];
+        let countdownIntervals = [];
+        let tradeMarkers = [];
+        let lastPrice = 0;
+
+        const balanceElement = document.getElementById('balance-amount-header');
+        const totalProfitElement = document.getElementById('total-profit');
+        const winRateElement = document.getElementById('win-rate');
+        const currentPriceElement = document.getElementById('current-price');
+        const currentPairElement = document.getElementById('current-pair');
+        const statusBar = document.getElementById('status-bar');
+        const priceChangeElement = document.getElementById('price-change');
+
+        function initChart() {
             const chartElement = document.getElementById('chart');
-            
-            // Инициализация графика
-            const chart = LightweightCharts.createChart(chartElement, {
-                layout: { background: { color: '#0b0e11' }, textColor: '#d1d4dc' },
-                grid: { vertLines: { visible: false }, horzLines: { visible: false } },
-                width: chartElement.clientWidth,
-                height: chartElement.clientHeight,
-                rightPriceScale: { borderVisible: false },
-                timeScale: { borderVisible: false, timeVisible: true, secondsVisible: true },
-            });
+            if (!chartElement) return;
 
-            // Твой рабочий метод создания линии
-            let lineSeries;
             try {
-                lineSeries = chart.addSeries(LightweightCharts.LineSeries, {
-                    color: '#f0b90b',
-                    lineWidth: 2,
-                    priceLineVisible: false,
-                    lastValueVisible: false
+                chart = LightweightCharts.createChart(chartElement, {
+                    layout: { background: { color: '#0b0e11' }, textColor: '#d1d4dc' },
+                    grid: { vertLines: { color: '#2b3139' }, horzLines: { color: '#2b3139' } },
+                    width: chartElement.clientWidth,
+                    height: chartElement.clientHeight,
+                    timeScale: { timeVisible: true, secondsVisible: true, borderColor: '#2b3139' },
+                    rightPriceScale: { borderColor: '#2b3139' },
+                    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
                 });
-            } catch (e) {
-                lineSeries = chart.addLineSeries({
-                    color: '#f0b90b',
-                    lineWidth: 2,
-                    priceLineVisible: false,
-                    lastValueVisible: false
+                updateChartType();
+                window.addEventListener('resize', () => {
+                    if (chart) chart.applyOptions({ width: chartElement.clientWidth, height: chartElement.clientHeight });
                 });
+            } catch (error) {
+                console.error('Ошибка создания графика:', error);
             }
+        }
 
-            // Подключение к серверу
-            const socket = io(); 
-            let balance = 1000.00;
-
-            socket.on('price_update', (data) => {
-                lineSeries.update(data);
-            });
-
-            // Функция отправки сделки
-            window.sendTrade = (type) => {
-                const amount = parseFloat(document.getElementById('amount').value);
-                const time = parseInt(document.getElementById('time').value);
-                
-                if (amount > balance) {
-                    alert("Недостаточно средств");
-                    return;
+        function updateChartType() {
+            if (!chart) return;
+            try {
+                const series = chart.series();
+                if (series.length) chart.removeSeries(series[0]);
+                if (currentChartType === 'line') {
+                    lineSeries = chart.addLineSeries({ color: '#f0b90b', lineWidth: 2, priceLineVisible: false, lastValueVisible: true });
+                } else if (currentChartType === 'area') {
+                    lineSeries = chart.addAreaSeries({ topColor: 'rgba(240, 185, 11, 0.4)', bottomColor: 'rgba(240, 185, 11, 0.05)', lineColor: '#f0b90b', lineWidth: 2, priceLineVisible: false });
                 }
+                if (lineSeries && tradeMarkers.length) lineSeries.setMarkers(tradeMarkers);
+            } catch (error) {
+                console.error('Ошибка обновления типа графика:', error);
+            }
+        }
 
-                document.getElementById('status-bar').innerText = "Сделка открыта...";
-                socket.emit('make_trade', { type, amount, time });
+        function updatePriceOnChart(price, time) {
+            if (lineSeries) lineSeries.update({ time: time, value: price });
+        }
+
+        function addTradeMarker(trade) {
+            if (!lineSeries) return;
+            const marker = {
+                time: trade.openTime,
+                position: 'inBar',
+                color: trade.type === 'higher' ? '#2ebd85' : '#f6465d',
+                shape: trade.type === 'higher' ? 'arrowUp' : 'arrowDown',
+                text: `${trade.type === 'higher' ? 'BUY' : 'SELL'} $${trade.amount} @ $${trade.startPrice.toFixed(2)}`,
+                id: trade.tradeId
             };
+            tradeMarkers.push(marker);
+            lineSeries.setMarkers(tradeMarkers);
+        }
 
-            socket.on('trade_result', (data) => {
-                balance += data.profit;
-                document.getElementById('balance-amount').innerText = balance.toFixed(2);
-                document.getElementById('status-bar').innerText = `${data.result}: ${data.profit > 0 ? '+' : ''}${data.profit.toFixed(2)}$`;
-                setTimeout(() => { document.getElementById('status-bar').innerText = "Рынок открыт"; }, 3000);
+        function updateTradeMarkerResult(tradeId, isWin, profit, endPrice) {
+            if (!lineSeries) return;
+            const markerIndex = tradeMarkers.findIndex(m => m.id === tradeId);
+            if (markerIndex !== -1) {
+                tradeMarkers[markerIndex].color = isWin ? '#2ebd85' : '#f6465d';
+                tradeMarkers[markerIndex].text = `${isWin ? '✅ WIN' : '❌ LOSS'} ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`;
+                const exitMarker = {
+                    time: Math.floor(Date.now() / 1000),
+                    position: 'inBar',
+                    color: isWin ? '#2ebd85' : '#f6465d',
+                    shape: 'circle',
+                    text: `Exit: $${endPrice.toFixed(2)}`,
+                    id: `${tradeId}_exit`
+                };
+                tradeMarkers.push(exitMarker);
+                lineSeries.setMarkers(tradeMarkers);
+            }
+        }
+
+        function updateBalanceUI() {
+            balanceElement.innerText = `$${balance.toFixed(2)}`;
+        }
+
+        function updateStatsUI(profit, winrate) {
+            totalProfit = profit;
+            winRate = winrate;
+            totalProfitElement.innerText = `${profit >= 0 ? '+' : ''}$${Math.abs(profit).toFixed(2)}`;
+            totalProfitElement.className = `stat-value ${profit >= 0 ? 'profit' : 'loss'}`;
+            winRateElement.innerText = `${winrate}%`;
+        }
+
+        function updatePriceChange(currentPrice, previousPrice) {
+            if (previousPrice && previousPrice > 0) {
+                const change = currentPrice - previousPrice;
+                const changePercent = (change / previousPrice) * 100;
+                priceChangeElement.innerHTML = `${change >= 0 ? '▲' : '▼'} ${Math.abs(change).toFixed(2)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`;
+                priceChangeElement.style.color = change >= 0 ? '#2ebd85' : '#f6465d';
+            } else {
+                priceChangeElement.innerHTML = '—';
+            }
+        }
+
+        function renderActiveTrades() {
+            const container = document.getElementById('active-trades-container');
+            countdownIntervals.forEach(interval => clearInterval(interval));
+            countdownIntervals = [];
+            if (!activeTrades.length) {
+                container.innerHTML = '<div style="text-align: center; color: #848e9c; padding: 15px;">Нет активных сделок</div>';
+                return;
+            }
+            container.innerHTML = activeTrades.map(trade => {
+                const timeLeft = Math.max(0, trade.expirationTime - Math.floor(Date.now() / 1000));
+                return `<div class="active-trade-item" data-trade-id="${trade.tradeId}">
+                    <div class="active-trade-header"><span>${trade.pair} ${trade.type === 'higher' ? '▲ ВЫШЕ' : '▼ НИЖЕ'}</span><span class="countdown" id="countdown-${trade.tradeId}">${timeLeft}s</span></div>
+                    <div>Ставка: $${trade.amount} | Цена входа: $${trade.startPrice.toFixed(2)}</div>
+                </div>`;
+            }).join('');
+            activeTrades.forEach(trade => {
+                let timeLeft = trade.expirationTime - Math.floor(Date.now() / 1000);
+                const interval = setInterval(() => {
+                    timeLeft--;
+                    const el = document.getElementById(`countdown-${trade.tradeId}`);
+                    if (el) el.innerText = `${Math.max(0, timeLeft)}s`;
+                    if (timeLeft <= 0) clearInterval(interval);
+                }, 1000);
+                countdownIntervals.push(interval);
             });
+        }
 
-            window.addEventListener('resize', () => {
-                chart.applyOptions({ 
-                    width: chartElement.clientWidth, 
-                    height: chartElement.clientHeight 
+        function initSocket() {
+            socket = io();
+            socket.on('connect', () => {
+                statusBar.innerHTML = '🟢 Рынок: ' + currentPair;
+                socket.emit('subscribe', currentPair);
+            });
+            socket.on('price_update', (data) => {
+                if (data.pairs && data.pairs[currentPair]) {
+                    const price = parseFloat(data.pairs[currentPair]);
+                    if (!isNaN(price) && price > 0) {
+                        const previousPrice = lastPrice;
+                        lastPrice = price;
+                        updatePriceChange(price, previousPrice);
+                        currentPriceElement.innerText = `$${price.toFixed(2)}`;
+                        updatePriceOnChart(price, data.time);
+                    }
+                }
+            });
+            socket.on('balance_update', (data) => {
+                balance = data.balance;
+                updateBalanceUI();
+                updateStatsUI(data.totalProfit - data.totalLoss, data.winRate);
+            });
+            socket.on('trade_opened', (data) => {
+                activeTrades.push(data);
+                renderActiveTrades();
+                addTradeMarker(data);
+                statusBar.innerHTML = `📊 Сделка открыта: ${data.type === 'higher' ? 'ВЫШЕ ▲' : 'НИЖЕ ▼'} на $${data.amount}`;
+                setTimeout(() => { if (statusBar.innerHTML.includes('Сделка открыта')) statusBar.innerHTML = '🟢 Рынок: ' + currentPair; }, 3000);
+            });
+            socket.on('trade_result', (data) => {
+                activeTrades = activeTrades.filter(t => t.tradeId !== data.tradeId);
+                renderActiveTrades();
+                updateTradeMarkerResult(data.tradeId, data.result === 'WIN', data.profit, data.endPrice);
+                statusBar.innerHTML = `${data.result === 'WIN' ? '✅ ПОБЕДА' : '❌ ПОРАЖЕНИЕ'}: ${data.profit >= 0 ? '+' : ''}$${data.profit.toFixed(2)}`;
+                setTimeout(() => { statusBar.innerHTML = '🟢 Рынок: ' + currentPair; }, 4000);
+            });
+            socket.on('trade_error', (data) => { alert(data.message); });
+            socket.on('demo_reset', () => {
+                activeTrades = [];
+                tradeMarkers = [];
+                if (lineSeries) lineSeries.setMarkers([]);
+                renderActiveTrades();
+                statusBar.innerHTML = '🔄 Демо-счет сброшен до $10,000';
+                setTimeout(() => { statusBar.innerHTML = '🟢 Рынок: ' + currentPair; }, 3000);
+            });
+            socket.on('history_data', (data) => {
+                if (data.trades && data.trades.length) {
+                    alert(`История сделок:\n${data.trades.map(t => `${t.type}: ${t.amount}$ → ${t.profit >= 0 ? '+' : ''}${t.profit}$`).join('\n')}`);
+                } else {
+                    alert('История сделок пуста');
+                }
+            });
+            socket.on('disconnect', () => { statusBar.innerHTML = '🔴 Нет соединения с сервером'; });
+        }
+
+        function sendTrade(type) {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const time = parseInt(document.getElementById('time').value);
+            if (isNaN(amount) || amount < 1) { alert("Минимальная ставка: $1"); return; }
+            if (amount > balance) { alert(`Недостаточно средств! Баланс: $${balance.toFixed(2)}`); return; }
+            if (!socket || !socket.connected) { alert("Нет подключения к серверу"); return; }
+            socket.emit('make_trade', { type, amount, time, pair: currentPair });
+        }
+
+        function resetDemo() {
+            if (confirm('Вы уверены, что хотите сбросить демо-счет до $10,000?')) {
+                if (socket && socket.connected) socket.emit('reset_demo');
+            }
+        }
+
+        function getHistory() {
+            if (socket && socket.connected) socket.emit('get_history');
+            else alert('Нет подключения к серверу');
+        }
+
+        function openProfile() {
+            document.getElementById('profileModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function bindEvents() {
+            document.getElementById('btnUp').addEventListener('click', () => sendTrade('higher'));
+            document.getElementById('btnDown').addEventListener('click', () => sendTrade('lower'));
+            document.querySelectorAll('#resetDemoBtn, #resetDemoBtnSidebar').forEach(btn => btn.addEventListener('click', resetDemo));
+            document.getElementById('getHistoryBtn').addEventListener('click', getHistory);
+            document.querySelectorAll('[data-pair]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    currentPair = this.getAttribute('data-pair');
+                    document.querySelectorAll('[data-pair]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentPairElement.innerText = currentPair;
+                    statusBar.innerHTML = '🟢 Рынок: ' + currentPair;
+                    if (lineSeries) { lineSeries.setData([]); tradeMarkers = []; lineSeries.setMarkers([]); }
+                    if (socket && socket.connected) socket.emit('subscribe', currentPair);
                 });
             });
-        };
+            document.querySelectorAll('[data-chart-type]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    currentChartType = this.getAttribute('data-chart-type');
+                    document.querySelectorAll('[data-chart-type]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    updateChartType();
+                });
+            });
+            document.getElementById('notificationsBtn').addEventListener('click', () => alert('🔔 Уведомления: У вас нет новых уведомлений'));
+            document.getElementById('profileBtn').addEventListener('click', openProfile);
+            document.getElementById('depositBtn').addEventListener('click', () => alert('💳 Пополнение счета\n\nФункция в разработке. Демо-баланс: $' + balance.toFixed(2)));
+            document.getElementById('profileModal').addEventListener('click', (e) => { if (e.target === document.getElementById('profileModal')) closeProfileModal(); });
+            window.addEventListener('message', (event) => { if (event.data === 'closeProfileModal') closeProfileModal(); });
+        }
+
+        function initAccordion() {
+            document.querySelectorAll('.main-category').forEach(button => {
+                button.addEventListener('click', () => {
+                    const submenu = button.nextElementSibling;
+                    if (submenu && submenu.classList.contains('submenu')) {
+                        button.classList.toggle('open');
+                        submenu.classList.toggle('open');
+                    }
+                });
+            });
+        }
+
+        window.addEventListener('load', () => {
+            initChart();
+            initSocket();
+            bindEvents();
+            initAccordion();
+            currentPairElement.innerText = currentPair;
+            updateBalanceUI();
+        });
     </script>
 </body>
 </html>
