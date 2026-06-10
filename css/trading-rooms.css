@@ -10,6 +10,7 @@
     --accent-tertiary: #00D4AA;
     --accent-quaternary: #FF9F0A;
     --green: #30D158;
+    --dark-green: #177a26;
     --red: #FF453A;
     --orange: #FF9F0A;
     --text-primary: #ffffff;
@@ -196,6 +197,8 @@ header {
     justify-content: center;
     text-align: center;
     position: relative;
+    padding-top: 90px;   
+    box-sizing: border-box;
 }
 
 .rooms h1 {
@@ -234,6 +237,12 @@ header {
     overflow: hidden;
 }
 
+.room p {
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
 .room div {
     font-size: 14px;
     font-weight: 500;
@@ -241,4 +250,69 @@ header {
     display: flex;
     justify-content: space-between; 
     align-items: center;
+}
+
+.participants {
+    color: var(--green)
+}
+
+.room-status {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.room.active-room {
+    border-color: var(--dark-green);
+    box-shadow: 0 8px 32px var(--glass-shadow), 
+                inset 0 0 15px rgba(48, 209, 88, 0.1);
+    gap: 20px;
+}
+.room.active-room .room-status {
+    color: var(--green);
+}
+
+.room.waiting-room {
+    opacity: 0.85; 
+}
+.room.waiting-room .room-status {
+    color: var(--orange);
+}
+
+.room.waiting-room:hover {
+    border-color: var(--orange);
+}
+
+.room .join-btn {
+    display: none;
+    
+}
+
+.room.waiting-room .join-btn {
+    display: block;
+    width: 100%;
+    margin-top: 15px;
+    padding: 12px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px var(--accent-glow);
+    transition: all 0.2s ease;
+}
+
+.room.waiting-room .join-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--accent-glow);
+    filter: brightness(1.1);
+}
+
+.room.waiting-room .join-btn:active {
+    transform: translateY(0);
 }
