@@ -119,6 +119,12 @@ header {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+header.scrolled {
+  top: 8px;
+  width: calc(100% - 32px);
+  background: rgba(20, 20, 20, 0.7);
+}
+
 .logo {
     display: flex;
     align-items: center;
@@ -204,6 +210,7 @@ header {
     justify-content: center;
     text-align: center;
     position: relative;
+    padding: 120px 24px 80px;
 }
 
 .forum h1 {
@@ -227,6 +234,21 @@ header {
     font-size: 16px;
     font-weight: 600;
     letter-spacing: 1px;
+}
+
+.content {
+    display: flex;
+    width: 100%;
+}
+
+.left-panel {
+    flex: 0 0 75%;
+    max-width: 75%;
+}
+
+.right-panel {
+    flex: 0 0 25%; 
+    max-width: 25%;
 }
 
 footer {

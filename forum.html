@@ -31,11 +31,58 @@
         </header>
         <div class="forum">
             <h1>Форум</h1>
-            <button class="new-theme glass-strong">Создать новую тему</button>
             <div class="content">
-                <div class="main-content">
-
-                    <nav class="pagination" aria-label="Постраничная навигация">
+                <div class="left-panel">
+                    <div class="main-content">
+                        <button class="new-theme glass-strong">Создать новую тему</button>
+                        <section class="category">
+                            <h2>Категория 1</h2>
+                            <ul class="theme-list">
+                                <li>
+                                    <h3>Тема: Какой-то вопрос</h3>
+                                    <div>Автор: кто-то</div>
+                                    <div>Ответы: 10</div>
+                                    <div>Просмотры: 50</div>
+                                </li>
+                                <li>
+                                    <h3>Тема: Ещё какой-то вопрос</h3>
+                                    <div>Автор: Господин Лягушка</div>
+                                    <div>Ответы: 40</div>
+                                    <div>Просмотры: 500</div>
+                                </li>
+                                <li>
+                                    <h3>Тема: Последний вопрос из этой темы</h3>
+                                    <div>Автор: человек</div>
+                                    <div>Ответы: 2</div>
+                                    <div>Просмотры: 5</div>
+                                </li>
+                            </ul>
+                        </section>
+                        <section class="category">
+                            <h2>Категория 2</h2>
+                            <ul class="theme-list">
+                                <li>
+                                    <h3>Тема: Интересный вопрос</h3>
+                                    <div>Автор: неизвестно кто</div>
+                                    <div>Ответы: 10</div>
+                                    <div>Просмотры: 100</div>
+                                </li>
+                                <li>
+                                    <h3>Тема: Вопрос</h3>
+                                    <div>Автор: пользователь</div>
+                                    <div>Ответы: 20</div>
+                                    <div>Просмотры: 40</div>
+                                </li>
+                                <li>
+                                    <h3>Тема: что-то</h3>
+                                    <div>Автор: кто-то</div>
+                                    <div>Ответы: 9</div>
+                                    <div>Просмотры: 15</div>
+                                </li>
+                            </ul>
+                        </section>
+                    </div>
+                    <nav class="pagination">
                         <ul class="pagination-list">
                             <!-- Кнопка назад -->
                             <li class="pagination-item">
@@ -73,20 +120,53 @@
                     </nav>
                 </div>
                 <div class="right-panel">
-
+                    <div class="small-profile">
+                        <a href="#" class="small-profile-link">Профиль</a>
+                        <div>Nickname</div>
+                        <div>Сообщения: 20</div>
+                        <div>Уведомления: 1</div>
+                    </div>
+                    <section>
+                        <h2>Популярные теги</h2>
+                        <ul class="tags-list">
+                            <li><a href="#" class="tag-link">#Тег1</a></li>
+                            <li><a href="#" class="tag-link">#Тег2</a></li>
+                            <li><a href="#" class="tag-link">#Тег3</a></li>
+                            <li><a href="#" class="tag-link">#Тег4</a></li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Статистика форума</h2>
+                        <div>Пользователей: 100</div>
+                        <div>Категории: 3</div>
+                        <div>Тем создано: 10</div>
+                        <div>Онлайн: 14</div>
+                    </section>
+                    <section>
+                        <h2>Правила форума</h2>
+                        <ol class="rules-list">
+                            <li class="rule">Уважайте других</li>
+                            <li class="rule">Не спамьте в темах</li>
+                            <li class="rule">Пишите по теме</li>
+                            <li class="rule">Перед созданием новой темы, убедитесь что она ещё не создана</li>
+                            <li class="rule">Выбирайте правильный раздел</li>
+                            <li class="rule">Оскорбления и нецензурная лексика запрещены</li>
+                        </ol>
+                    </section>
                 </div>
             </div>
             <footer class="glass footer">
-                <div>
-                    <span>© 2026</span>
-                    <div class="logo-text">LUMIT <span>Trade</span></div>
-                    <span>Все права защищены</span>
-                </div>
+                <span>© 2026 LumitTrade. Все права защищены.</span>
                 <nav class="nav-menu">
                     <a href="technical-support.html" class="nav-link">Помощь</a>
                     <a href="#" class="nav-link">Контакты</a>
                 </nav>
             </footer>
         </div>
+        <script>
+            window.addEventListener('scroll', () => {
+                document.getElementById('header').classList.toggle('scrolled', window.scrollY > 50);
+            });
+        </script>
     </body>
 </html>
