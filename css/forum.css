@@ -163,7 +163,7 @@ header.scrolled {
 }
 
 .nav-link {
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
     text-decoration: none;
     font-size: 15px;
     font-weight: 500;
@@ -174,7 +174,7 @@ header.scrolled {
 }
 
 .nav-link:hover {
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
 }
 
 .profile-link {
@@ -210,7 +210,8 @@ header.scrolled {
     justify-content: center;
     text-align: center;
     position: relative;
-    padding: 120px 24px 80px;
+    padding: 120px 30px 80px;
+    gap: 50px;
 }
 
 .forum h1 {
@@ -226,6 +227,29 @@ header.scrolled {
     animation: fadeInUp 0.8s ease-out 0.1s both;
 }
 
+.content {
+    display: flex;
+    width: 100%;
+}
+
+a {
+    text-decoration: none;
+}
+a:link { color: var(--text-primary); }    /* Непосещенная (обычная) ссылка */
+a:visited { color: var(--text-secondary); } /* Ссылка, по которой пользователь уже кликал */
+a:hover { color: var(--green); }   /* Курсор мыши находится над ссылкой */
+a:active { color: var(--orange); }  /* Момент самого клика по ссылке */
+
+.left-panel {
+    flex: 0 0 70%;
+    max-width: 70%;
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+    padding: 10px;
+    animation: fadeInUp 1s ease-out 0.5s both;
+}
+
 .new-theme {
     display: block;
     padding: 10px;
@@ -234,21 +258,116 @@ header.scrolled {
     font-size: 16px;
     font-weight: 600;
     letter-spacing: 1px;
-}
-
-.content {
-    display: flex;
     width: 100%;
+    max-width: 250px;
+    align-self: center;
 }
 
-.left-panel {
-    flex: 0 0 75%;
-    max-width: 75%;
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.category {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.theme-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    list-style-type: none;
+}
+
+.theme-list li {
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.question-statistics {
+    display: flex;
+    gap: 30px;
+}
+
+.pagination {
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary)
+}
+
+.pagination-list {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    list-style-type: none;
 }
 
 .right-panel {
-    flex: 0 0 25%; 
-    max-width: 25%;
+    flex: 0 0 30%; 
+    max-width: 30%;
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+    padding: 10px;
+    animation: fadeInUp 1s ease-out 0.8s both;
+}
+
+.right-section {
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.right-section h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    align-self: center;
+}
+
+.right-section.small-profile {
+    align-items: center;
+}
+
+.nickname {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.profile-statistics {
+    display: flex;
+    gap: 10px;
+}
+
+.tags-list {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 15px;
+    list-style-type: none;
+}
+
+.rules-list {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    list-style-position: inside;
+}
+
+.rule {
+    text-align: left;
 }
 
 footer {

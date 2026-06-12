@@ -33,63 +33,80 @@
             <h1>Форум</h1>
             <div class="content">
                 <div class="left-panel">
+                    <button class="new-theme glass-strong">Создать новую тему</button>
                     <div class="main-content">
-                        <button class="new-theme glass-strong">Создать новую тему</button>
                         <section class="category">
                             <h2>Категория 1</h2>
                             <ul class="theme-list">
-                                <li>
-                                    <h3>Тема: Какой-то вопрос</h3>
-                                    <div>Автор: кто-то</div>
-                                    <div>Ответы: 10</div>
-                                    <div>Просмотры: 50</div>
+                                <li class="glass">
+                                    <h3>Тема:<a href="#" class="theme-link"> Что делать, если что-то там где-то там бла-бла-бла и так далее</a></h3>
+                                    <div>Автор:<a href="#" class="autor"> кто-то</a></div>
+                                    <div class="question-statistics">
+                                        <span>Ответы: 10</span>
+                                        <span>Просмотры: 50</span>
+                                    </div>
                                 </li>
-                                <li>
-                                    <h3>Тема: Ещё какой-то вопрос</h3>
-                                    <div>Автор: Господин Лягушка</div>
-                                    <div>Ответы: 40</div>
-                                    <div>Просмотры: 500</div>
+                                <li class="glass">
+                                    <h3>Тема:<a href="#" class="theme-link"> Что делать, если что-то там где-то там бла-бла-бла и так далее и тому подобное</a></h3>
+                                    <div>Автор:<a href="#" class="autor"> Господин Лягушка</a></div>
+                                    <div class="question-statistics">
+                                        <span>Ответы: 50</span>
+                                        <span>Просмотры: 200</span>
+                                    </div>
                                 </li>
-                                <li>
-                                    <h3>Тема: Последний вопрос из этой темы</h3>
-                                    <div>Автор: человек</div>
-                                    <div>Ответы: 2</div>
-                                    <div>Просмотры: 5</div>
+                                <li class="glass">
+                                    <h3>Тема:<a href="#" class="theme-link"> Пример темы</a></h3>
+                                    <div>Автор:<a href="#" class="autor"> человек</a></div>
+                                    <div class="question-statistics">
+                                        <span>Ответы: 4</span>
+                                        <span>Просмотры: 5</span>
+                                    </div>
                                 </li>
                             </ul>
                         </section>
                         <section class="category">
                             <h2>Категория 2</h2>
                             <ul class="theme-list">
-                                <li>
-                                    <h3>Тема: Интересный вопрос</h3>
-                                    <div>Автор: неизвестно кто</div>
-                                    <div>Ответы: 10</div>
-                                    <div>Просмотры: 100</div>
+                                <li class="glass">
+                                    <h3>Тема:<a href="#" class="theme-link"> Пример вопроса</a></h3>
+                                    <div>Автор:<a href="#" class="autor"> Пользователь</a></div>
+                                    <div class="question-statistics">
+                                        <span>Ответы: 8</span>
+                                        <span>Просмотры: 30</span>
+                                    </div>
                                 </li>
-                                <li>
-                                    <h3>Тема: Вопрос</h3>
-                                    <div>Автор: пользователь</div>
-                                    <div>Ответы: 20</div>
-                                    <div>Просмотры: 40</div>
+                                <li class="glass">
+                                    <h3>Тема:<a href="#" class="theme-link"> Какой-то длинный текст о чём-то, связянном с этим сайтом и так далее бла-бла-бла что-то там один два три</a></h3>
+                                    <div>Автор:<a href="#" class="autor"> Andrey2005</a></div>
+                                    <div class="question-statistics">
+                                        <span>Ответы: 10</span>
+                                        <span>Просмотры: 100</span>
+                                    </div>
                                 </li>
-                                <li>
-                                    <h3>Тема: что-то</h3>
-                                    <div>Автор: кто-то</div>
-                                    <div>Ответы: 9</div>
-                                    <div>Просмотры: 15</div>
+                                <li class="glass">
+                                    <h3>Тема:<a href="#" class="theme-link"> Что делать, если что-то там где-то там бла-бла-бла и так далее</a></h3>
+                                    <div>Автор:<a href="#" class="autor"> кто-то</a></div>
+                                    <div class="question-statistics">
+                                        <span>Ответы: 26</span>
+                                        <span>Просмотры: 100</span>
+                                    </div>
+                                </li>
+                                <li class="glass">
+                                    <h3>Тема:<a href="#" class="theme-link"> Что делать, если что-то там где-то там бла-бла-бла и так далее</a></h3>
+                                    <div>Автор:<a href="#" class="autor"> кто-то</a></div>
+                                    <div class="question-statistics">
+                                        <span>Ответы: 11</span>
+                                        <span>Просмотры: 55</span>
+                                    </div>
                                 </li>
                             </ul>
                         </section>
                     </div>
-                    <nav class="pagination">
+                    <nav class="pagination glass">
                         <ul class="pagination-list">
-                            <!-- Кнопка назад -->
                             <li class="pagination-item">
                                 <a href="#" class="pagination-link prev disabled" tabindex="-1">Назад</a>
                             </li>
-
-                            <!-- Номера страниц -->
                             <li class="pagination-item">
                                 <span class="pagination-link current">1</span>
                             </li>
@@ -102,47 +119,54 @@
                             <li class="pagination-item">
                                 <a href="#" class="pagination-link">4</a>
                             </li>
-
-                            <!-- Многоточие -->
                             <li class="pagination-item">
                                 <span class="pagination-separator">&hellip;</span>
                             </li>
-
                             <li class="pagination-item">
                                 <a href="#" class="pagination-link">12</a>
                             </li>
-
-                            <!-- Кнопка Вперед -->
                             <li class="pagination-item">
-                                <a href="#" class="pagination-link next">Вперед</a>
+                                <a href="#" class="pagination-link next">
+                                    <svg xmlns="http://w3.org" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
                             </li>
                         </ul>
                     </nav>
                 </div>
                 <div class="right-panel">
-                    <div class="small-profile">
-                        <a href="#" class="small-profile-link">Профиль</a>
-                        <div>Nickname</div>
-                        <div>Сообщения: 20</div>
-                        <div>Уведомления: 1</div>
-                    </div>
-                    <section>
+                    <section class="right-section small-profile glass">
+                        <a href="profile.html" class="small-profile-link">
+                            <h2>Профиль</h2>
+                        </a>
+                        <div class="nickname">Nickname</div>
+                        <div class="profile-statistics">
+                            <span>Сообщения: 20</span>
+                            <span>Уведомления: 1</span>
+                        </div>
+                    </section>
+                    <section class="right-section glass">
                         <h2>Популярные теги</h2>
                         <ul class="tags-list">
-                            <li><a href="#" class="tag-link">#Тег1</a></li>
+                            <li><a href="#" class="tag-link">#РедкийТег1</a></li>
                             <li><a href="#" class="tag-link">#Тег2</a></li>
                             <li><a href="#" class="tag-link">#Тег3</a></li>
-                            <li><a href="#" class="tag-link">#Тег4</a></li>
+                            <li><a href="#" class="tag-link">#ПопулярныйТег4</a></li>
+                            <li><a href="#" class="tag-link">#Тег5</a></li>
+                            <li><a href="#" class="tag-link">#Тег6</a></li>
+                            <li><a href="#" class="tag-link">#Тег7</a></li>
+
                         </ul>
                     </section>
-                    <section>
+                    <section class="right-section glass">
                         <h2>Статистика форума</h2>
                         <div>Пользователей: 100</div>
                         <div>Категории: 3</div>
                         <div>Тем создано: 10</div>
                         <div>Онлайн: 14</div>
                     </section>
-                    <section>
+                    <section class="right-section glass">
                         <h2>Правила форума</h2>
                         <ol class="rules-list">
                             <li class="rule">Уважайте других</li>
