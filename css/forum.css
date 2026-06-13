@@ -163,7 +163,7 @@ header.scrolled {
 }
 
 .nav-link {
-    color: var(--text-secondary) !important;
+    color: var(--text-secondary);
     text-decoration: none;
     font-size: 15px;
     font-weight: 500;
@@ -174,7 +174,7 @@ header.scrolled {
 }
 
 .nav-link:hover {
-    color: var(--text-primary) !important;
+    color: var(--text-primary);
 }
 
 .profile-link {
@@ -232,14 +232,6 @@ header.scrolled {
     width: 100%;
 }
 
-a {
-    text-decoration: none;
-}
-a:link { color: var(--text-primary); }    /* Непосещенная (обычная) ссылка */
-a:visited { color: var(--text-secondary); } /* Ссылка, по которой пользователь уже кликал */
-a:hover { color: var(--green); }   /* Курсор мыши находится над ссылкой */
-a:active { color: var(--orange); }  /* Момент самого клика по ссылке */
-
 .left-panel {
     flex: 0 0 70%;
     max-width: 70%;
@@ -276,6 +268,13 @@ a:active { color: var(--orange); }  /* Момент самого клика по
     gap: 15px;
 }
 
+.category h2{
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--accent);
+}
+
 .theme-list {
     display: flex;
     flex-direction: column;
@@ -292,9 +291,51 @@ a:active { color: var(--orange); }  /* Момент самого клика по
     gap: 7px;
 }
 
+.theme-link {
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.autor {
+    text-decoration: none;
+    color: var(--accent);
+    font-size: 16px;
+}
+
+.forum-link {
+    position: relative;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.forum-link::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    transform: scaleX(0); 
+    height: 2px; 
+    bottom: -2px;
+    left: 0;
+    background: linear-gradient(90deg, var(--accent), var(--accent-secondary)); 
+    transform-origin: bottom center;
+    transition: transform 0.3s ease;
+}
+
+.forum-link:hover {
+    color: var(--text-primary);
+    text-shadow: 0 0 12px var(--accent-glow);
+}
+
+.forum-link:hover::after {
+    transform: scaleX(1);
+}
+
+
 .question-statistics {
     display: flex;
     gap: 30px;
+    font-size: 16px;
+    color: var(--text-secondary);
 }
 
 .pagination {
@@ -308,6 +349,23 @@ a:active { color: var(--orange); }  /* Момент самого клика по
     justify-content: center;
     gap: 30px;
     list-style-type: none;
+}
+
+.pagination-link {
+    text-decoration: none;
+    color: var(--text-secondary);
+}
+
+.pagination-link:hover {
+    color: var(--text-primary);
+}
+
+.pagination-link.current {
+    color: var(--accent);
+}
+
+.pagination-separator {
+    color: var(--text-secondary);
 }
 
 .right-panel {
@@ -331,7 +389,7 @@ a:active { color: var(--orange); }  /* Момент самого клика по
 }
 
 .right-section h2 {
-    font-size: 22px;
+    font-size: 25px;
     font-weight: 700;
     letter-spacing: 1px;
     align-self: center;
@@ -341,14 +399,40 @@ a:active { color: var(--orange); }  /* Момент самого клика по
     align-items: center;
 }
 
+.small-profile-link {
+    text-decoration: none;
+    color: var(--text-primary);
+    display: inline-block;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.small-profile-link h2 {
+    transition: color 0.3s ease, text-shadow 0.3s ease; 
+}
+
+.small-profile-link:hover {
+    transform: scale(1.05); 
+}
+
+.small-profile-link:hover h2 {
+    color: var(--accent); 
+    text-shadow: 0 0 15px var(--accent-glow); 
+}
+
+.small-profile-link:active {
+    transform: scale(0.98); 
+}
+
 .nickname {
     font-size: 20px;
     font-weight: 600;
+    color: var(--accent);
 }
 
 .profile-statistics {
     display: flex;
     gap: 10px;
+    color: var(--text-secondary);
 }
 
 .tags-list {
@@ -356,6 +440,15 @@ a:active { color: var(--orange); }  /* Момент самого клика по
     flex-flow: row wrap;
     gap: 15px;
     list-style-type: none;
+}
+
+.tag-link {
+    text-decoration: none;
+    color: var(--accent);
+}
+
+.statistics div {
+    color: var(--text-secondary);
 }
 
 .rules-list {
@@ -368,6 +461,7 @@ a:active { color: var(--orange); }  /* Момент самого клика по
 
 .rule {
     text-align: left;
+    color: var(--text-secondary);
 }
 
 footer {
