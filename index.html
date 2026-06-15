@@ -992,9 +992,109 @@ footer {
   .modal { padding: 36px 24px; margin: 16px; }
   .modal-header h2 { font-size: 24px; }
 }
+  /* --- DISCLAIMER BANNER (RKN COMPLIANCE) --- */
+.rkn-disclaimer-banner {
+  position: relative;
+  width: 100%;
+  background: linear-gradient(90deg, rgba(255, 69, 58, 0.15) 0%, rgba(255, 159, 10, 0.15) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 159, 10, 0.3);
+  padding: 12px 24px;
+  z-index: 9999; /* Поверх всех элементов */
+}
+
+.rkn-disclaimer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.rkn-badge {
+  background: var(--orange);
+  color: #000000;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.rkn-text {
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 400;
+  flex-grow: 1;
+}
+
+.rkn-text strong {
+  color: var(--orange);
+}
+
+.rkn-text u {
+  text-decoration-color: var(--red);
+  font-weight: 600;
+}
+
+.rkn-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 8px;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.rkn-close-btn:hover {
+  color: var(--text-primary);
+}
+
+/* Смещение шапки, чтобы она не перекрывала баннер */
+header {
+  top: 76px !important;
+}
+header.scrolled {
+  top: 64px !important;
+}
+
+@media (max-width: 768px) {
+  .rkn-disclaimer-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .rkn-close-btn {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+  }
+  header { top: 140px !important; }
+}
+
 </style>
 </head>
 <body>
+  <!-- ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР (ДЛЯ РКН) -->
+<div class="rkn-disclaimer-banner">
+  <div class="rkn-disclaimer-content">
+    <div class="rkn-badge">УЧЕБНЫЙ ПРОЕКТ</div>
+    <p class="rkn-text">
+      <strong>Внимание!</strong> Данный сайт является исключительно демонстрационным учебным макетом (пет-проектом) и находится в разработке. 
+      Платформа <strong>LUMIT Trade</strong> вымышлена. Сайт <u>не оказывает</u> финансовых услуг, не принимает платежи, 
+      не осуществляет торговлю реальными бинарными опционами или иными активами. Все данные, графики и котировки являются симуляцией.
+    </p>
+    <button class="rkn-close-btn" onclick="this.parentElement.parentElement.style.display='none';">&times;</button>
+  </div>
+</div>
+
 
 <div class="ambient-bg">
   <div class="ambient-orb"></div>
