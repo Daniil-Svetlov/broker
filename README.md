@@ -1,5 +1,9 @@
 # 🚀 LUMIT Trade — Next-Gen Binary Options & Trading Platform
 
+https://daniil-svetlov.github.io/broker/
+
+## ⚠️ платофрма находится в стадии разработки!
+
 ![LUMIT Trade Banner](https://img.shields.io/badge/Platform-LUMIT_Trade-007AFF?style=for-the-badge&logo=computercraft&logoColor=white)
 ![Status](https://img.shields.io/badge/Stage-MVP_Development-30D158?style=for-the-badge)
 ![UI Style](https://img.shields.io/badge/Design-Glassmorphism_Dark-5856D6?style=for-the-badge)
