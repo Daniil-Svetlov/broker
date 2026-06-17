@@ -1086,6 +1086,76 @@ footer {
     top: 12px;
   }
 }
+
+/* Прокачка иконок преимуществ */
+.feature-icon svg {
+  color: var(--text-primary);
+  opacity: 0.9;
+  transition: transform 0.3s ease;
+}
+.feature-card:hover .feature-icon svg {
+  transform: scale(1.1);
+}
+
+/* Дорогой неоновый эффект для карточек активов */
+.asset-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.asset-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(800px circle at var(--mouse-x, 0px) var(--mouse-y, 0px), rgba(255,255,255,0.06), transparent 40%);
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.asset-card:hover::after {
+  opacity: 1;
+}
+.asset-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Адаптация кнопок CALL / PUT под общий минимализм */
+.btn-call {
+  background: rgba(48, 209, 88, 0.1);
+  border: 1px solid rgba(48, 209, 88, 0.3);
+  color: var(--green);
+  box-shadow: none;
+}
+.btn-call:hover {
+  background: var(--green);
+  color: #000;
+  box-shadow: 0 0 20px rgba(48, 209, 88, 0.4);
+}
+.btn-put {
+  background: rgba(255, 69, 58, 0.1);
+  border: 1px solid rgba(255, 69, 58, 0.3);
+  color: var(--red);
+  box-shadow: none;
+}
+.btn-put:hover {
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(255, 69, 58, 0.4);
+}
+
+/* Эстетичные инпуты для формы */
+.form-group input {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.2px;
+}
+.form-group input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
     </style>
 </head>
 <body>
@@ -1094,7 +1164,7 @@ footer {
   <div class="rkn-disclaimer-content">
     <div class="rkn-badge">УЧЕБНЫЙ ПРОЕКТ</div>
     <p class="rkn-text">
-      <strong>Внимание!</strong> Данный site является исключительно демонстрационным учебным макетом (пет-проектом) и находится в разработке. 
+      <strong>Внимание!</strong> Данный сайт является исключительно демонстрационным учебным макетом (пет-проектом) и находится в разработке. 
       Платформа <strong>LUMIT Trade</strong> вымышлена. Сайт <u>не оказывает</u> финансовых услуг, не принимает платежи, 
       не осуществляет торговлю реальными бинарными опционами или иными активами. Все данные, графики и котировки являются симуляцией.
     </p>
@@ -1218,34 +1288,46 @@ footer {
     <p>Технологии институционального уровня в элегантном интерфейсе</p>
   </div>
 
-  <div class="features-grid">
+<div class="features-grid">
     <div class="feature-card glass reveal">
-      <div class="feature-icon blue">⚡</div>
+      <div class="feature-icon blue">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
       <h3>Мгновенное исполнение</h3>
       <p>Ордера исполняются за 30мс благодаря серверам в Лондоне, Нью-Йорке и Токио</p>
     </div>
     <div class="feature-card glass reveal">
-      <div class="feature-icon purple">📊</div>
+      <div class="feature-icon purple">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </div>
       <h3>Живая аналитика</h3>
       <p>Графики в реальном времени, технические индикаторы и сигналы на основе AI</p>
     </div>
     <div class="feature-card glass reveal">
-      <div class="feature-icon green">🛡️</div>
+      <div class="feature-icon green">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
       <h3>Защита депозитов</h3>
       <p>Мультиподпись, холодное хранение и полное страхование всех средств</p>
     </div>
     <div class="feature-card glass reveal">
-      <div class="feature-icon orange">💎</div>
+      <div class="feature-icon orange">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/></svg>
+      </div>
       <h3>До 95% прибыли</h3>
       <p>Лучшие коэффициенты в индустрии для всех типов бинарных опционов</p>
     </div>
     <div class="feature-card glass reveal">
-      <div class="feature-icon red">🎯</div>
+      <div class="feature-icon red">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
       <h3>Копи-трейдинг</h3>
       <p>Подписывайтесь на успешных трейдеров и копируйте их сделки автоматически</p>
     </div>
     <div class="feature-card glass reveal">
-      <div class="feature-icon teal">🌐</div>
+      <div class="feature-icon teal">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </div>
       <h3>50+ активов</h3>
       <p>Валютные пары, криптовалюты, акции и товары — всё в одном терминале</p>
     </div>
