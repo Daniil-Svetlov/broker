@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LUMIT Trade — Binary Options Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-:root {
+    <style>
+      :root {
   --glass-bg: rgba(255, 255, 255, 0.08);
   --glass-bg-hover: rgba(255, 255, 255, 0.12);
   --glass-border: rgba(255, 255, 255, 0.15);
@@ -26,6 +26,14 @@
   --radius-md: 20px;
   --radius-lg: 28px;
   --radius-xl: 40px;
+  
+  /* Переменная высоты баннера для динамического расчета положения шапки */
+  --banner-height: 54px; 
+}
+
+/* Если на body повесить класс, что баннера нет — обнуляем высоту */
+body.has-no-banner {
+  --banner-height: 0px;
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -125,10 +133,11 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-/* --- HEADER --- */
+/* --- HEADER (ИСПРАВЛЕНО) --- */
 header {
   position: fixed;
-  top: 16px;
+  /* Автоматически рассчитывает отступ: высота баннера + базовые 16px */
+  top: calc(var(--banner-height) + 16px);
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 48px);
@@ -139,11 +148,11 @@ header {
   align-items: center;
   z-index: 1000;
   border-radius: var(--radius-lg);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: top 0.3s ease, width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s;
 }
 
 header.scrolled {
-  top: 8px;
+  top: calc(var(--banner-height) + 8px);
   width: calc(100% - 32px);
   background: rgba(20, 20, 20, 0.7);
 }
@@ -992,16 +1001,20 @@ footer {
   .modal { padding: 36px 24px; margin: 16px; }
   .modal-header h2 { font-size: 24px; }
 }
-  /* --- DISCLAIMER BANNER (RKN COMPLIANCE) --- */
+
+/* --- DISCLAIMER BANNER (RKN COMPLIANCE) (ИСПРАВЛЕНО) --- */
 .rkn-disclaimer-banner {
-  position: relative;
+  position: -webkit-sticky;
+  position: sticky; /* Теперь баннер фиксируется только у верхней границы окна */
+  top: 0;
   width: 100%;
   background: linear-gradient(90deg, rgba(255, 69, 58, 0.15) 0%, rgba(255, 159, 10, 0.15) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 159, 10, 0.3);
   padding: 12px 24px;
-  z-index: 9999; /* Поверх всех элементов */
+  z-index: 9999; /* Всегда поверх всего */
+  min-height: var(--banner-height);
 }
 
 .rkn-disclaimer-content {
@@ -1057,15 +1070,11 @@ footer {
   color: var(--text-primary);
 }
 
-/* Смещение шапки, чтобы она не перекрывала баннер */
-header {
-  top: 76px !important;
-}
-header.scrolled {
-  top: 64px !important;
-}
-
 @media (max-width: 768px) {
+  :root {
+    /* На мобилках текст переносится, баннер становится выше */
+    --banner-height: 110px; 
+  }
   .rkn-disclaimer-content {
     flex-direction: column;
     align-items: flex-start;
@@ -1076,22 +1085,20 @@ header.scrolled {
     right: 12px;
     top: 12px;
   }
-  header { top: 140px !important; }
 }
-
-</style>
+    </style>
 </head>
 <body>
-  <!-- ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР (ДЛЯ РКН) -->
+  <!-- ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР-->
 <div class="rkn-disclaimer-banner">
   <div class="rkn-disclaimer-content">
     <div class="rkn-badge">УЧЕБНЫЙ ПРОЕКТ</div>
     <p class="rkn-text">
-      <strong>Внимание!</strong> Данный сайт является исключительно демонстрационным учебным макетом (пет-проектом) и находится в разработке. 
+      <strong>Внимание!</strong> Данный site является исключительно демонстрационным учебным макетом (пет-проектом) и находится в разработке. 
       Платформа <strong>LUMIT Trade</strong> вымышлена. Сайт <u>не оказывает</u> финансовых услуг, не принимает платежи, 
       не осуществляет торговлю реальными бинарными опционами или иными активами. Все данные, графики и котировки являются симуляцией.
     </p>
-    <button class="rkn-close-btn" onclick="this.parentElement.parentElement.style.display='none';">&times;</button>
+    <button class="rkn-close-btn" onclick="this.parentElement.parentElement.style.display='none'; document.body.classList.add('has-no-banner');">&times;</button>
   </div>
 </div>
 
