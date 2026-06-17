@@ -231,6 +231,7 @@ header.scrolled {
     display: flex;
     flex-direction: column;
     width: 80%;
+    gap: 20px;
 }
 
 .main-panel {
@@ -242,19 +243,25 @@ header.scrolled {
 }
 
 .new-theme {
-    display: block;
+    align-self: flex-end;
+    background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+    color: #ffffff;
+    border: none;
     padding: 10px;
     border-radius: var(--radius-sm);
-    color: var(--text-primary);
     font-size: 16px;
     font-weight: 600;
     letter-spacing: 1px;
+    cursor: pointer;
     width: 100%;
     max-width: 250px;
-    align-self: center;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .main-content {
+    margin-top: -45px;
     display: flex;
     flex-direction: column;
     gap: 25px;
@@ -449,19 +456,6 @@ header.scrolled {
 }
 
 .statistics div {
-    color: var(--text-secondary);
-}
-
-.rules-list {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-    list-style-position: inside;
-}
-
-.rule {
-    text-align: left;
     color: var(--text-secondary);
 }
 

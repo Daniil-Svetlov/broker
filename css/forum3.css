@@ -230,6 +230,7 @@ header.scrolled {
 .content {
     display: flex;
     flex-direction: column;
+    gap: 20px;
     width: 80%;
 }
 
@@ -318,19 +319,6 @@ header.scrolled {
     color: var(--text-secondary);
 }
 
-.rules-list {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-    list-style-position: inside;
-}
-
-.rule {
-    text-align: left;
-    color: var(--text-secondary);
-}
-
 .main-panel {
     display: flex;
     flex-direction: column;
@@ -340,7 +328,7 @@ header.scrolled {
 }
 
 .new-theme {
-    display: block;
+    align-self: flex-end;
     padding: 10px;
     border-radius: var(--radius-sm);
     color: var(--text-primary);
@@ -349,10 +337,14 @@ header.scrolled {
     letter-spacing: 1px;
     width: 100%;
     max-width: 250px;
-    align-self: center;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-evenly;
 }
 
 .main-content {
+    margin-top: -45px;
     display: flex;
     flex-direction: column;
     gap: 25px;
