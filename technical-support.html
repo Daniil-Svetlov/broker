@@ -32,18 +32,21 @@
         <div class="support">
             <h1>Техподдержка</h1>
             <p>Если у вас возникла проблема, вы можете ознакомится с <a href="index.html" class="frequently-asked-questions">часто задаваемыми вопросами</a> или заполнить форму ниже</p>
-            <form class="support-form glass" onsubmit="handleSubmit(event)">
+            <form class="support-form glass" onsubmit="handleSubmit(event)" novalidate>
                 <div class="input-group">
                     <input type="text" id="userName" required placeholder=" ">
                     <label for="userName">Ваше имя</label>
+                    <span class="error-message"></span>
                 </div>
                 <div class="input-group">
                     <input type="email" id="userEmail" required placeholder=" ">
                     <label for="userEmail">Электронная почта</label>
+                    <span class="error-message"></span>
                 </div>
                 <div class="input-group">
                     <textarea id="userMessage" required placeholder=" " rows="6"></textarea>
                     <label for="userMessage">Опишите вашу проблему</label>
+                    <span class="error-message"></span>
                 </div>
                 <button type="submit" class="submit-btn">
                     <span>Отправить</span>
@@ -51,13 +54,61 @@
             </form>
         </div>
         <script>
+            function showError(inputElement, message) {
+                const group = inputElement.parentElement;
+                const errorSpan = group.querySelector('.error-message');
+                group.classList.add('invalid');
+                errorSpan.innerText = message;
+            }
+
+            function clearError(inputElement) {
+                const group = inputElement.parentElement;
+                group.classList.remove('invalid');
+            }
+
             function handleSubmit(event) {
                 event.preventDefault();
-                const name = document.getElementById('userName').value;
-                const email = document.getElementById('userEmail').value;
-                const message = document.getElementById('userMessage').value;
-                console.log('Данные к отправке:', name, email, message); 
+
                 const form = event.target;
+                const nameInput = document.getElementById('userName');
+                const emailInput = document.getElementById('userEmail');
+                const messageInput = document.getElementById('userMessage');
+                
+                clearError(nameInput);
+                clearError(emailInput);
+                clearError(messageInput);
+
+                let isValid = true;
+
+                if (nameInput.value.trim() === '') {
+                    showError(nameInput, 'Пожалуйста, введите ваше имя');
+                    isValid = false;
+                } else if (nameInput.value.trim().length < 4) {
+                    showError(nameInput, 'Имя должно содержать минимум 4 символа');
+                    isValid = false;
+                }
+
+                const emailRegex = /^[^\s@]+@[^\s@.]+\.[^\s@.]+$/;
+                if (emailInput.value.trim() === '') {
+                    showError(emailInput, 'Введите адрес электронной почты');
+                    isValid = false;
+                } else if (!emailRegex.test(emailInput.value.trim())) {
+                    showError(emailInput, 'Введите корректный адрес электронной почты');
+                    isValid = false;
+                }
+
+                if (messageInput.value.trim() === '') {
+                    showError(messageInput, 'Опишите вашу проблему');
+                    isValid = false;
+                } else if (messageInput.value.trim().length < 10) {
+                    showError(messageInput, 'Описание должно содержать минимум 10 символов');
+                    isValid = false;
+                }
+
+                if (!isValid) return;
+
+                console.log('Данные к отправке:', nameInput.value.trim(), emailInput.value.trim(), messageInput.value.trim()); 
+
                 const btn = form.querySelector('.submit-btn');
                 const btnText = btn.querySelector('span');
                 const originalText = btnText.innerText;
@@ -69,6 +120,10 @@
                     btn.classList.remove('success');
                 }, 3000);
             }
+
+            document.querySelectorAll('.input-group input, .input-group textarea').forEach(element => {
+                element.addEventListener('input', () => clearError(element));
+            });
         </script>
     </body>
 </html>

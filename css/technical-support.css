@@ -278,6 +278,7 @@ header {
 
 .input-group {
     position: relative;
+    margin-bottom: 24px;
     width: 100%;
 }
 
@@ -358,4 +359,25 @@ header {
     transform: translateY(0);
     box-shadow: 0 4px 20px rgba(48, 209, 88, 0.4);
     filter: none;
+}
+
+.error-message {
+    color: var(--red);
+    font-size: 14px;
+    position: absolute;
+    bottom: -18px;
+    left: 5px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.input-group.invalid input,
+.input-group.invalid textarea {
+    border-color: var(--red) !important;
+    box-shadow: 0 0 8px rgba(255, 77, 77, 0.2);
+}
+
+.input-group.invalid .error-message {
+    opacity: 1;
 }
