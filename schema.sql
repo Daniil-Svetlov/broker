@@ -1,3 +1,7 @@
+-- ВНИМАНИЕ: канонический источник схемы — миграции Django (django-api/trading/migrations).
+-- Этот файл оставлен как справка/для standalone-развёртывания Go-сервиса без Django.
+-- Держите его в соответствии с моделями trading/models.py.
+
 -- 1. Users
 CREATE TABLE users (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -25,14 +29,17 @@ CREATE TYPE trade_status AS ENUM ('OPEN', 'WIN', 'LOSS');
 CREATE TABLE traders (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    account_id   UUID REFERENCES pay(id) ON DELETE CASCADE,
     asset_pair   VARCHAR(20) NOT NULL,
     amount       NUMERIC(18, 2) NOT NULL,
     direction    trade_direction NOT NULL,
     entry_price  NUMERIC(18, 8) NOT NULL,
     exit_price   NUMERIC(18, 8),
+    payout       NUMERIC(18, 2) NOT NULL DEFAULT 0,
     status       trade_status NOT NULL DEFAULT 'OPEN',
     duration     INTEGER NOT NULL,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    settled_at   TIMESTAMPTZ
 );
 
 -- 4. Transactions
@@ -49,6 +56,7 @@ CREATE TABLE transactions (
 -- Индексы
 CREATE INDEX idx_pay_user_id ON pay(user_id);
 CREATE INDEX idx_traders_user_id ON traders(user_id);
+CREATE INDEX idx_traders_account_id ON traders(account_id);
 CREATE INDEX idx_traders_status ON traders(status);
 CREATE INDEX idx_transactions_account_id ON transactions(account_id);
 
