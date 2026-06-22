@@ -2,9 +2,11 @@
 <html>
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Форум LUMIT Trade</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="css/forum3.css">
+        <script defer src="scripts/forum3-script.js"></script>
     </head>
     <body>
         <div class="ambient-bg">
@@ -30,7 +32,14 @@
             </nav>
         </header>
         <div class="forum">
-            <h1>Форум</h1>
+            <div class="forum-header">
+                <h1>Форум</h1>
+                <button class="toggle-panel-btn glass" id="togglePanelBtn" aria-label="Переключить панель">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 6h16M4 12h10M4 18h6"/>
+                    </svg>
+                </button>
+            </div>
             <div class="content">
                 <div class="additional-panel">
                     <section class="additional-section small-profile glass">
@@ -75,7 +84,7 @@
                             <h2>Категория 1</h2>
                             <ul class="theme-list">
                                 <li class="glass">
-                                    <h3>Тема: <a href="#" class="theme-link forum-link">Что делать, если что-то там где-то там бла-бла-бла и так далее</a></h3>
+                                    <h3>Тема: <a href="#" class="theme-link">Что делать, если что-то там где-то там бла-бла-бла и так далее</a></h3>
                                     <div>Автор: <a href="#" class="autor forum-link">кто-то</a></div>
                                     <div class="question-statistics">
                                         <span>Ответы: 10</span>
@@ -83,7 +92,7 @@
                                     </div>
                                 </li>
                                 <li class="glass">
-                                    <h3>Тема: <a href="#" class="theme-link forum-link">Что делать, если что-то там где-то там бла-бла-бла и так далее и тому подобное</a></h3>
+                                    <h3>Тема: <a href="#" class="theme-link">Что делать, если что-то там где-то там бла-бла-бла и так далее и тому подобное</a></h3>
                                     <div>Автор: <a href="#" class="autor forum-link">Господин Лягушка</a></div>
                                     <div class="question-statistics">
                                         <span>Ответы: 50</span>
@@ -91,7 +100,7 @@
                                     </div>
                                 </li>
                                 <li class="glass">
-                                    <h3>Тема: <a href="#" class="theme-link forum-link">Пример темы</a></h3>
+                                    <h3>Тема: <a href="#" class="theme-link">Пример темы</a></h3>
                                     <div>Автор: <a href="#" class="autor forum-link">человек</a></div>
                                     <div class="question-statistics">
                                         <span>Ответы: 4</span>
@@ -104,7 +113,7 @@
                             <h2>Категория 2</h2>
                             <ul class="theme-list">
                                 <li class="glass">
-                                    <h3>Тема: <a href="#" class="theme-link forum-link">Пример вопроса</a></h3>
+                                    <h3>Тема: <a href="#" class="theme-link">Пример вопроса</a></h3>
                                     <div>Автор: <a href="#" class="autor forum-link">Пользователь</a></div>
                                     <div class="question-statistics">
                                         <span>Ответы: 8</span>
@@ -112,7 +121,7 @@
                                     </div>
                                 </li>
                                 <li class="glass">
-                                    <h3>Тема: <a href="#" class="theme-link forum-link">Какой-то длинный текст о чём-то, связянном с этим сайтом и так далее бла-бла-бла что-то там один два три</a></h3>
+                                    <h3>Тема: <a href="#" class="theme-link">Какой-то длинный текст о чём-то, связянном с этим сайтом и так далее бла-бла-бла что-то там один два три</a></h3>
                                     <div>Автор: <a href="#" class="autor forum-link">Andrey2005</a></div>
                                     <div class="question-statistics">
                                         <span>Ответы: 10</span>
@@ -120,7 +129,7 @@
                                     </div>
                                 </li>
                                 <li class="glass">
-                                    <h3>Тема: <a href="#" class="theme-link forum-link">Что делать, если что-то там где-то там бла-бла-бла и так далее</a></h3>
+                                    <h3>Тема: <a href="#" class="theme-link">Что делать, если что-то там где-то там бла-бла-бла и так далее</a></h3>
                                     <div>Автор: <a href="#" class="autor forum-link">кто-то</a></div>
                                     <div class="question-statistics">
                                         <span>Ответы: 26</span>
@@ -128,7 +137,7 @@
                                     </div>
                                 </li>
                                 <li class="glass">
-                                    <h3>Тема: <a href="#" class="theme-link forum-link">Что делать, если что-то там где-то там бла-бла-бла и так далее</a></h3>
+                                    <h3>Тема: <a href="#" class="theme-link">Что делать, если что-то там где-то там бла-бла-бла и так далее</a></h3>
                                     <div>Автор: <a href="#" class="autor forum-link">кто-то</a></div>
                                     <div class="question-statistics">
                                         <span>Ответы: 11</span>
@@ -176,14 +185,6 @@
                     </nav>
                 </div>
             </div>
-            <footer class="glass footer">
-                <span>© 2026 LumitTrade. Все права защищены.</span>
-                <nav class="nav-menu">
-                    <a href="#" class="nav-link">Правила</a>
-                    <a href="technical-support.html" class="nav-link">Помощь</a>
-                    <a href="#" class="nav-link">Контакты</a>
-                </nav>
-            </footer>
         </div>
         <script>
             window.addEventListener('scroll', () => {

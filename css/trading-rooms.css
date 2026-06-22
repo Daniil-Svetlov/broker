@@ -112,6 +112,12 @@ header {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+header.scrolled {
+  top: 8px;
+  width: calc(100% - 32px);
+  background: rgba(20, 20, 20, 0.7);
+}
+
 .logo {
     display: flex;
     align-items: center;
@@ -314,4 +320,153 @@ header {
 
 .room.waiting-room .join-btn:active {
     transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+    .ambient-orb {
+        filter: blur(60px); 
+        opacity: 0.6;     
+    }
+
+    .ambient-orb:nth-child(1) {
+        width: 300px;
+        height: 300px;
+        top: -100px;
+        left: -80px;
+    }
+
+    .ambient-orb:nth-child(2) {
+        width: 250px;
+        height: 250px;
+        top: 20%;
+        right: -80px;
+    }
+
+    .ambient-orb:nth-child(3) {
+        width: 200px;
+        height: 200px;
+        bottom: -50px;
+        left: 20%;
+    }
+
+    .ambient-orb:nth-child(4) {
+        width: 180px;
+        height: 180px;
+        top: 30%;
+        left: 40%;
+    }
+
+    header {
+        padding: 10px 16px;
+        top: 12px;
+        width: calc(100% - 24px);
+        border-radius: var(--radius-md);
+    }
+
+    .logo-text {
+        font-size: 16px;
+    }
+
+    .logo-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+
+    .nav-menu {
+        gap: 12px;
+    }
+
+    .nav-link {
+        font-size: 13px;
+        gap: 4px;
+    }
+
+    .profile-link {
+        padding: 6px 12px;
+    }
+    
+    .profile-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .rooms h1 {
+        font-size: clamp(28px, 7vw, 44px);
+        margin-bottom: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ambient-orb {
+        filter: blur(40px); 
+        opacity: 0.6;     
+    }
+
+    .ambient-orb:nth-child(1) {
+        width: 200px;
+        height: 200px;
+        top: -60px;
+        left: -50px;
+    }
+
+    .ambient-orb:nth-child(2) {
+        width: 160px;
+        height: 160px;
+        top: 10%;
+        right: -40px;
+    }
+
+    .ambient-orb:nth-child(3) {
+        width: 140px;
+        height: 140px;
+        bottom: -30px;
+        left: 10%;
+    }
+
+    .ambient-orb:nth-child(4) {
+        width: 120px;
+        height: 120px;
+        top: 40%;
+        left: 50%;
+    }
+
+    header {
+        padding: 8px 12px;
+        top: 8px;
+        width: calc(100% - 16px);
+    }
+
+    .logo-text {
+        font-size: 14px;
+    }
+
+    .logo-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+
+    .nav-link {
+        font-size: 13px;
+    }
+
+    .profile-link {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 6px 10px;
+        border: 2px solid var(--glass-border);
+    }
+
+    .profile-link span {
+        display: none; 
+    }
+    
+    .profile-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .rooms h1 {
+        font-size: clamp(24px, 8vw, 32px);
+    }
 }
