@@ -76,8 +76,15 @@ func main() {
 }
 
 func runDaemon(ctx context.Context, cfg config.Config, st *store.Store, svc *quotes.Service, assets []store.Asset) {
-	// HTTP API.
-	srv := &http.Server{Addr: cfg.HTTPAddr, Handler: httpapi.New(svc).Handler()}
+	// HTTP API. Таймауты — защита от медленных/зависших клиентов (Slowloris).
+	srv := &http.Server{
+		Addr:              cfg.HTTPAddr,
+		Handler:           httpapi.New(svc).Handler(),
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
 	go func() {
 		log.Printf("quotes API listening on %s", cfg.HTTPAddr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

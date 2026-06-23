@@ -43,3 +43,7 @@ quotes-service/quotes
 /tmp/quotes
 *.test
 *.out
+
+# Тесты — только локально, в репозиторий и прод не попадают
+*_test.go
+tests.py

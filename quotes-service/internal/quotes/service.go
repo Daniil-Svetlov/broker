@@ -8,12 +8,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"math/rand"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/Daniil-Svetlov/broker/quotes-service/internal/config"
+	"github.com/Daniil-Svetlov/broker/quotes-service/internal/market"
 	"github.com/Daniil-Svetlov/broker/quotes-service/internal/store"
 )
 
@@ -41,8 +43,10 @@ type Price struct {
 // liveState — текущее состояние одной пары в памяти.
 type liveState struct {
 	assetID string
-	base    float64 // реальный базовый курс с провайдера
-	mid     float64 // текущая «живая» mid-цена (база + накопленные тики)
+	base    float64               // реальный базовый курс с провайдера
+	mid     float64               // текущая «живая» mid-цена (база + накопленные тики)
+	trend   market.TrendDirection // текущий тренд модели цены
+	cfg     market.AssetConfig    // параметры генерации (волатильность, барьер, точность)
 }
 
 type Service struct {
@@ -135,7 +139,7 @@ func (s *Service) RefreshBase(ctx context.Context, assets []store.Asset) error {
 		}
 		st, exists := s.state[a.Symbol]
 		if !exists {
-			st = &liveState{assetID: a.ID, mid: rate}
+			st = &liveState{assetID: a.ID, mid: rate, trend: market.RandomTrend(s.rng)}
 			s.state[a.Symbol] = st
 		}
 		st.assetID = a.ID
@@ -143,12 +147,30 @@ func (s *Service) RefreshBase(ctx context.Context, assets []store.Asset) error {
 		if st.mid == 0 {
 			st.mid = rate
 		}
+		// Параметры модели: барьер вполовину от реального курса (цена не уйдёт
+		// в ноль), точность зависит от пары (JPY-кросс грубее форекса).
+		st.cfg = market.AssetConfig{
+			Volatility: s.cfg.TickVolatility,
+			MinPrice:   rate * 0.5,
+			Precision:  precisionFor(a.Symbol),
+		}
 	}
 	return nil
 }
 
-// Tick двигает «живые» цены случайным блужданием вокруг базового курса.
-// Это даёт настоящие онлайн-курсы, которые при этом меняются каждую секунду.
+// precisionFor подбирает число знаков под пару: котировки к JPY — 3 знака,
+// остальной форекс — 5 (как в торговых терминалах).
+func precisionFor(symbol string) int {
+	if len(symbol) >= 3 && symbol[len(symbol)-3:] == "JPY" {
+		return 3
+	}
+	return 5
+}
+
+// Tick двигает «живые» цены по модели market.CalculateNextPrice: дрейф по
+// тренду + случайный шум. Тренд изредка меняется (RollTrend) с лёгким
+// возвратом к реальному базовому курсу, чтобы цена не уходила далеко.
+// Получаются настоящие онлайн-курсы, которые при этом меняются каждую секунду.
 func (s *Service) Tick() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -156,13 +178,8 @@ func (s *Service) Tick() {
 		if st.base == 0 {
 			continue
 		}
-		step := (s.rng.Float64() - 0.5) * 2 * s.cfg.TickVolatility * st.base
-		st.mid += step
-		// Лёгкий возврат к базе, чтобы цена не уходила далеко от реальной.
-		st.mid += (st.base - st.mid) * 0.01
-		if st.mid <= 0 {
-			st.mid = st.base
-		}
+		st.trend = market.RollTrend(s.rng, st.trend, s.cfg.TrendChangeChance, st.mid, st.base)
+		st.mid = market.CalculateNextPrice(s.rng, st.mid, st.trend, st.cfg)
 	}
 }
 
@@ -195,11 +212,17 @@ func (s *Service) priceFrom(symbol string, st *liveState) Price {
 	spread := st.mid * s.cfg.Spread
 	return Price{
 		Symbol:    symbol,
-		Bid:       st.mid - spread,
-		Ask:       st.mid + spread,
+		Bid:       roundTo(st.mid-spread, st.cfg.Precision),
+		Ask:       roundTo(st.mid+spread, st.cfg.Precision),
 		Mid:       st.mid,
 		Timestamp: time.Now().UTC(),
 	}
+}
+
+// roundTo округляет цену до n знаков после запятой (как и mid в модели цены).
+func roundTo(v float64, precision int) float64 {
+	shift := math.Pow(10, float64(precision))
+	return math.Round(v*shift) / shift
 }
 
 // Persist пишет текущие живые котировки в Postgres (история для графиков).

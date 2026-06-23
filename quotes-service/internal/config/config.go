@@ -32,6 +32,8 @@ type Config struct {
 	TickVolatility float64
 	// Спред в долях от цены (0.0001 = 0.01%), как в исходном quotes.py
 	Spread float64
+	// Вероятность смены тренда за тик (модель market.CalculateNextPrice)
+	TrendChangeChance float64
 }
 
 func Load() Config {
@@ -49,8 +51,9 @@ func Load() Config {
 		TickInterval:        envDuration("TICK_INTERVAL", time.Second),
 		PersistInterval:     envDuration("PERSIST_INTERVAL", 10*time.Second),
 
-		TickVolatility: envFloat("TICK_VOLATILITY", 0.00012),
-		Spread:         envFloat("SPREAD", 0.0001),
+		TickVolatility:    envFloat("TICK_VOLATILITY", 0.00012),
+		Spread:            envFloat("SPREAD", 0.0001),
+		TrendChangeChance: envFloat("TREND_CHANGE_CHANCE", 0.05),
 	}
 }
 

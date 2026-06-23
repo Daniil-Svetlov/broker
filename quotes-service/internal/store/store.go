@@ -34,10 +34,14 @@ func New(ctx context.Context, dsn string) (*Store, error) {
 func (s *Store) Close() { s.pool.Close() }
 
 // InitAssets создаёт записи валютных пар (идемпотентно), как initialize_assets().
+// id/is_active/payout_percent проставляем явно: схему владеет Django, а у его
+// UUID-полей и полей с default= нет дефолта на уровне БД (значения генерит ORM
+// в Python). Поэтому даём БД сгенерить UUID и задаём дефолты сами.
 func (s *Store) InitAssets(ctx context.Context, pairs [][2]string) error {
 	for _, p := range pairs {
 		_, err := s.pool.Exec(ctx,
-			`INSERT INTO assets (symbol, name) VALUES ($1, $2)
+			`INSERT INTO assets (id, symbol, name, is_active, payout_percent)
+			 VALUES (gen_random_uuid(), $1, $2, TRUE, 80)
 			 ON CONFLICT (symbol) DO NOTHING`,
 			p[0], p[1])
 		if err != nil {
@@ -67,10 +71,12 @@ func (s *Store) ActiveAssets(ctx context.Context) ([]Asset, error) {
 	return out, rows.Err()
 }
 
-// InsertQuote сохраняет котировку для пары по её символу.
+// InsertQuote сохраняет котировку для пары по её символу. id и timestamp
+// задаём явно — у Django-полей (UUID PK, auto_now_add) нет дефолта в БД.
 func (s *Store) InsertQuote(ctx context.Context, assetID string, bid, ask float64) error {
 	_, err := s.pool.Exec(ctx,
-		`INSERT INTO quotes (asset_id, bid, ask) VALUES ($1, $2, $3)`,
+		`INSERT INTO quotes (id, asset_id, bid, ask, timestamp)
+		 VALUES (gen_random_uuid(), $1, $2, $3, NOW())`,
 		assetID, bid, ask)
 	if err != nil {
 		return fmt.Errorf("insert quote: %w", err)
