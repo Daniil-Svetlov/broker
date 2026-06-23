@@ -22,9 +22,17 @@
     --radius-xl: 40px;
 }
 
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-html { scroll-behavior: smooth; }
+html {
+    scroll-behavior: smooth;
+}
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -52,47 +60,60 @@ body {
 }
 
 .ambient-orb:nth-child(1) {
-    width: 600px; 
+    width: 600px;
     height: 600px;
     background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-    top: -200px; 
+    top: -200px;
     left: -100px;
     animation-delay: 0s;
 }
 
 .ambient-orb:nth-child(2) {
-    width: 500px; 
+    width: 500px;
     height: 500px;
     background: radial-gradient(circle, var(--accent-secondary) 0%, transparent 70%);
-    top: 40%; 
+    top: 40%;
     right: -150px;
     animation-delay: -7s;
 }
 
 .ambient-orb:nth-child(3) {
-    width: 450px; 
+    width: 450px;
     height: 450px;
     background: radial-gradient(circle, var(--accent-tertiary) 0%, transparent 70%);
-    bottom: -100px; 
+    bottom: -100px;
     left: 30%;
     animation-delay: -14s;
 }
 
 .ambient-orb:nth-child(4) {
-    width: 350px; 
+    width: 350px;
     height: 350px;
     background: radial-gradient(circle, var(--accent-quaternary) 0%, transparent 70%);
-    top: 20%; 
+    top: 20%;
     left: 50%;
     animation-delay: -3s;
     opacity: 0.3;
 }
 
 @keyframes float {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    25% { transform: translate(50px, -30px) scale(1.05); }
-    50% { transform: translate(-30px, 50px) scale(0.95); }
-    75% { transform: translate(40px, 20px) scale(1.02); }
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    25% {
+        transform: translate(50px, -30px) scale(1.05);
+    }
+
+    50% {
+        transform: translate(-30px, 50px) scale(0.95);
+    }
+
+    75% {
+        transform: translate(40px, 20px) scale(1.02);
+    }
 }
 
 .noise-overlay {
@@ -117,7 +138,7 @@ body {
     position: relative;
 }
 
-.support h1{
+.support h1 {
     font-size: clamp(36px, 6vw, 72px);
     font-weight: 700;
     line-height: 1.1;
@@ -131,8 +152,15 @@ body {
 }
 
 @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .glass {
@@ -168,7 +196,7 @@ header {
 }
 
 .logo-icon {
-    width: 36px; 
+    width: 36px;
     height: 36px;
     background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
     border-radius: 10px;
@@ -244,7 +272,7 @@ header {
 
 .frequently-asked-questions {
     color: var(--accent);
-    text-decoration: none; 
+    text-decoration: none;
     font-weight: 500;
     position: relative;
     display: inline-block;
@@ -255,11 +283,11 @@ header {
     content: '';
     position: absolute;
     width: 100%;
-    transform: scaleX(0); 
-    height: 2px; 
+    transform: scaleX(0);
+    height: 2px;
     bottom: -2px;
     left: 0;
-    background: linear-gradient(90deg, var(--accent), var(--accent-secondary)); 
+    background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
     transform-origin: bottom center;
     transition: transform 0.3s ease;
 }
@@ -322,10 +350,10 @@ header {
     transition: all 0.3s ease;
 }
 
-.input-group input:focus ~ label,
-.input-group input:not(:placeholder-shown) ~ label,
-.input-group textarea:focus ~ label,
-.input-group textarea:not(:placeholder-shown) ~ label {
+.input-group input:focus~label,
+.input-group input:not(:placeholder-shown)~label,
+.input-group textarea:focus~label,
+.input-group textarea:not(:placeholder-shown)~label {
     top: -20px;
     left: 4px;
     font-size: 12px;
@@ -394,8 +422,8 @@ header {
 
 @media (max-width: 768px) {
     .ambient-orb {
-        filter: blur(60px); 
-        opacity: 0.6;     
+        filter: blur(60px);
+        opacity: 0.6;
     }
 
     .ambient-orb:nth-child(1) {
@@ -455,7 +483,7 @@ header {
     .profile-link {
         padding: 6px 12px;
     }
-    
+
     .profile-icon {
         width: 16px;
         height: 16px;
@@ -497,11 +525,11 @@ header {
         top: 14px;
         left: 12px;
     }
-    
-    .input-group input:focus ~ label,
-    .input-group input:not(:placeholder-shown) ~ label,
-    .input-group textarea:focus ~ label,
-    .input-group textarea:not(:placeholder-shown) ~ label {
+
+    .input-group input:focus~label,
+    .input-group input:not(:placeholder-shown)~label,
+    .input-group textarea:focus~label,
+    .input-group textarea:not(:placeholder-shown)~label {
         top: -18px;
         left: 2px;
         font-size: 11px;
@@ -521,8 +549,8 @@ header {
 
 @media (max-width: 480px) {
     .ambient-orb {
-        filter: blur(40px); 
-        opacity: 0.6;     
+        filter: blur(40px);
+        opacity: 0.6;
     }
 
     .ambient-orb:nth-child(1) {
@@ -580,9 +608,9 @@ header {
     }
 
     .profile-link span {
-        display: none; 
+        display: none;
     }
-    
+
     .profile-icon {
         width: 20px;
         height: 20px;
@@ -618,10 +646,10 @@ header {
         left: 10px;
     }
 
-    .input-group input:focus ~ label,
-    .input-group input:not(:placeholder-shown) ~ label,
-    .input-group textarea:focus ~ label,
-    .input-group textarea:not(:placeholder-shown) ~ label {
+    .input-group input:focus~label,
+    .input-group input:not(:placeholder-shown)~label,
+    .input-group textarea:focus~label,
+    .input-group textarea:not(:placeholder-shown)~label {
         top: -16px;
         left: 0;
         font-size: 10px;

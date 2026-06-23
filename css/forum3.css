@@ -22,9 +22,17 @@
     --radius-xl: 40px;
 }
 
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-html { scroll-behavior: smooth; }
+html {
+    scroll-behavior: smooth;
+}
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -52,39 +60,71 @@ body {
 }
 
 .ambient-orb:nth-child(1) {
-    width: 600px; height: 600px;
+    width: 600px;
+    height: 600px;
     background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-    top: -200px; left: -100px;
+    top: -200px;
+    left: -100px;
     animation-delay: 0s;
 }
 
 .ambient-orb:nth-child(2) {
-    width: 500px; height: 500px;
+    width: 500px;
+    height: 500px;
     background: radial-gradient(circle, var(--accent-secondary) 0%, transparent 70%);
-    top: 40%; right: -150px;
+    top: 40%;
+    right: -150px;
     animation-delay: -7s;
 }
 
 .ambient-orb:nth-child(3) {
-    width: 450px; height: 450px;
+    width: 450px;
+    height: 450px;
     background: radial-gradient(circle, var(--accent-tertiary) 0%, transparent 70%);
-    bottom: -100px; left: 30%;
+    bottom: -100px;
+    left: 30%;
     animation-delay: -14s;
 }
 
 .ambient-orb:nth-child(4) {
-    width: 350px; height: 350px;
+    width: 350px;
+    height: 350px;
     background: radial-gradient(circle, var(--accent-quaternary) 0%, transparent 70%);
-    top: 20%; left: 50%;
+    top: 20%;
+    left: 50%;
     animation-delay: -3s;
     opacity: 0.3;
 }
 
 @keyframes float {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    25% { transform: translate(50px, -30px) scale(1.05); }
-    50% { transform: translate(-30px, 50px) scale(0.95); }
-    75% { transform: translate(40px, 20px) scale(1.02); }
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    25% {
+        transform: translate(50px, -30px) scale(1.05);
+    }
+
+    50% {
+        transform: translate(-30px, 50px) scale(0.95);
+    }
+
+    75% {
+        transform: translate(40px, 20px) scale(1.02);
+    }
+}
+
+.noise-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.03;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
 }
 
 .glass {
@@ -120,9 +160,9 @@ header {
 }
 
 header.scrolled {
-  top: 8px;
-  width: calc(100% - 32px);
-  background: rgba(20, 20, 20, 0.7);
+    top: 8px;
+    width: calc(100% - 32px);
+    background: rgba(20, 20, 20, 0.7);
 }
 
 .logo {
@@ -134,7 +174,8 @@ header.scrolled {
 }
 
 .logo-icon {
-    width: 36px; height: 36px;
+    width: 36px;
+    height: 36px;
     background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
     border-radius: 10px;
     display: flex;
@@ -198,8 +239,15 @@ header.scrolled {
 }
 
 @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .forum {
@@ -215,9 +263,9 @@ header.scrolled {
 }
 
 .forum-header {
-    position: relative; 
+    position: relative;
     display: flex;
-    justify-content: center; 
+    justify-content: center;
     align-items: center;
     width: 80%;
     max-width: 100%;
@@ -239,7 +287,7 @@ header.scrolled {
 }
 
 .toggle-panel-btn {
-    display: none; 
+    display: none;
     position: absolute;
     right: 0;
     transform: translateY(-50%);
@@ -255,7 +303,7 @@ header.scrolled {
     cursor: pointer;
     transition: all 0.3s ease;
     flex-shrink: 0;
-    right: 10px; 
+    right: 10px;
     animation: fadeInUp 0.5s ease-out 0.1s both;
 }
 
@@ -280,8 +328,8 @@ header.scrolled {
 .additional-panel {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    justify-content: center; 
-    justify-items: center; 
+    justify-content: center;
+    justify-items: center;
     gap: 35px;
     padding: 10px;
     animation: fadeInUp 1s ease-out 0.8s both;
@@ -318,20 +366,20 @@ header.scrolled {
 }
 
 .small-profile-link h2 {
-    transition: color 0.3s ease, text-shadow 0.3s ease; 
+    transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
 .small-profile-link:hover {
-    transform: scale(1.05); 
+    transform: scale(1.05);
 }
 
 .small-profile-link:hover h2 {
-    color: var(--accent); 
-    text-shadow: 0 0 15px var(--accent-glow); 
+    color: var(--accent);
+    text-shadow: 0 0 15px var(--accent-glow);
 }
 
 .small-profile-link:active {
-    transform: scale(0.98); 
+    transform: scale(0.98);
 }
 
 .nickname {
@@ -400,7 +448,7 @@ header.scrolled {
     gap: 15px;
 }
 
-.category h2{
+.category h2 {
     font-size: 22px;
     font-weight: 700;
     letter-spacing: 1px;
@@ -450,11 +498,11 @@ header.scrolled {
     content: '';
     position: absolute;
     width: 100%;
-    transform: scaleX(0); 
-    height: 2px; 
+    transform: scaleX(0);
+    height: 2px;
     bottom: -2px;
     left: 0;
-    background: linear-gradient(90deg, var(--accent), var(--accent-secondary)); 
+    background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
     transform-origin: bottom center;
     transition: transform 0.3s ease;
 }
@@ -520,8 +568,8 @@ footer {
 
 @media (max-width: 768px) {
     .ambient-orb {
-        filter: blur(60px); 
-        opacity: 0.6;     
+        filter: blur(60px);
+        opacity: 0.6;
     }
 
     .ambient-orb:nth-child(1) {
@@ -581,16 +629,16 @@ footer {
     .profile-link {
         padding: 6px 12px;
     }
-    
+
     .profile-icon {
         width: 16px;
         height: 16px;
     }
 
     .forum-header {
-        width: 100%; 
+        width: 100%;
         padding: 0 10px;
-        justify-content: center; 
+        justify-content: center;
     }
 
     .toggle-panel-btn {
@@ -598,24 +646,24 @@ footer {
     }
 
     .additional-panel {
-        display: grid !important; 
+        display: grid !important;
         grid-template-columns: 1fr;
         justify-items: flex-start;
         gap: 12px;
         width: 100%;
-        overflow: hidden; 
-        max-height: 0; 
-        opacity: 0; 
-        padding: 0 10px; 
+        overflow: hidden;
+        max-height: 0;
+        opacity: 0;
+        padding: 0 10px;
         transition: max-height 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-                    opacity 0.3s ease,
-                    padding 0.3s ease;
+            opacity 0.3s ease,
+            padding 0.3s ease;
     }
 
     .additional-panel.open {
-        max-height: 2000px; 
+        max-height: 2000px;
         opacity: 1;
-        padding: 10px; 
+        padding: 10px;
     }
 
     .additional-section {
@@ -652,13 +700,13 @@ footer {
     }
 
     .forum {
-        padding: 100px 12px 60px; 
+        padding: 100px 12px 60px;
         gap: 30px;
     }
 
     .content {
-        width: 100%; 
-        padding: 0 4px; 
+        width: 100%;
+        padding: 0 4px;
     }
 
     .forum h1 {
@@ -678,7 +726,7 @@ footer {
     }
 
     .main-content {
-        margin-top: 0; 
+        margin-top: 0;
         gap: 20px;
     }
 
@@ -730,8 +778,8 @@ footer {
 
 @media (max-width: 480px) {
     .ambient-orb {
-        filter: blur(40px); 
-        opacity: 0.6;     
+        filter: blur(40px);
+        opacity: 0.6;
     }
 
     .ambient-orb:nth-child(1) {
@@ -789,9 +837,9 @@ footer {
     }
 
     .profile-link span {
-        display: none; 
+        display: none;
     }
-    
+
     .profile-icon {
         width: 20px;
         height: 20px;
@@ -875,13 +923,13 @@ footer {
         border: 2px solid var(--glass-border);
         justify-content: center;
         align-items: center;
-        font-size: 0;      
+        font-size: 0;
         align-self: flex-end;
         margin-bottom: 0;
     }
 
     .new-theme span {
-        display: none;      
+        display: none;
     }
 
     .new-theme svg {
@@ -896,7 +944,7 @@ footer {
     }
 
     .main-content {
-        margin-top: -45px !important; 
+        margin-top: -45px !important;
         gap: 16px;
         margin-top: 0;
     }
