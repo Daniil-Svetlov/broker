@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LUMIT Trade — Binary Options Platform</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet">
     <link rel="stylesheet" href="css/index.css">
     <script defer src="scripts/index-script.js"></script>
   </head>
@@ -13,11 +15,15 @@
       <div class="rkn-disclaimer-content">
         <div class="rkn-badge">УЧЕБНЫЙ ПРОЕКТ</div>
         <p class="rkn-text">
-          <strong>Внимание!</strong> Данный сайт является исключительно демонстрационным учебным макетом (пет-проектом) и находится в разработке.
-          Платформа <strong>LUMIT Trade</strong> вымышлена. Сайт <u>не оказывает</u> финансовых услуг, не принимает платежи,
-          не осуществляет торговлю реальными бинарными опционами или иными активами. Все данные, графики и котировки являются симуляцией.
+          <strong>Внимание!</strong> Данный сайт является исключительно демонстрационным учебным макетом (пет-проектом) и
+          находится в разработке.
+          Платформа <strong>LUMIT Trade</strong> вымышлена. Сайт <u>не оказывает</u> финансовых услуг, не принимает
+          платежи,
+          не осуществляет торговлю реальными бинарными опционами или иными активами. Все данные, графики и котировки
+          являются симуляцией.
         </p>
-        <button class="rkn-close-btn" onclick="this.parentElement.parentElement.style.display='none'; document.body.classList.add('has-no-banner');">&times;</button>
+        <button class="rkn-close-btn"
+          onclick="this.parentElement.parentElement.style.display='none'; document.body.classList.add('has-no-banner');">&times;</button>
       </div>
     </div>
 
@@ -58,7 +64,8 @@
           Торгуй<br>
           <span class="gradient-text">на скорости света</span>
         </h1>
-        <p>Премиальная платформа для бинарных опционов с мгновенным исполнением, аналитикой в реальном времени и интуитивным интерфейсом.</p>
+        <p>Премиальная платформа для бинарных опционов с мгновенным исполнением, аналитикой в реальном времени и
+          интуитивным интерфейсом.</p>
         <div class="hero-buttons">
           <button class="btn-primary" onclick="openModal()">Открыть счёт</button>
           <!-- <button class="btn-secondary" onclick="window.location.href='http://localhost:3030/terminal'">Демо-режим</button> -->
@@ -79,7 +86,6 @@
           </div>
         </div>
       </div>
-
       <div class="hero-visual">
         <div class="terminal-card glass-strong">
           <div class="terminal-topbar">
@@ -119,11 +125,19 @@
             </div>
             <div class="trading-actions">
               <button class="btn-trade btn-call">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="19" x2="12" y2="5" />
+                  <polyline points="5 12 12 5 19 12" />
+                </svg>
                 CALL
               </button>
               <button class="btn-trade btn-put">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <polyline points="19 12 12 19 5 12" />
+                </svg>
                 PUT
               </button>
             </div>
@@ -238,19 +252,22 @@
       <div class="showcase-grid">
         <div class="showcase-image reveal">
           <!--
-            ПУТЬ ДЛЯ ИЗОБРАЖЕНИЯ:
-            Положите файл сюда: images/dashboard-screenshot.png
-            Рекомендуемый размер: 1200x1400px (вертикальная ориентация), формат PNG или WEBP
-          -->
-          <img src="images/dashboard-screenshot.png" alt="Интерфейс платформы LUMIT Trade" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <div class="img-fallback" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%;">
+              ПУТЬ ДЛЯ ИЗОБРАЖЕНИЯ:
+              Положите файл сюда: images/dashboard-screenshot.png
+              Рекомендуемый размер: 1200x1400px (вертикальная ориентация), формат PNG или WEBP
+            -->
+          <img src="images/dashboard-screenshot.png" alt="Интерфейс платформы LUMIT Trade"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback"
+            style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%;">
             images/dashboard-screenshot.png<br>1200×1400
           </div>
         </div>
         <div class="showcase-content reveal">
           <div class="section-label">Интерфейс</div>
           <h2>Полный контроль над торговлей</h2>
-          <p>Наш интуитивный интерфейс дает вам всю информацию, которая вам нужна, в режиме реального времени. От графиков до портфеля — всё под контролем.</p>
+          <p>Наш интуитивный интерфейс дает вам всю информацию, которая вам нужна, в режиме реального времени. От графиков
+            до портфеля — всё под контролем.</p>
 
           <div class="showcase-features">
             <div class="showcase-feature">
@@ -305,7 +322,11 @@
             <p>Создайте аккаунт за 30 секунд. Верификация не требуется для демо-счёта</p>
           </div>
           <div class="step-arrow">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
           </div>
         </div>
         <div class="step-row reveal">
@@ -315,7 +336,11 @@
             <p>Внесите депозит любым удобным способом: карта, крипто или банковский перевод</p>
           </div>
           <div class="step-arrow">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
           </div>
         </div>
         <div class="step-row reveal">
@@ -325,7 +350,11 @@
             <p>Выберите актив, направление и сумму. Прибыль до 95% от суммы сделки</p>
           </div>
           <div class="step-arrow">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
           </div>
         </div>
       </div>
@@ -335,7 +364,8 @@
       <div class="cta-card reveal">
         <h2>Готовы начать?</h2>
         <p>Присоединяйтесь к 150,000+ трейдеров по всему миру</p>
-        <button class="btn-primary" style="font-size: 18px; padding: 20px 48px;" onclick="openModal()">Создать бесплатный аккаунт</button>
+        <button class="btn-primary create-account" style="font-size: 18px; padding: 20px 48px;" onclick="openModal()">Создать бесплатный
+          аккаунт</button>
       </div>
     </section>
 
@@ -343,7 +373,7 @@
       <div class="footer-content">
         <a href="#" class="logo">
           <div class="logo-icon">L</div>
-          <div class="logo-text">LUMIT <span>Trade</span></div>
+          <div class="logo-text foot">LUMIT <span>Trade</span></div>
         </a>
         <div class="footer-links">
           <a href="#">Условия</a>

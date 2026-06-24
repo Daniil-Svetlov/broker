@@ -262,7 +262,7 @@ function handleRegister(event) {
     const nameInput = document.getElementById('regName');
     const emailInput = document.getElementById('regEmail');
     const passwordInput = document.getElementById('regPassword');
-    
+
     clearError(nameInput);
     clearError(emailInput);
     clearError(passwordInput);
@@ -305,23 +305,23 @@ function handleRegister(event) {
         name: nameInput.value.trim(),
         email: emailInput.value.trim(),
         password: passwordInput.value
-    }); 
+    });
 
-    const btn = form.querySelector('.modal-btn'); 
+    const btn = form.querySelector('.modal-btn');
 
     if (btn) {
         const btnText = btn.querySelector('span');
         const originalText = btnText ? btnText.innerText : btn.innerText;
-    
+
         if (btnText) {
             btnText.innerText = 'Аккаунт создан!';
         } else {
             btn.innerText = 'Аккаунт создан!';
         }
-        
+
         btn.classList.add('success');
-        form.reset(); 
-        
+        form.reset();
+
         setTimeout(() => {
             if (btnText) {
                 btnText.innerText = originalText;
@@ -330,7 +330,7 @@ function handleRegister(event) {
             }
             btn.classList.remove('success');
             if (typeof closeModal === 'function') {
-                closeModal(); 
+                closeModal();
             }
             alert('Аккаунт создан! Добро пожаловать в LUMIT Trade.');
         }, 1000);
