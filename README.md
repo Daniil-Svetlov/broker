@@ -47,6 +47,23 @@ docker compose up --build
 
 - API:        http://localhost:8000/api/
 - Котировки:  http://localhost:8090/price?symbol=EUR/USD
+- Админка:    http://localhost:8000/admin/
+
+## Доступ в админку
+
+Суперюзер не создаётся автоматически. Создать его (контейнер `api` должен быть
+поднят):
+
+```bash
+# интерактивно — логин/почта/пароль спросят
+docker compose exec api python manage.py createsuperuser
+
+# либо одной строкой — заведёт admin / admin
+docker compose exec api python manage.py shell -c "from django.contrib.auth.models import User; User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin','admin@example.com','admin')"
+```
+
+Это пользователь Django (`auth.User`) для входа в `/admin/` — отдельный от
+бизнес-модели `trading.User`.
 
 ## Локальный запуск без Docker
 
