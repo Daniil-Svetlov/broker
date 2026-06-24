@@ -1809,10 +1809,6 @@ footer {
         font-size: 10px;
     }
 
-    .chart-placeholder {
-        height: 400px;
-    }
-
     .btn-trade {
     padding: 10px;
     font-weight: 600;
@@ -1862,10 +1858,6 @@ footer {
 
     .cta-card p {
         margin-bottom: 30px;
-    }
-
-    .btn-primary.create-account {
-        padding: 13px 16px !important;
     }
 
     footer {
