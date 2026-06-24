@@ -41,7 +41,7 @@ func main() {
 	log.Println("postgres connected")
 
 	if *initOnly {
-		if err := st.InitAssets(ctx, quotes.CurrencyPairs); err != nil {
+		if err := initAssets(ctx, st); err != nil {
 			log.Fatalf("init assets: %v", err)
 		}
 		log.Println("Assets initialized successfully")
@@ -49,7 +49,7 @@ func main() {
 	}
 
 	// Гарантируем наличие пар и берём активные.
-	if err := st.InitAssets(ctx, quotes.CurrencyPairs); err != nil {
+	if err := initAssets(ctx, st); err != nil {
 		log.Fatalf("init assets: %v", err)
 	}
 	assets, err := st.ActiveAssets(ctx)
@@ -73,6 +73,34 @@ func main() {
 	}
 
 	runDaemon(ctx, cfg, st, svc, assets)
+}
+
+// initAssets создаёт валютные пары, дожидаясь схемы. Схему создаёт Django
+// (migrate) в соседнем контейнере; depends_on гарантирует только старт api, но
+// не завершение миграций, поэтому таблиц может ещё не быть — ретраимся, пока
+// они не появятся (или пока не истечёт лимит ожидания / не придёт сигнал).
+func initAssets(ctx context.Context, st *store.Store) error {
+	const (
+		maxWait = 90 * time.Second
+		every   = 2 * time.Second
+	)
+	deadline := time.Now().Add(maxWait)
+	for attempt := 1; ; attempt++ {
+		err := st.InitAssets(ctx, quotes.CurrencyPairs)
+		if err == nil {
+			return nil
+		}
+		if ctx.Err() != nil || time.Now().After(deadline) {
+			return err
+		}
+		log.Printf("init assets: попытка %d не удалась (схема ещё не готова?): %v; жду %s...",
+			attempt, err, every)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(every):
+		}
+	}
 }
 
 func runDaemon(ctx context.Context, cfg config.Config, st *store.Store, svc *quotes.Service, assets []store.Asset) {
