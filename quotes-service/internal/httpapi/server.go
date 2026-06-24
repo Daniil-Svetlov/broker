@@ -20,7 +20,27 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/health", s.health)
 	mux.HandleFunc("/price", s.price)
 	mux.HandleFunc("/prices", s.prices)
-	return mux
+	return withCORS(mux)
+}
+
+// withCORS разрешает фронтенду (HTML/JS на другом порту) ходить за котировками
+// через fetch. Без этих заголовков браузер режет ответ по Same-Origin Policy
+// («Origin ... is not allowed by Access-Control-Allow-Origin»), и страница
+// падает. Политика — открытая, как CORS_ALLOW_ALL_ORIGINS=True у Django: это
+// публичные read-only котировки без кук и авторизации.
+func withCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Vary", "Origin")
+		// Префлайт (OPTIONS) завершаем сразу, до бизнес-логики.
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (s *Server) health(w http.ResponseWriter, _ *http.Request) {
