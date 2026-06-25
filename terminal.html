@@ -1,13 +1,38 @@
 <!DOCTYPE html>
+<!--
+  ЛОКАЛЬНАЯ проверочная версия терминала (ветка main + новый бэкенд).
+  Отличия от main/terminal.html:
+   * убран <script socket.io> — данные берём по REST (Go /price + Django /api);
+   * подключён config.js (адреса бэка + accountId демо-счёта);
+   * валютные пары заменены на те, что реально отдаёт quotes-service (форекс);
+   * onclick="socket.emit(...)" убраны (сокета больше нет).
+  В прод НЕ идёт: это стенд для проверки связки фронт↔бэк.
+-->
 <html lang="ru">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Торговля — LUMIT Trade</title>
+    <title>Торговля — LUMIT Trade (local)</title>
     <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
-    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Критический минимум: чтобы страница не была белой и у графика была
+         высота ДАЖЕ если внешний css/terminal.css не подгрузился (404/не та
+         папка). Полный стиль ниже во внешнем файле — он переопределит эти
+         правила, когда доступен. -->
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        background: #000; color: #fff;
+        font-family: 'Inter', -apple-system, sans-serif;
+        overflow-x: hidden;
+      }
+      .main { display: flex; height: 100vh; width: 100%; }
+      /* Без этой высоты график создаётся 0×0 и не виден. */
+      #chart { flex: 1; min-height: 420px; position: relative; }
+    </style>
     <link rel="stylesheet" href="css/terminal.css">
+    <script src="config.js"></script>
     <script defer src="scripts/terminal-script.js"></script>
   </head>
   <body>
@@ -37,7 +62,7 @@
         </div>
         <div class="balance-block">
           <span class="balance-label">Демо-баланс</span>
-          <span class="balance-amount" id="balance-amount-header">$10,000.00</span>
+          <span class="balance-amount" id="balance-amount-header">$0.00</span>
         </div>
         <button class="right-btn" title="Уведомления">
           <svg class="bell-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
@@ -79,88 +104,28 @@
                 <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
                 <path d="M12 7v10M14 9h-3a1.5 1.5 0 0 0 0 3h2a1.5 1.5 0 0 1 0 3H9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
-            <span>Криптовалюта</span>
+            <span>Валютные пары</span>
             </div>
             <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
               <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
           <div class="submenu open">
-            <button class="sub-btn active" data-pair="BTC/USDT">
-              <span class="sub-icon">₿</span>
-              Bitcoin
+            <button class="sub-btn active" data-pair="EUR/USD">
+              <span class="sub-icon">€</span>
+              Euro / Dollar
             </button>
-            <button class="sub-btn" data-pair="ETH/USDT">
-              <span class="sub-icon">Ξ</span>
-              Ethereum
+            <button class="sub-btn" data-pair="GBP/USD">
+              <span class="sub-icon">£</span>
+              Pound / Dollar
             </button>
-            <button class="sub-btn" data-pair="LUMIT/OTC">
-              <span class="sub-icon">
-                <svg class="diamond-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
-                  <path d="M6 3h12l4 5-10 13L2 8l4-5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M2 8h20M6 3l6 5 6-5M12 8v13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </span>
-              LUMIT OTC
-            </button>
-          </div>
-        </div>
-        <div class="category-item">
-          <button class="main-category">
-            <div class="category-name">
-              <svg class="bar-chart-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
-                <path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <span>Вид графика</span>
-            </div>
-            <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
-              <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          <div class="submenu">
-            <button class="sub-btn">
-              <span class="sub-icon">
-                <svg class="trend-up-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
-                  <path d="M23 6l-9.5 9.5-5-5L1 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg> 
-              </span>
-              Линия
-            </button>
-            <button class="sub-btn">
-              <span class="sub-icon">
-                <svg class="bar-chart-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
-                  <path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </span>
-              Свечи
+            <button class="sub-btn" data-pair="USD/JPY">
+              <span class="sub-icon">¥</span>
+              Dollar / Yen
             </button>
           </div>
         </div>
         <div class="category-divider"></div>
-        <div class="category-item">
-          <button class="main-category">
-            <div class="category-name">
-              <svg class="history-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <span>История</span>
-            </div>
-            <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
-              <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          <div class="submenu">
-            <button class="sub-btn" onclick="socket.emit('get_history')">
-              <span class="sub-icon">
-                <svg class="bar-chart-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
-                  <path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </span> 
-              Мои сделки
-            </button>
-          </div>
-        </div>
         <div class="category-item">
           <button class="main-category">
             <div class="category-name">
@@ -180,18 +145,9 @@
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l.73-1.19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </span>
-              Сбросить счет
+              Обновить баланс
             </button>
           </div>
-        </div>
-        <div class="settings">
-          <a class="settings-link" href="http://localhost:3030/profile">
-            <svg class="settings-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
-              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span>Настройки</span>
-          </a>
         </div>
       </div>
       <div id="chart"></div>
@@ -203,7 +159,7 @@
           </div>
           <div class="trade-info-row">
             <span class="trade-info-label">Пара</span>
-            <span class="trade-info-value" id="current-pair">BTC/USDT</span>
+            <span class="trade-info-value" id="current-pair">EUR/USD</span>
           </div>
         </div>
         <div class="input-group">
@@ -212,7 +168,7 @@
         </div>
         <div class="input-group">
           <label>Время экспирации (сек)</label>
-          <input type="number" id="time" value="60" min="5" max="300" step="5">
+          <input type="number" id="time" value="30" min="5" max="300" step="5">
         </div>
         <div id="status-bar">Подключение...</div>
         <div class="active-trades" id="active-trades-container"></div>
@@ -224,7 +180,7 @@
           <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l.73-1.19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span>Сбросить демо-счет</span>
+          <span>Обновить баланс</span>
         </button>
       </div>
     </div>
