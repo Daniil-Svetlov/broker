@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUMIT TRADE — Платформа для трейдеров</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body class="page">
+    <header class="header">
+        <div class="header__container">
+            <div class="header__logo">LUMIT_TRADE</div>
+            <nav class="header__nav">
+                <a href="#" class="header__link">Преимущества</a>
+                <a href="#" class="header__link">Рынки</a>
+                <a href="#" class="header__link">Обучение</a>
+            </nav>
+            <div class="header__actions">
+                <button class="button button_type_secondary">Войти</button>
+                <button class="button button_type_primary">Регистрация</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="content">
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1 class="hero__title">Торгуй будущим с <span class="hero__accent">LUMIT</span></h1>
+            <p class="hero__subtitle">Профессиональный терминал для бинарных опционов. Быстрые сделки, точные графики и моментальный вывод средств.</p>
+            <div class="hero__buttons">
+                <button class="button button_size_large button_type_primary">Начать торговать</button>
+                <button class="button button_size_large button_type_outline">Демо-счет</button>
+            </div>
+            <div class="hero__preview">
+                <img src="preview.jpg" alt="Интерфейс" class="hero__image">
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features">
+            <div class="features__grid">
+                <div class="feature-card">
+                    <div class="feature-card__icon">⚡</div>
+                    <h3 class="feature-card__title">Мгновенное исполнение</h3>
+                    <p class="feature-card__text">Ваши сделки открываются за доли секунды без проскальзываний.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-card__icon">🔒</div>
+                    <h3 class="feature-card__title">Безопасность</h3>
+                    <p class="feature-card__text">Ваши средства защищены двухфакторной аутентификацией и шифрованием.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-card__icon">💰</div>
+                    <h3 class="feature-card__title">Быстрый вывод</h3>
+                    <p class="feature-card__text">Выводите прибыль на карту или криптокошелек в течение 15 минут.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

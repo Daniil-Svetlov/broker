@@ -1,112 +1,43 @@
-# Broker — бэкенд
+# Локальная связка фронт ↔ бэк (проверочный стенд)
 
-Бэкенд платформы бинарных опционов. Состоит из двух сервисов вокруг общей БД
-Postgres:
+Фронтенд из ветки `main`, подключённый к **новому** бэкенду (Go quotes-service +
+Django REST). Нужен только для проверки работоспособности — **в прод не идёт**,
+папка в `.gitignore`. Соответствие старому socket.io-серверу не требуется:
 
-```
-┌─────────────────┐   HTTP /price    ┌──────────────────────┐
-│  quotes-service │◀─────────────────│   django-api (DRF)    │
-│      (Go)       │   живая цена      │  модели + логика      │
-│                 │                  │  сделок + REST API    │
-└────────┬────────┘                  └───────────┬───────────┘
-         │ запись истории котировок               │ счета, сделки, баланс
-         ▼                                        ▼
-                      ┌──────────────────┐
-                      │    PostgreSQL    │
-                      └──────────────────┘
-```
+| Было (server.js, socket.io) | Стало (REST)                                   |
+|-----------------------------|------------------------------------------------|
+| `socket.on('price_update')` | `GET {Go}/price?symbol=PAIR` (опрос ~1с)        |
+| `emit('make_trade')`        | `POST {Django}/api/trades/`                     |
+| `on('trade_result')`        | `POST /api/trades/<id>/settle/` по истечении    |
+| `on('balance_update')`      | `GET /api/accounts/<accountId>/`                |
 
-- **quotes-service (Go)** — go-порт прежнего Python-сервиса `quotes.py`.
-  Тянет реальные форекс-курсы онлайн, считает кросс-курсы, держит «живую» цену с
-  микро-тиками и отдаёт её по HTTP; параллельно пишет историю в Postgres.
-  Подробности — [`quotes-service/README.md`](quotes-service/README.md).
-- **django-api (Django + DRF)** — модели (порт `database.py`), REST API и
-  **логика сделок** (порт серверной логики из `frontend2/server.js`).
-  Цену для открытия/закрытия сделки берёт **онлайн** у Go-сервиса.
-  Подробности — [`django-api/README.md`](django-api/README.md).
-
-## Что изменилось относительно старой версии
-
-| Было (Python)                     | Стало                                            |
-|-----------------------------------|--------------------------------------------------|
-| `quotes.py` (парсинг котировок)   | `quotes-service/` на Go + HTTP API живой цены    |
-| `database.py` (наброски моделей)  | полноценный Django-проект `django-api/`          |
-| логика сделок на JS (`server.js`) | `django-api/trading/services.py` (Postgres, Decimal, атомарно) |
-| `init_assets.py`, `settings.py`   | `quotes -init`, env-конфиг                       |
-
-Канонический источник схемы БД — миграции Django (`django-api/trading/migrations`).
-`schema.sql` оставлен как справка для standalone-запуска Go-сервиса без Django.
-
-## Быстрый старт (Docker Compose)
-
-Поднимает Postgres, применяет миграции, запускает Go-сервис, API и закрытие сделок:
+## Запуск
 
 ```bash
-docker compose up --build
+# 1. Поднять бэкенд (из корня репозитория)
+docker compose up --build        # Postgres + Django :8000 + Go :8090 + settler
+
+# 2. Создать демо-счёт и прописать его UUID в config.js
+cd _local-integration
+./bootstrap.sh
+
+# 3. Отдать фронтенд на том же :3030, что в браузере
+python3 serve.py
+# открыть http://localhost:3030/terminal.html
 ```
 
-- API:        http://localhost:8000/api/
-- Котировки:  http://localhost:8090/price?symbol=EUR/USD
-- Админка:    http://localhost:8000/admin/
+Без Docker (локальный Django): `RUN="cd ../django-api && python manage.py" ./bootstrap.sh`.
 
-## Доступ в админку
+## Что проверяется
 
-Суперюзер не создаётся автоматически. Создать его (контейнер `api` должен быть
-поднят):
+- График тянет живую цену с Go-сервиса (CORS уже разрешён на бэке).
+- Кнопки ВЫШЕ/НИЖЕ открывают сделку в Django, баланс списывается.
+- По истечении срока сделка закрывается, рисуется итог, баланс обновляется.
 
-```bash
-# интерактивно — логин/почта/пароль спросят
-docker compose exec api python manage.py createsuperuser
+`accountId` можно переопределить без правки файла:
+`localStorage.setItem('lumit_account_id','<uuid>')` в консоли браузера.
 
-# либо одной строкой — заведёт admin / admin
-docker compose exec api python manage.py shell -c "from django.contrib.auth.models import User; User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin','admin@example.com','admin')"
-```
+## Пары
 
-Это пользователь Django (`auth.User`) для входа в `/admin/` — отдельный от
-бизнес-модели `trading.User`.
-
-## Локальный запуск без Docker
-
-```bash
-# 1. Postgres
-docker run -d --name broker-pg -e POSTGRES_PASSWORD=1234 -e POSTGRES_DB=binary \
-  -p 5432:5432 postgres:16
-
-# 2. Django: схема + API
-cd django-api
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver 0.0.0.0:8000
-
-# 3. Go-сервис котировок (в другом терминале)
-cd quotes-service
-go run ./cmd/quotes
-
-# 4. Закрытие истёкших сделок (в другом терминале)
-cd django-api && source venv/bin/activate
-python manage.py settle_trades --watch
-```
-
-## Пример сделки
-
-```bash
-# создать пользователя и счёт можно через django admin или shell;
-# открыть сделку:
-curl -X POST http://localhost:8000/api/trades/ -H 'Content-Type: application/json' -d '{
-  "account_id": "<uuid счёта>",
-  "asset_pair": "EUR/USD",
-  "amount": "100.00",
-  "direction": "UP",
-  "duration": 30
-}'
-```
-
-Через `duration` секунд `settle_trades` закроет сделку по живой цене и обновит баланс.
-
-## Тесты
-
-```bash
-cd quotes-service && go test ./...
-cd django-api && DJANGO_TEST_SQLITE=1 python manage.py test trading
-```
+Бэкенд отдаёт форекс (`EUR/USD`, `GBP/USD`, `USD/JPY`, …) — в терминале выбраны
+они, а не крипта из исходного `main` (там цены брал отдельный socket-сервер).

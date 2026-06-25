@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>LUMIT Broker</title>
+    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <style>
+        :root { --bg: #0b0e11; --panel: #161a1e; --accent: #ffffff; --green: #2ebd85; --red: #f6465d; --border: #2b3139; }
+        * { outline: none !important; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        body { background: var(--bg); color: #eaecef; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { background: var(--panel); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: relative; z-index: 20; }
+        .logo-area { display: flex; align-items: center; gap: 12px; }
+        .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .logo-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .logo-text { color: var(--accent); font-weight: bold; font-size: 20px; letter-spacing: 2px; }
+
+        .right-buttons { display: flex; align-items: center; gap: 15px; background: rgba(43, 49, 57, 0.5); padding: 5px 15px; border-radius: 40px; backdrop-filter: blur(4px); }
+        .right-btn { background: transparent; border: none; color: #eaecef; font-size: 14px; font-weight: 500; cursor: pointer; padding: 6px 12px; border-radius: 30px; transition: 0.2s; font-family: inherit; }
+        .right-btn:hover { background: #2b3139; }
+        .balance-block { display: flex; flex-direction: column; background: #2b3139; padding: 6px 14px; border-radius: 20px; }
+        .balance-label { font-size: 9px; color: #848e9c; text-transform: uppercase; }
+        .balance-amount { font-weight: bold; font-size: 16px; color: #2ebd85; }
+        .stats-block { display: flex; gap: 10px; font-size: 11px; }
+        .stat-item { display: flex; flex-direction: column; }
+        .stat-label { color: #848e9c; font-size: 9px; }
+        .stat-value { font-weight: bold; }
+        .stat-value.profit { color: #2ebd85; }
+        .stat-value.loss { color: #f6465d; }
+        .deposit-btn { background: #f0b90b; color: #0b0e11; font-weight: bold; padding: 8px 16px; border-radius: 30px; }
+
+        .main { display: flex; flex: 1; overflow: hidden; background: var(--bg); position: relative; }
+
+        .left-bar { width: 220px; background: var(--panel); display: flex; flex-direction: column; padding: 15px 10px; gap: 8px; border-right: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; }
+        .main-category { background: #2b3139; border-radius: 8px; padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; color: #eaecef; border: none; width: 100%; font-family: inherit; }
+        .main-category:hover { background: #3b424b; }
+        .main-category .arrow { transition: transform 0.2s; font-size: 12px; color: #848e9c; }
+        .main-category.open .arrow { transform: rotate(90deg); }
+
+        .submenu { display: none; flex-direction: column; gap: 6px; margin-top: 8px; padding-left: 8px; }
+        .submenu.open { display: flex; }
+        .sub-btn { background: #1e2329; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 12px; font-size: 12px; color: #c8ccd1; cursor: pointer; border: none; width: 100%; font-family: inherit; text-align: left; }
+        .sub-btn:hover { background: #2b3139; color: #f0b90b; }
+        .sub-btn.active { background: #2b3139; color: #f0b90b; border-left: 3px solid #f0b90b; }
+        .sub-icon { font-size: 14px; min-width: 24px; text-align: center; }
+
+        .category-divider { height: 1px; background: #2b3139; margin: 8px 0; }
+        #chart { flex: 1; position: relative; z-index: 5; min-width: 0; }
+
+        .sidebar { width: 280px; background: var(--panel); padding: 20px; display: flex; flex-direction: column; gap: 15px; border-left: 1px solid var(--border); flex-shrink: 0; overflow-y: auto; }
+        label { font-size: 11px; color: #848e9c; font-weight: bold; display: block; margin-bottom: 8px; }
+        input { background: #2b3139; border: 1px solid #474d57; color: white; padding: 12px; border-radius: 4px; width: 100%; font-size: 14px; }
+        .btn { padding: 16px; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-up { background: var(--green); }
+        .btn-down { background: var(--red); }
+        .btn-reset { background: #474d57; padding: 10px; font-size: 12px; }
+        #status-bar { text-align: center; color: #f0b90b; font-size: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 4px; background: #1e2329; }
+        
+        .trade-info { background: #1e2329; padding: 12px; border-radius: 4px; font-size: 11px; }
+        .trade-info-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .trade-info-label { color: #848e9c; }
+        .trade-info-value { color: #eaecef; font-weight: bold; }
+        
+        .active-trades { max-height: 150px; overflow-y: auto; }
+        .active-trade-item { background: #2b3139; padding: 8px; border-radius: 4px; margin-bottom: 6px; font-size: 11px; }
+        .active-trade-header { display: flex; justify-content: space-between; margin-bottom: 4px; font-weight: bold; }
+        .countdown { color: #f0b90b; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-area">
+            <div class="logo-icon"><img src="https://cdn-icons-png.flaticon.com/512/2502/2502160.png"></div>
+            <div class="logo-text">LUMIT_TRADE</div>
+        </div>
+        <div class="right-buttons">
+            <div class="stats-block">
+                <div class="stat-item">
+                    <span class="stat-label">Профит</span>
+                    <span class="stat-value profit" id="total-profit">+$0.00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Винрейт</span>
+                    <span class="stat-value" id="win-rate">0%</span>
+                </div>
+            </div>
+            <div class="balance-block">
+                <span class="balance-label">Демо-баланс</span>
+                <span class="balance-amount" id="balance-amount-header">$10,000.00</span>
+            </div>
+            <div class="right-btn notification-icon">🔔</div>
+            <div class="right-btn profile-icon">👤</div>
+            <div class="right-btn deposit-btn">💳 Пополнить</div>
+        </div>
+    </header>
+
+    <div class="main">
+        <div class="left-bar">
+            <div class="category-item">
+                <button class="main-category"><span>⏱️ Таймфрейм</span><span class="arrow">▶</span></button>
+                <div class="submenu">
+                    <button class="sub-btn"><span class="sub-icon">1м</span> 1 минута</button>
+                    <button class="sub-btn"><span class="sub-icon">5м</span> 5 минут</button>
+                </div>
+            </div>
+
+            <div class="category-item">
+                <button class="main-category open"><span>🪙 Криптовалюта</span><span class="arrow">▶</span></button>
+                <div class="submenu open">
+                    <button class="sub-btn active" data-pair="BTC/USDT"><span class="sub-icon">₿</span> Bitcoin</button>
+                    <button class="sub-btn" data-pair="ETH/USDT"><span class="sub-icon">Ξ</span> Ethereum</button>
+                    <button class="sub-btn" data-pair="LUMIT/OTC"><span class="sub-icon">💎</span> LUMIT OTC</button>
+                </div>
+            </div>
+
+            <div class="category-item">
+                <button class="main-category"><span>📊 Вид графика</span><span class="arrow">▶</span></button>
+                <div class="submenu">
+                    <button class="sub-btn"><span class="sub-icon">📈</span> Линия</button>
+                    <button class="sub-btn"><span class="sub-icon">📊</span> Свечи</button>
+                </div>
+            </div>
+
+            <div class="category-divider"></div>
+
+            <div class="category-item">
+                <button class="main-category"><span>📜 История</span><span class="arrow">▶</span></button>
+                <div class="submenu">
+                    <button class="sub-btn" onclick="socket.emit('get_history')"><span class="sub-icon">📊</span> Мои сделки</button>
+                </div>
+            </div>
+
+            <div class="category-item">
+                <button class="main-category"><span>🗑️ Действия</span><span class="arrow">▶</span></button>
+                <div class="submenu">
+                    <button class="sub-btn" onclick="resetDemo()"><span class="sub-icon">🔄</span> Сбросить счет</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="chart"></div>
+
+        <div class="sidebar">
+            <div class="trade-info">
+                <div class="trade-info-row">
+                    <span class="trade-info-label">Текущая цена:</span>
+                    <span class="trade-info-value" id="current-price">-</span>
+                </div>
+                <div class="trade-info-row">
+                    <span class="trade-info-label">Пара:</span>
+                    <span class="trade-info-value" id="current-pair">BTC/USDT</span>
+                </div>
+            </div>
+
+            <div>
+                <label>СУММА СТАВКИ ($)</label>
+                <input type="number" id="amount" value="10" min="1" step="1">
+            </div>
+            <div>
+                <label>ВРЕМЯ ЭКСПИРАЦИИ (СЕК)</label>
+                <input type="number" id="time" value="60" min="5" max="300" step="5">
+            </div>
+
+            <div id="status-bar">Подключение...</div>
+
+            <div class="active-trades" id="active-trades-container"></div>
+
+            <button class="btn btn-up" id="btnUp">ВЫШЕ ▲</button>
+            <button class="btn btn-down" id="btnDown">НИЖЕ ▼</button>
+
+            <button class="btn btn-reset" onclick="resetDemo()">🔄 Сбросить демо-счет</button>
+        </div>
+    </div>
+
+<script>
+        let currentPair = 'BTC/USDT'; 
+        let lineSeries = null;
+        let chart = null;
+        let socket = null;
+        let balance = 10000.00;
+        let activeTrades = [];
+        let countdownIntervals = [];
+        let tradeMarkers = []; // Массив для хранения маркеров
+
+        // Аккордеон
+        document.querySelectorAll('.main-category').forEach(button => {
+            button.addEventListener('click', () => {
+                const submenu = button.nextElementSibling;
+                button.classList.toggle('open');
+                submenu.classList.toggle('open');
+            });
+        });
+
+        // Выбор пары
+        document.querySelectorAll('.sub-btn[data-pair]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentPair = this.getAttribute('data-pair');
+                
+                document.querySelectorAll('.sub-btn[data-pair]').forEach(b => {
+                    b.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                if (lineSeries) {
+                    lineSeries.setData([]);
+                    // Очищаем маркеры при смене пары
+                    tradeMarkers = [];
+                    lineSeries.setMarkers([]);
+                }
+                
+                document.getElementById('current-pair').innerText = currentPair;
+                document.getElementById('status-bar').innerText = "Рынок: " + currentPair;
+            });
+        });
+
+        // Инициализация
+        window.addEventListener('load', function() {
+            console.log('Загрузка LUMIT Trading Engine...');
+            
+            const chartElement = document.getElementById('chart');
+            
+            if (typeof LightweightCharts === 'undefined') {
+                console.error('LightweightCharts не загружена!');
+                document.getElementById('status-bar').innerText = "Ошибка загрузки графика";
+                return;
+            }
+
+            try {
+                chart = LightweightCharts.createChart(chartElement, {
+                    layout: { 
+                        background: { color: '#0b0e11' }, 
+                        textColor: '#d1d4dc' 
+                    },
+                    grid: { 
+                        vertLines: { color: '#2b3139' }, 
+                        horzLines: { color: '#2b3139' } 
+                    },
+                    width: chartElement.clientWidth,
+                    height: chartElement.clientHeight,
+                    timeScale: { 
+                        timeVisible: true, 
+                        secondsVisible: true 
+                    },
+                    rightPriceScale: {
+                        borderColor: '#2b3139',
+                    },
+                    crosshair: {
+                        mode: LightweightCharts.CrosshairMode.Normal,
+                    },
+                });
+
+                lineSeries = chart.addLineSeries({ 
+                    color: '#f0b90b', 
+                    lineWidth: 2,
+                    priceLineVisible: false,
+                });
+
+                console.log('✅ График создан');
+
+            } catch (error) {
+                console.error('Ошибка создания графика:', error);
+                return;
+            }
+
+            // Socket.IO
+            socket = io(); 
+
+            socket.on('connect', () => {
+                console.log('✅ Подключено к серверу');
+                document.getElementById('status-bar').innerText = "Рынок: " + currentPair;
+            });
+
+            socket.on('price_update', (data) => {
+                try {
+                    if (data.pairs && data.pairs[currentPair]) {
+                        const price = parseFloat(data.pairs[currentPair]);
+                        if (price > 0 && !isNaN(price)) {
+                            lineSeries.update({ 
+                                time: data.time, 
+                                value: price 
+                            });
+                            document.getElementById('current-price').innerText = `$${price.toFixed(2)}`;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Ошибка обновления графика:', error);
+                }
+            });
+
+            socket.on('balance_update', (data) => {
+                balance = data.balance;
+                document.getElementById('balance-amount-header').innerText = `$${balance.toFixed(2)}`;
+                
+                const profit = data.totalProfit - data.totalLoss;
+                document.getElementById('total-profit').innerText = `${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`;
+                document.getElementById('total-profit').className = `stat-value ${profit >= 0 ? 'profit' : 'loss'}`;
+                document.getElementById('win-rate').innerText = `${data.winRate}%`;
+            });
+
+            socket.on('trade_opened', (data) => {
+                activeTrades.push(data);
+                renderActiveTrades();
+                
+                // Добавляем маркер точки входа на график
+                const currentTime = Math.floor(Date.now() / 1000);
+                const newMarker = {
+                    time: currentTime,
+                    position: 'inBar',
+                    color: data.type === 'higher' ? '#2ebd85' : '#f6465d',
+                    shape: data.type === 'higher' ? 'arrowUp' : 'arrowDown',
+                    text: `${data.type === 'higher' ? '▲' : '▼'} $${data.amount} @ $${data.startPrice.toFixed(2)}`,
+                    id: data.tradeId
+                };
+                
+                tradeMarkers.push(newMarker);
+                lineSeries.setMarkers(tradeMarkers);
+                
+                console.log('📍 Маркер добавлен на график:', newMarker);
+                
+                document.getElementById('status-bar').innerText = `Сделка открыта: ${data.type === 'higher' ? '▲' : '▼'} $${data.amount}`;
+            });
+
+            socket.on('trade_result', (data) => {
+                activeTrades = activeTrades.filter(t => t.tradeId !== data.tradeId);
+                renderActiveTrades();
+                
+                // Находим маркер входа и обновляем его цвет в зависимости от результата
+                const markerIndex = tradeMarkers.findIndex(m => m.id === data.tradeId);
+                if (markerIndex !== -1) {
+                    // Меняем цвет маркера на основе результата
+                    tradeMarkers[markerIndex].color = data.result === 'WIN' ? '#2ebd85' : '#f6465d';
+                    tradeMarkers[markerIndex].text = `${data.result === 'WIN' ? '✅' : '❌'} ${data.profit >= 0 ? '+' : ''}$${data.profit.toFixed(2)}`;
+                    
+                    // Добавляем маркер точки выхода
+                    const exitMarker = {
+                        time: Math.floor(Date.now() / 1000),
+                        position: 'inBar',
+                        color: data.result === 'WIN' ? '#2ebd85' : '#f6465d',
+                        shape: 'circle',
+                        text: `Exit: $${data.endPrice}`,
+                        id: `${data.tradeId}_exit`
+                    };
+                    
+                    tradeMarkers.push(exitMarker);
+                    lineSeries.setMarkers(tradeMarkers);
+                    
+                    console.log('📍 Маркер выхода добавлен:', exitMarker);
+                }
+                
+                const resultText = data.result === 'WIN' ? '✅ ВЫИГРЫШ' : '❌ ПРОИГРЫШ';
+                document.getElementById('status-bar').innerText = `${resultText}: ${data.profit >= 0 ? '+' : ''}$${data.profit.toFixed(2)}`;
+                
+                setTimeout(() => {
+                    document.getElementById('status-bar').innerText = "Рынок: " + currentPair;
+                }, 4000);
+            });
+
+            socket.on('trade_error', (data) => {
+                alert(data.message);
+            });
+
+            socket.on('demo_reset', (data) => {
+                activeTrades = [];
+                tradeMarkers = [];
+                if (lineSeries) {
+                    lineSeries.setMarkers([]);
+                }
+                renderActiveTrades();
+                alert('Демо-счет сброшен до $10,000');
+            });
+
+            socket.on('disconnect', () => {
+                console.log('⚠️ Отключено от сервера');
+                document.getElementById('status-bar').innerText = "Нет соединения";
+            });
+
+            window.addEventListener('resize', () => {
+                if (chart) {
+                    chart.applyOptions({ 
+                        width: chartElement.clientWidth, 
+                        height: chartElement.clientHeight 
+                    });
+                }
+            });
+
+            document.getElementById('btnUp').addEventListener('click', () => sendTrade('higher'));
+            document.getElementById('btnDown').addEventListener('click', () => sendTrade('lower'));
+        });
+
+        function sendTrade(type) {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const time = parseInt(document.getElementById('time').value);
+            
+            if (amount > balance) {
+                alert("Недостаточно средств на балансе");
+                return;
+            }
+            
+            if (amount < 1) {
+                alert("Минимальная ставка: $1");
+                return;
+            }
+            
+            if (!socket || !socket.connected) {
+                alert("Нет подключения к серверу");
+                return;
+            }
+            
+            socket.emit('make_trade', { 
+                type, 
+                amount, 
+                time, 
+                pair: currentPair 
+            });
+        }
+
+        function resetDemo() {
+            if (confirm('Вы уверены, что хотите сбросить демо-счет до $10,000? Вся история будет удалена.')) {
+                socket.emit('reset_demo');
+            }
+        }
+
+        function renderActiveTrades() {
+            const container = document.getElementById('active-trades-container');
+            
+            // Очищаем старые таймеры
+            countdownIntervals.forEach(interval => clearInterval(interval));
+            countdownIntervals = [];
+            
+            if (activeTrades.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            container.innerHTML = activeTrades.map((trade, index) => {
+                const timeLeft = Math.max(0, trade.expirationTime - Math.floor((Date.now() - new Date().getTime()) / 1000));
+                return `
+                    <div class="active-trade-item" id="trade-${index}">
+                        <div class="active-trade-header">
+                            <span>${trade.pair} ${trade.type === 'higher' ? '▲' : '▼'}</span>
+                            <span class="countdown" id="countdown-${index}">${timeLeft}s</span>
+                        </div>
+                        <div>Ставка: $${trade.amount} | Цена: $${trade.startPrice.toFixed(2)}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Запускаем таймеры
+            activeTrades.forEach((trade, index) => {
+                let timeLeft = trade.expirationTime;
+                const interval = setInterval(() => {
+                    timeLeft--;
+                    const el = document.getElementById(`countdown-${index}`);
+                    if (el) {
+                        el.innerText = `${Math.max(0, timeLeft)}s`;
+                    }
+                    if (timeLeft <= 0) {
+                        clearInterval(interval);
+                    }
+                }, 1000);
+                countdownIntervals.push(interval);
+            });
+        }
+    </script>
+</html>

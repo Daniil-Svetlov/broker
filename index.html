@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUMIT Trade — Binary Options Platform</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet">
+    <link rel="stylesheet" href="css/index.css">
+    <script defer src="scripts/index-script.js"></script>
+  </head>
+  <body>
+    <div class="rkn-disclaimer-banner">
+      <div class="rkn-disclaimer-content">
+        <div class="rkn-badge">УЧЕБНЫЙ ПРОЕКТ</div>
+        <p class="rkn-text">
+          <strong>Внимание!</strong> Данный сайт является исключительно демонстрационным учебным макетом (пет-проектом) и
+          находится в разработке.
+          Платформа <strong>LUMIT Trade</strong> вымышлена. Сайт <u>не оказывает</u> финансовых услуг, не принимает
+          платежи,
+          не осуществляет торговлю реальными бинарными опционами или иными активами. Все данные, графики и котировки
+          являются симуляцией.
+        </p>
+        <button class="rkn-close-btn"
+          onclick="this.parentElement.parentElement.style.display='none'; document.body.classList.add('has-no-banner');">&times;</button>
+      </div>
+    </div>
+    <div class="ambient-bg">
+      <div class="ambient-orb"></div>
+      <div class="ambient-orb"></div>
+      <div class="ambient-orb"></div>
+      <div class="ambient-orb"></div>
+    </div>
+    <div class="noise-overlay"></div>
+
+    <header class="glass" id="header">
+      <a href="#" class="logo">
+        <div class="logo-icon">L</div>
+        <div class="logo-text">LUMIT <span>Trade</span></div>
+      </a>
+      <nav>
+        <a href="#features">Возможности</a>
+        <a href="#assets">Активы</a>
+        <a href="#how">Как начать</a>
+        <button class="btn-header" onclick="openModal()">Начать торговлю</button>
+      </nav>
+    </header>
+
+    <!-- TICKER MARQUEE -->
+    <div class="ticker-strip">
+      <div class="ticker-track" id="ticker-track"></div>
+    </div>
+
+    <section class="hero" style="padding-top: 56px;">
+      <div class="hero-copy">
+        <div class="hero-index">
+          <span class="idx-num mono">01</span>
+          <span class="idx-line"></span>
+          <span class="idx-label">Платформа нового поколения</span>
+        </div>
+        <h1>
+          Торгуй<br>
+          <span class="gradient-text">на скорости света</span>
+        </h1>
+        <p>Премиальная платформа для бинарных опционов с мгновенным исполнением, аналитикой в реальном времени и
+          интуитивным интерфейсом.</p>
+        <div class="hero-buttons">
+          <button class="btn-primary" onclick="openModal()">Открыть счёт</button>
+          <!-- <button class="btn-secondary" onclick="window.location.href='http://localhost:3030/terminal'">Демо-режим</button> -->
+          <button class="btn-secondary" onclick="window.location.href='terminal.html'">Демо-режим</button>
+        </div>
+        <div class="hero-microstats">
+          <div class="micro-stat">
+            <div class="micro-value mono">30мс</div>
+            <div class="micro-label">исполнение ордера</div>
+          </div>
+          <div class="micro-stat">
+            <div class="micro-value mono">95%</div>
+            <div class="micro-label">максимальная прибыль</div>
+          </div>
+          <div class="micro-stat">
+            <div class="micro-value mono">150K+</div>
+            <div class="micro-label">трейдеров</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="terminal-card glass-strong">
+          <div class="terminal-topbar">
+            <div class="terminal-tabs">
+              <div class="terminal-tab active">BTC/USD</div>
+              <div class="terminal-tab">ETH/USD</div>
+            </div>
+            <div class="terminal-dot-group">
+              <div class="t-dot"></div>
+              <div class="t-dot"></div>
+              <div class="t-dot"></div>
+            </div>
+          </div>
+          <div class="terminal-body">
+            <div class="trading-header">
+              <div class="trading-pair">
+                <div class="pair-icon">BTC</div>
+                <div class="pair-info">
+                  <h3>BTC / USD</h3>
+                  <span>Bitcoin · Binary Option</span>
+                </div>
+              </div>
+              <div class="trading-price">
+                <div class="price mono" id="live-price">$68,241.50</div>
+                <div class="change">+3.24% сегодня</div>
+              </div>
+            </div>
+            <div class="timeframe-row">
+              <div class="tf-pill">1м</div>
+              <div class="tf-pill active">5м</div>
+              <div class="tf-pill">15м</div>
+              <div class="tf-pill">1ч</div>
+              <div class="tf-pill">1д</div>
+            </div>
+            <div class="chart-placeholder">
+              <canvas id="hero-chart"></canvas>
+            </div>
+            <div class="trading-actions">
+              <button class="btn-trade btn-call">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="19" x2="12" y2="5" />
+                  <polyline points="5 12 12 5 19 12" />
+                </svg>
+                CALL
+              </button>
+              <button class="btn-trade btn-put">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <polyline points="19 12 12 19 5 12" />
+                </svg>
+                PUT
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal glass-strong">
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <div class="modal-header">
+          <h2>Создать аккаунт</h2>
+          <p>Начните торговать за 30 секунд</p>
+        </div>
+        <form onsubmit="handleRegister(event)" novalidate>
+          <div class="form-group">
+            <label>Имя</label>
+            <input type="text" id="regName" placeholder="Ваше имя" required>
+            <span class="error-message"></span>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="regEmail" placeholder="name@email.com" required>
+            <span class="error-message"></span>
+          </div>
+          <div class="form-group">
+            <label>Пароль</label>
+            <input type="password" id="regPassword" placeholder="Минимум 8 символов" required>
+            <span class="error-message"></span>
+          </div>
+          <button type="submit" class="btn-primary modal-btn">
+            <span>Зарегистрироваться</span>
+          </button>
+        </form>
+        <div class="modal-footer">
+          Уже есть аккаунт? <a href="#">Войти</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stats-container">
+        <div class="stat-item glass">
+          <div class="stat-value" data-count="150">0</div>
+          <div class="stat-label">Тысяч трейдеров</div>
+        </div>
+        <div class="stat-item glass">
+          <div class="stat-value" data-count="30">0</div>
+          <div class="stat-label">мс исполнение</div>
+        </div>
+        <div class="stat-item glass">
+          <div class="stat-value" data-count="98">0</div>
+          <div class="stat-label">% аптайм</div>
+        </div>
+        <div class="stat-item glass">
+          <div class="stat-value" data-count="50">0</div>
+          <div class="stat-label">+ активов</div>
+        </div>
+      </div>
+    </div>
+
+    <section id="features">
+      <div class="section-header centered reveal">
+        <div class="section-label" style="justify-content: center;">Преимущества</div>
+        <h2>Всё для успешной<br>торговли</h2>
+        <p>Технологии институционального уровня в элегантном интерфейсе</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-index">01 / ИСПОЛНЕНИЕ</div>
+          <h3>Мгновенное исполнение</h3>
+          <p>Ордера исполняются за 30мс благодаря серверам в Лондоне, Нью-Йорке и Токио</p>
+          <div class="feature-glyph">30</div>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-index">02 / АНАЛИТИКА</div>
+          <h3>Живая аналитика</h3>
+          <p>Графики в реальном времени, технические индикаторы и сигналы на основе AI</p>
+          <div class="feature-glyph">AI</div>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-index">03 / БЕЗОПАСНОСТЬ</div>
+          <h3>Защита депозитов</h3>
+          <p>Мультиподпись, холодное хранение и полное страхование всех средств</p>
+          <div class="feature-glyph">100</div>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-index">04 / ДОХОДНОСТЬ</div>
+          <h3>До 95% прибыли</h3>
+          <p>Лучшие коэффициенты в индустрии для всех типов бинарных опционов</p>
+          <div class="feature-glyph">95</div>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-index">05 / СООБЩЕСТВО</div>
+          <h3>Копи-трейдинг</h3>
+          <p>Подписывайтесь на успешных трейдеров и копируйте их сделки автоматически</p>
+          <div class="feature-glyph">CT</div>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-index">06 / РЫНКИ</div>
+          <h3>50+ активов</h3>
+          <p>Валютные пары, криптовалюты, акции и товары — всё в одном терминале</p>
+          <div class="feature-glyph">50+</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SHOWCASE: МЕСТО ДЛЯ КАРТИНКИ ИНТЕРФЕЙСА -->
+    <section class="showcase-section">
+      <div class="showcase-grid">
+        <div class="showcase-image reveal">
+          <!--
+              ПУТЬ ДЛЯ ИЗОБРАЖЕНИЯ:
+              Положите файл сюда: images/dashboard-screenshot.png
+              Рекомендуемый размер: 1200x1400px (вертикальная ориентация), формат PNG или WEBP
+            -->
+          <img src="images/dashboard-screenshot.png" alt="Интерфейс платформы LUMIT Trade"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback"
+            style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%;">
+            images/dashboard-screenshot.png<br>1200×1400
+          </div>
+        </div>
+        <div class="showcase-content reveal">
+          <div class="section-label">Интерфейс</div>
+          <h2>Полный контроль над торговлей</h2>
+          <p>Наш интуитивный интерфейс дает вам всю информацию, которая вам нужна, в режиме реального времени. От графиков
+            до портфеля — всё под контролем.</p>
+
+          <div class="showcase-features">
+            <div class="showcase-feature">
+              <div class="sf-num mono">01</div>
+              <div>
+                <h4>Мультиинструментальная торговля</h4>
+                <p>Торгуйте криптовалютами, валютами, акциями и сырьевыми товарами одновременно</p>
+              </div>
+            </div>
+            <div class="showcase-feature">
+              <div class="sf-num mono">02</div>
+              <div>
+                <h4>Автоматические сигналы</h4>
+                <p>AI анализирует рынок 24/7 и отправляет вам сигналы для прибыльных сделок</p>
+              </div>
+            </div>
+            <div class="showcase-feature">
+              <div class="sf-num mono">03</div>
+              <div>
+                <h4>Управление рисками</h4>
+                <p>Stop-Loss, Take-Profit и автоматические стоп-ордера для защиты капитала</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="assets" class="assets-section">
+      <div class="section-header centered reveal">
+        <div class="section-label" style="justify-content: center;">Рынки</div>
+        <h2>Популярные активы</h2>
+        <p>Торгуйте самыми ликвидными инструментами мировых рынков</p>
+      </div>
+
+      <div class="assets-grid glass" id="assets-grid" style="display:contents;">
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="section-header centered reveal">
+        <div class="section-label" style="justify-content: center;">Быстрый старт</div>
+        <h2>Начните за 3 шага</h2>
+        <p>От регистрации до первой сделки — менее 2 минут</p>
+      </div>
+
+      <div class="steps-rail">
+        <div class="step-row reveal">
+          <div class="step-idx">01</div>
+          <div class="step-text">
+            <h3>Регистрация</h3>
+            <p>Создайте аккаунт за 30 секунд. Верификация не требуется для демо-счёта</p>
+          </div>
+          <div class="step-arrow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </div>
+        </div>
+        <div class="step-row reveal">
+          <div class="step-idx">02</div>
+          <div class="step-text">
+            <h3>Пополнение</h3>
+            <p>Внесите депозит любым удобным способом: карта, крипто или банковский перевод</p>
+          </div>
+          <div class="step-arrow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </div>
+        </div>
+        <div class="step-row reveal">
+          <div class="step-idx">03</div>
+          <div class="step-text">
+            <h3>Торговля</h3>
+            <p>Выберите актив, направление и сумму. Прибыль до 95% от суммы сделки</p>
+          </div>
+          <div class="step-arrow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <div class="cta-card reveal">
+        <h2>Готовы начать?</h2>
+        <p>Присоединяйтесь к 150,000+ трейдеров по всему миру</p>
+        <button class="btn-primary create-account" style="font-size: 18px; padding: 20px 48px;" onclick="openModal()">Создать бесплатный
+          аккаунт</button>
+      </div>
+    </section>
+
+    <footer>
+      <div class="footer-content">
+        <a href="#" class="logo">
+          <div class="logo-icon">L</div>
+          <div class="logo-text foot">LUMIT <span>Trade</span></div>
+        </a>
+        <div class="footer-links">
+          <a href="#">Условия</a>
+          <a href="#">Конфиденциальность</a>
+          <a href="#">Поддержка</a>
+          <a href="#">API</a>
+        </div>
+        <div class="footer-copy">© 2026 LUMIT Trade</div>
+      </div>
+    </footer>
+  </body>
+</html>
