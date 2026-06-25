@@ -6,6 +6,7 @@
     <title>Профиль — LUMIT Trade</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/profile.css">
+    <script src="config.js"></script>
     <script defer src="scripts/profile-script.js"></script>
   </head>
   <body>
@@ -97,10 +98,10 @@
         </nav>
 
         <div class="sidebar-user">
-          <div class="user-avatar">D</div>
+          <div class="user-avatar" id="pf-avatar">·</div>
           <div class="user-info">
-            <div class="user-name">Daniil</div>
-            <div class="user-email">trade@lumit.com</div>
+            <div class="user-name" id="pf-username">—</div>
+            <div class="user-email" id="pf-email">—</div>
           </div>
         </div>
       </aside>
@@ -121,8 +122,8 @@
               </div>
               <div class="balance-display">
                 <div class="balance-label">Общий баланс</div>
-                <div class="balance-amount"><span class="currency">$</span>12,847.50</div>
-                <div class="balance-change up">+12.4% за неделю</div>
+                <div class="balance-amount"><span class="currency">$</span><span id="pf-balance-dash">0.00</span></div>
+                <div class="balance-change up" id="pf-account-type">Демо-счёт</div>
               </div>
               <div class="balance-actions">
                 <a href="/pay" class="btn-balance btn-deposit"
@@ -137,15 +138,15 @@
               <div class="stats-row">
                 <div class="stat-box">
                   <div class="stat-box-label">Всего сделок</div>
-                  <div class="stat-box-value">347</div>
+                  <div class="stat-box-value" id="pf-stat-total">0</div>
                 </div>
                 <div class="stat-box">
                   <div class="stat-box-label">Win Rate</div>
-                  <div class="stat-box-value green">68%</div>
+                  <div class="stat-box-value green" id="pf-stat-winrate">0%</div>
                 </div>
                 <div class="stat-box">
                   <div class="stat-box-label">Прибыль</div>
-                  <div class="stat-box-value green">+$2,847</div>
+                  <div class="stat-box-value green" id="pf-stat-profit">$0</div>
                 </div>
               </div>
               <div class="chart-area">
@@ -169,67 +170,8 @@
                       <th>Время</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <div class="asset-cell">
-                          <div class="asset-cell-icon btc">B</div>
-                          <div>
-                            <div class="asset-cell-name">BTC/USD</div>
-                            <div class="asset-cell-sub">Bitcoin</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td><span class="direction-badge call">CALL</span></td>
-                      <td>$250.00</td>
-                      <td><span class="result-badge win">+$237.50</span></td>
-                      <td style="color:var(--text-secondary)">2 мин назад</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="asset-cell">
-                          <div class="asset-cell-icon eth">E</div>
-                          <div>
-                            <div class="asset-cell-name">ETH/USD</div>
-                            <div class="asset-cell-sub">Ethereum</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td><span class="direction-badge put">PUT</span></td>
-                      <td>$100.00</td>
-                      <td><span class="result-badge loss">-$100.00</span></td>
-                      <td style="color:var(--text-secondary)">15 мин назад</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="asset-cell">
-                          <div class="asset-cell-icon sol">S</div>
-                          <div>
-                            <div class="asset-cell-name">SOL/USD</div>
-                            <div class="asset-cell-sub">Solana</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td><span class="direction-badge call">CALL</span></td>
-                      <td>$500.00</td>
-                      <td><span class="result-badge win">+$475.00</span></td>
-                      <td style="color:var(--text-secondary)">1 час назад</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="asset-cell">
-                          <div class="asset-cell-icon eur">€</div>
-                          <div>
-                            <div class="asset-cell-name">EUR/USD</div>
-                            <div class="asset-cell-sub">Euro</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td><span class="direction-badge put">PUT</span></td>
-                      <td>$150.00</td>
-                      <td><span class="result-badge pending">В процессе</span></td>
-                      <td style="color:var(--text-secondary)">3 мин осталось</td>
-                    </tr>
+                  <tbody id="recent-trades-body">
+                    <tr><td colspan="5" style="color:var(--text-secondary)">Загрузка…</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -247,18 +189,18 @@
           <div class="profile-grid">
             <div class="profile-card glass full-width">
               <div class="profile-avatar-section">
-                <div class="profile-avatar">D</div>
+                <div class="profile-avatar" id="pf-avatar2">·</div>
                 <div class="profile-details">
-                  <h2>Daniil</h2>
-                  <p>trade@lumit.com</p>
-                  <div class="member-since">Участник с января 2026</div>
+                  <h2 id="pf-name2">—</h2>
+                  <p id="pf-email2">—</p>
+                  <div class="member-since" id="pf-member">—</div>
                 </div>
               </div>
               <form onsubmit="saveProfile(event)">
                 <div class="form-grid">
                   <div class="form-group">
                     <label>Имя</label>
-                    <input type="text" value="Daniil" placeholder="Ваше имя">
+                    <input type="text" id="pf-input-name" value="" placeholder="Ваше имя">
                   </div>
                   <div class="form-group">
                     <label>Фамилия</label>
@@ -266,7 +208,7 @@
                   </div>
                   <div class="form-group">
                     <label>Email</label>
-                    <input type="email" value="trade@lumit.com" placeholder="name@email.com">
+                    <input type="email" id="pf-input-email" value="" placeholder="name@email.com" readonly>
                   </div>
                   <div class="form-group">
                     <label>Телефон</label>
@@ -335,8 +277,8 @@
                 <div class="card-title">Основной баланс</div>
               </div>
               <div class="balance-display">
-                <div class="balance-amount"><span class="currency">$</span>12,847.50</div>
-                <div class="balance-change up">+$1,420 за сегодня</div>
+                <div class="balance-amount"><span class="currency">$</span><span id="pf-balance-wallet">0.00</span></div>
+                <div class="balance-change up" id="pf-currency">USD</div>
               </div>
               <div class="balance-actions">
                 <a href="/pay" class="btn-balance btn-deposit"

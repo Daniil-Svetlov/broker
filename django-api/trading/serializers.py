@@ -61,3 +61,39 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = ["id", "account", "amount", "type", "timestamp"]
+
+
+class RegisterSerializer(serializers.Serializer):
+    """Входные данные регистрации (POST /api/register/)."""
+
+    name = serializers.CharField(min_length=4, max_length=50)
+    email = serializers.EmailField()
+    password = serializers.CharField(min_length=8, write_only=True)
+
+
+class LoginSerializer(serializers.Serializer):
+    """Входные данные входа (POST /api/login/)."""
+
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+
+class AccountAuthSerializer(serializers.ModelSerializer):
+    """Ответ register/login: счёт + данные пользователя для фронта."""
+
+    account_id = serializers.UUIDField(source="id", read_only=True)
+    user_id = serializers.UUIDField(source="user.id", read_only=True)
+    username = serializers.CharField(source="user.username", read_only=True)
+    email = serializers.EmailField(source="user.email", read_only=True)
+
+    class Meta:
+        model = Pay
+        fields = [
+            "account_id",
+            "user_id",
+            "username",
+            "email",
+            "account_type",
+            "balance",
+            "currency",
+        ]

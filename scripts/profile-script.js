@@ -85,35 +85,155 @@ if (equityCanvas) {
     window.addEventListener('resize', drawEquityChart);
 }
 
-// --- TRADES DATA ---
-const allTrades = [
-    { asset: 'BTC/USD', icon: 'btc', letter: 'B', sub: 'Bitcoin', dir: 'call', amount: 250, result: 'win', profit: '+$237.50', date: 'Сегодня, 14:32' },
-    { asset: 'ETH/USD', icon: 'eth', letter: 'E', sub: 'Ethereum', dir: 'put', amount: 100, result: 'loss', profit: '-$100.00', date: 'Сегодня, 14:17' },
-    { asset: 'SOL/USD', icon: 'sol', letter: 'S', sub: 'Solana', dir: 'call', amount: 500, result: 'win', profit: '+$475.00', date: 'Сегодня, 13:45' },
-    { asset: 'EUR/USD', icon: 'eur', letter: '€', sub: 'Euro', dir: 'put', amount: 150, result: 'pending', profit: 'В процессе', date: 'Сегодня, 14:30' },
-    { asset: 'GBP/USD', icon: 'gbp', letter: '£', sub: 'Pound', dir: 'call', amount: 200, result: 'win', profit: '+$190.00', date: 'Вчера, 18:22' },
-    { asset: 'BTC/USD', icon: 'btc', letter: 'B', sub: 'Bitcoin', dir: 'put', amount: 300, result: 'loss', profit: '-$300.00', date: 'Вчера, 16:10' },
-    { asset: 'ETH/USD', icon: 'eth', letter: 'E', sub: 'Ethereum', dir: 'call', amount: 150, result: 'win', profit: '+$142.50', date: 'Вчера, 12:05' },
-    { asset: 'SOL/USD', icon: 'sol', letter: 'S', sub: 'Solana', dir: 'call', amount: 400, result: 'win', profit: '+$380.00', date: '20 мая, 09:30' },
-    { asset: 'EUR/USD', icon: 'eur', letter: '€', sub: 'Euro', dir: 'put', amount: 100, result: 'win', profit: '+$95.00', date: '20 мая, 08:15' },
-    { asset: 'BTC/USD', icon: 'btc', letter: 'B', sub: 'Bitcoin', dir: 'call', amount: 600, result: 'win', profit: '+$570.00', date: '19 мая, 21:40' },
-];
+// === РЕАЛЬНЫЕ ДАННЫЕ ИЗ БЭКА ===
+const CFG = window.LUMIT_CONFIG || {};
+const API = CFG.apiBase || '';
+const ACCOUNT_ID = localStorage.getItem('lumit_account_id') || '';
 
-const tradesBody = document.getElementById('trades-body');
-allTrades.forEach(t => {
-    tradesBody.innerHTML += `
+const money = (v) => '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+function fmtDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+// Если пользователь не вошёл — на главную (там регистрация/вход).
+if (!ACCOUNT_ID) {
+    alert('Сначала войдите или зарегистрируйтесь');
+    window.location.href = 'index.html';
+}
+
+// Личность берём из localStorage (положили при входе/регистрации).
+function fillIdentity() {
+    const name = localStorage.getItem('lumit_username') || 'Пользователь';
+    const email = localStorage.getItem('lumit_email') || '';
+    const letter = (name[0] || '·').toUpperCase();
+    setText('pf-username', name);
+    setText('pf-email', email);
+    setText('pf-name2', name);
+    setText('pf-email2', email);
+    setText('pf-avatar', letter);
+    setText('pf-avatar2', letter);
+    const nameInput = document.getElementById('pf-input-name');
+    const emailInput = document.getElementById('pf-input-email');
+    if (nameInput) nameInput.value = name;
+    if (emailInput) emailInput.value = email;
+}
+
+async function loadAccount() {
+    try {
+        const res = await fetch(`${API}/api/accounts/${ACCOUNT_ID}/`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const acc = await res.json();
+        setText('pf-balance-dash', Number(acc.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        setText('pf-balance-wallet', Number(acc.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        setText('pf-currency', acc.currency || 'USD');
+        setText('pf-account-type', acc.account_type === 'DEMO' ? 'Демо-счёт' : 'Реальный счёт');
+        setText('pf-member', acc.account_type === 'DEMO' ? 'Демо-аккаунт LUMIT Trade' : 'Аккаунт LUMIT Trade');
+    } catch (err) {
+        console.error('Не удалось загрузить счёт:', err);
+    }
+}
+
+function tradeRow(t) {
+    const dirClass = t.direction === 'UP' ? 'call' : 'put';
+    const dirText = t.direction === 'UP' ? 'ВЫШЕ' : 'НИЖЕ';
+    const base = (t.asset_pair || '').split('/')[0];
+    let result, badgeClass, profitText;
+    const amount = Number(t.amount);
+    if (t.status === 'WIN') {
+        const net = Number(t.payout) - amount;
+        result = 'Прибыль'; badgeClass = 'win'; profitText = '+' + money(net);
+    } else if (t.status === 'LOSS') {
+        result = 'Убыток'; badgeClass = 'loss'; profitText = '-' + money(amount);
+    } else {
+        result = 'В процессе'; badgeClass = 'pending'; profitText = '—';
+    }
+    return `
       <tr>
         <td>
           <div class="asset-cell">
-            <div class="asset-cell-icon ${t.icon}">${t.letter}</div>
-            <div><div class="asset-cell-name">${t.asset}</div><div class="asset-cell-sub">${t.sub}</div></div>
+            <div class="asset-cell-icon">${base[0] || '?'}</div>
+            <div><div class="asset-cell-name">${t.asset_pair}</div><div class="asset-cell-sub">${base}</div></div>
           </div>
         </td>
-        <td><span class="direction-badge ${t.dir}">${t.dir.toUpperCase()}</span></td>
-        <td>$${t.amount.toFixed(2)}</td>
-        <td style="font-weight:600">${t.profit}</td>
-        <td><span class="result-badge ${t.result}">${t.result === 'win' ? 'Прибыль' : t.result === 'loss' ? 'Убыток' : 'В процессе'}</span></td>
-        <td style="color:var(--text-secondary)">${t.date}</td>
-      </tr>
-    `;
-});
+        <td><span class="direction-badge ${dirClass}">${dirText}</span></td>
+        <td>${money(amount)}</td>
+        <td style="font-weight:600">${profitText}</td>
+        <td><span class="result-badge ${badgeClass}">${result}</span></td>
+        <td style="color:var(--text-secondary)">${fmtDate(t.created_at)}</td>
+      </tr>`;
+}
+
+// Строка для дашборда — без колонки «Выплата» (там 5 колонок).
+function recentRow(t) {
+    const dirClass = t.direction === 'UP' ? 'call' : 'put';
+    const dirText = t.direction === 'UP' ? 'ВЫШЕ' : 'НИЖЕ';
+    const base = (t.asset_pair || '').split('/')[0];
+    const amount = Number(t.amount);
+    let badgeClass, profitText;
+    if (t.status === 'WIN') { badgeClass = 'win'; profitText = '+' + money(Number(t.payout) - amount); }
+    else if (t.status === 'LOSS') { badgeClass = 'loss'; profitText = '-' + money(amount); }
+    else { badgeClass = 'pending'; profitText = 'В процессе'; }
+    return `
+      <tr>
+        <td>
+          <div class="asset-cell">
+            <div class="asset-cell-icon">${base[0] || '?'}</div>
+            <div><div class="asset-cell-name">${t.asset_pair}</div><div class="asset-cell-sub">${base}</div></div>
+          </div>
+        </td>
+        <td><span class="direction-badge ${dirClass}">${dirText}</span></td>
+        <td>${money(amount)}</td>
+        <td><span class="result-badge ${badgeClass}">${profitText}</span></td>
+        <td style="color:var(--text-secondary)">${fmtDate(t.created_at)}</td>
+      </tr>`;
+}
+
+async function loadTrades() {
+    const fullBody = document.getElementById('trades-body');
+    const recentBody = document.getElementById('recent-trades-body');
+    try {
+        const res = await fetch(`${API}/api/accounts/${ACCOUNT_ID}/trades/`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const trades = await res.json();
+
+        if (!trades.length) {
+            const empty = '<tr><td colspan="6" style="color:var(--text-secondary)">Сделок пока нет</td></tr>';
+            if (fullBody) fullBody.innerHTML = empty;
+            if (recentBody) recentBody.innerHTML = '<tr><td colspan="5" style="color:var(--text-secondary)">Сделок пока нет</td></tr>';
+        } else {
+            if (fullBody) fullBody.innerHTML = trades.map(tradeRow).join('');
+            if (recentBody) recentBody.innerHTML = trades.slice(0, 5).map(recentRow).join('');
+        }
+
+        // Статистика по реальным сделкам.
+        const wins = trades.filter(t => t.status === 'WIN').length;
+        const losses = trades.filter(t => t.status === 'LOSS').length;
+        const settled = wins + losses;
+        const profit = trades.reduce((sum, t) => {
+            if (t.status === 'WIN') return sum + (Number(t.payout) - Number(t.amount));
+            if (t.status === 'LOSS') return sum - Number(t.amount);
+            return sum;
+        }, 0);
+        setText('pf-stat-total', String(trades.length));
+        setText('pf-stat-winrate', (settled ? Math.round((wins / settled) * 100) : 0) + '%');
+        const profitEl = document.getElementById('pf-stat-profit');
+        if (profitEl) {
+            profitEl.textContent = (profit >= 0 ? '+' : '−') + money(Math.abs(profit));
+            profitEl.classList.toggle('green', profit >= 0);
+        }
+    } catch (err) {
+        console.error('Не удалось загрузить сделки:', err);
+        if (fullBody) fullBody.innerHTML = '<tr><td colspan="6" style="color:var(--text-secondary)">Ошибка загрузки</td></tr>';
+        if (recentBody) recentBody.innerHTML = '<tr><td colspan="5" style="color:var(--text-secondary)">Ошибка загрузки</td></tr>';
+    }
+}
+
+if (ACCOUNT_ID) {
+    fillIdentity();
+    loadAccount();
+    loadTrades();
+}

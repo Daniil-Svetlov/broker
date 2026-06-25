@@ -8,6 +8,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
       rel="stylesheet">
     <link rel="stylesheet" href="css/index.css">
+    <script src="config.js"></script>
     <script defer src="scripts/index-script.js"></script>
   </head>
   <body>
@@ -173,7 +174,35 @@
           </button>
         </form>
         <div class="modal-footer">
-          Уже есть аккаунт? <a href="#">Войти</a>
+          Уже есть аккаунт? <a href="#" onclick="openLogin(); return false;">Войти</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="login-overlay">
+      <div class="modal glass-strong">
+        <button class="modal-close" onclick="closeLogin()">×</button>
+        <div class="modal-header">
+          <h2>Вход</h2>
+          <p>Рады видеть вас снова</p>
+        </div>
+        <form onsubmit="handleLogin(event)" novalidate>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="loginEmail" placeholder="name@email.com" required>
+            <span class="error-message"></span>
+          </div>
+          <div class="form-group">
+            <label>Пароль</label>
+            <input type="password" id="loginPassword" placeholder="Ваш пароль" required>
+            <span class="error-message"></span>
+          </div>
+          <button type="submit" class="btn-primary modal-btn">
+            <span>Войти</span>
+          </button>
+        </form>
+        <div class="modal-footer">
+          Нет аккаунта? <a href="#" onclick="openModal(); return false;">Зарегистрироваться</a>
         </div>
       </div>
     </div>

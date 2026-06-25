@@ -16,17 +16,25 @@ from decimal import ROUND_HALF_UP, Decimal
 from typing import Optional
 
 from django.conf import settings
-from django.db import transaction
+from django.contrib.auth.hashers import check_password, make_password
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from .models import Asset, Pay, Trade
+from .models import Asset, Pay, Trade, User
 from .quotes_client import QuotesUnavailable, get_live_price
 
 CENTS = Decimal("0.01")
 
+# Стартовый баланс демо-счёта нового пользователя.
+SIGNUP_BONUS = Decimal("10000")
+
 
 class TradeError(Exception):
     """Доменная ошибка сделки (некорректные данные, нет средств и т.п.)."""
+
+
+class AuthError(Exception):
+    """Доменная ошибка регистрации/входа (email занят, неверный пароль и т.п.)."""
 
 
 def _money(value: Decimal) -> Decimal:
@@ -165,3 +173,74 @@ def settle_due_trades() -> int:
             settle_trade(trade_id)
             settled += 1
     return settled
+
+
+# --- Аутентификация ---
+
+
+def _unique_username(name: str) -> str:
+    """Уникальный username из введённого имени (тёзки получают суффикс)."""
+    base = (name or "").strip() or "user"
+    candidate = base
+    suffix = 2
+    while User.objects.filter(username=candidate).exists():
+        candidate = f"{base}{suffix}"
+        suffix += 1
+    return candidate
+
+
+@transaction.atomic
+def register_user(*, name: str, email: str, password: str) -> Pay:
+    """Создаёт пользователя и демо-счёт со стартовым балансом. Возвращает счёт.
+
+    Пароль хранится хешированным (Django make_password). Email уникален —
+    повторная регистрация на тот же адрес отклоняется.
+    """
+    email = (email or "").strip().lower()
+    if User.objects.filter(email=email).exists():
+        raise AuthError("этот email уже зарегистрирован")
+
+    try:
+        user = User.objects.create(
+            username=_unique_username(name),
+            email=email,
+            password_hash=make_password(password),
+        )
+    except IntegrityError as exc:
+        # Гонка между проверкой и вставкой (уникальный email/username).
+        raise AuthError("этот email уже зарегистрирован") from exc
+
+    return Pay.objects.create(
+        user=user,
+        account_type="DEMO",
+        balance=_money(SIGNUP_BONUS),
+        currency="USD",
+    )
+
+
+def login_user(*, email: str, password: str) -> Pay:
+    """Проверяет email+пароль, возвращает счёт пользователя (его DEMO-счёт)."""
+    email = (email or "").strip().lower()
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        # Конкретная причина (это учебный проект — account enumeration не критичен,
+        # зато сразу видно, что именно не так).
+        raise AuthError("аккаунт с таким email не найден — проверьте почту или зарегистрируйтесь")
+
+    if not check_password(password, user.password_hash):
+        raise AuthError("неверный пароль")
+
+    account = (
+        Pay.objects.filter(user=user, account_type="DEMO").first()
+        or Pay.objects.filter(user=user).first()
+    )
+    if account is None:
+        # У пользователя нет счёта (нештатно) — заводим демо-счёт.
+        account = Pay.objects.create(
+            user=user,
+            account_type="DEMO",
+            balance=_money(SIGNUP_BONUS),
+            currency="USD",
+        )
+    return account

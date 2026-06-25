@@ -58,21 +58,55 @@ document.querySelectorAll('.main-category').forEach(button => {
   });
 });
 
-document.querySelectorAll('.sub-btn[data-pair]').forEach(btn => {
-  btn.addEventListener('click', function () {
-    currentPair = this.getAttribute('data-pair');
-    document.querySelectorAll('.sub-btn[data-pair]').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    if (lineSeries) {
-      lineSeries.setData([]);
-      lastChartTime = 0;
-      tradeMarkers = [];
-      lineSeries.setMarkers([]);
-    }
-    document.getElementById('current-pair').innerText = currentPair;
-    document.getElementById('status-bar').innerText = 'Рынок: ' + currentPair;
-  });
-});
+// Символ валюты для иконки (база пары). Фолбэк — первая буква.
+const CURRENCY_ICON = {
+  EUR: '€', USD: '$', GBP: '£', JPY: '¥', AUD: 'A$',
+  CAD: 'C$', CHF: '₣', NZD: 'NZ$', CNY: '¥', RUB: '₽',
+};
+
+function selectPair(pair) {
+  currentPair = pair;
+  document.querySelectorAll('.sub-btn[data-pair]').forEach(b =>
+    b.classList.toggle('active', b.getAttribute('data-pair') === pair));
+  if (lineSeries) {
+    lineSeries.setData([]);
+    lastChartTime = 0;
+    tradeMarkers = [];
+    lineSeries.setMarkers([]);
+  }
+  document.getElementById('current-pair').innerText = pair;
+  document.getElementById('status-bar').innerText = 'Рынок: ' + pair;
+}
+
+// Список валютных пар берём из Django (/api/assets/), а не из захардкоженного HTML —
+// сколько пар отдаёт бэк, столько и показываем.
+async function loadAssets() {
+  const menu = document.getElementById('pairs-menu');
+  try {
+    const res = await fetch(`${API}/api/assets/`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const assets = await res.json();
+    if (!Array.isArray(assets) || assets.length === 0) throw new Error('пусто');
+
+    menu.innerHTML = '';
+    assets.forEach((a, i) => {
+      const base = (a.symbol || '').split('/')[0];
+      const icon = CURRENCY_ICON[base] || (base[0] || '?');
+      const btn = document.createElement('button');
+      btn.className = 'sub-btn' + (i === 0 ? ' active' : '');
+      btn.setAttribute('data-pair', a.symbol);
+      btn.innerHTML = `<span class="sub-icon">${icon}</span> ${a.name || a.symbol}`;
+      btn.addEventListener('click', () => selectPair(a.symbol));
+      menu.appendChild(btn);
+    });
+    // Активируем первую пару (или сохраняем текущую, если она есть в списке).
+    const symbols = assets.map(a => a.symbol);
+    selectPair(symbols.includes(currentPair) ? currentPair : symbols[0]);
+  } catch (err) {
+    console.error('Не удалось загрузить список пар:', err);
+    menu.innerHTML = '<button class="sub-btn" disabled>Пары недоступны</button>';
+  }
+}
 
 function toggleLeft() {
   document.getElementById('left-bar').classList.toggle('open');
@@ -99,8 +133,8 @@ window.addEventListener('load', function () {
   }
   if (!ACCOUNT_OK) {
     document.getElementById('status-bar').innerText =
-      'Не задан accountId — запустите bootstrap.sh (см. README)';
-    console.error('accountId не задан в config.js / localStorage');
+      'Войдите или зарегистрируйтесь, чтобы торговать';
+    console.error('accountId не задан — нужна регистрация/вход');
   }
 
   try {
@@ -130,7 +164,8 @@ window.addEventListener('load', function () {
   document.getElementById('current-pair').innerText = currentPair;
   document.getElementById('status-bar').innerText = 'Рынок: ' + currentPair;
 
-  // Стартуем опрос цены и подгружаем баланс.
+  // Подгружаем список пар из бэка, баланс и стартуем опрос цены.
+  loadAssets();
   loadBalance();
   pollPrice();
   setInterval(pollPrice, POLL);
@@ -193,7 +228,7 @@ function updateStats() {
 async function sendTrade(type) {
   const amount = parseFloat(document.getElementById('amount').value);
   const time = parseInt(document.getElementById('time').value);
-  if (!ACCOUNT_OK) { alert('Не задан accountId — запустите bootstrap.sh (см. README)'); return; }
+  if (!ACCOUNT_OK) { alert('Сначала войдите или зарегистрируйтесь на главной странице'); return; }
   if (isNaN(amount) || amount < 1) { alert('Минимальная ставка: $1'); return; }
   if (amount > balance) { alert('Недостаточно средств на балансе'); return; }
 

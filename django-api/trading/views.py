@@ -17,12 +17,22 @@ from rest_framework.response import Response
 from .models import Asset, Pay, Trade
 from .quotes_client import QuotesUnavailable, get_live_price
 from .serializers import (
+    AccountAuthSerializer,
     AssetSerializer,
+    LoginSerializer,
     OpenTradeSerializer,
     PaySerializer,
+    RegisterSerializer,
     TradeSerializer,
 )
-from .services import TradeError, open_trade, settle_trade
+from .services import (
+    AuthError,
+    TradeError,
+    login_user,
+    open_trade,
+    register_user,
+    settle_trade,
+)
 
 
 class AssetListView(ListAPIView):
@@ -47,6 +57,34 @@ class TradeDetailView(RetrieveAPIView):
     queryset = Trade.objects.all()
     serializer_class = TradeSerializer
     lookup_field = "id"
+
+
+@api_view(["POST"])
+def register_view(request):
+    serializer = RegisterSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.validated_data
+    try:
+        account = register_user(
+            name=data["name"], email=data["email"], password=data["password"]
+        )
+    except AuthError as exc:
+        return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+    return Response(
+        AccountAuthSerializer(account).data, status=status.HTTP_201_CREATED
+    )
+
+
+@api_view(["POST"])
+def login_view(request):
+    serializer = LoginSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.validated_data
+    try:
+        account = login_user(email=data["email"], password=data["password"])
+    except AuthError as exc:
+        return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+    return Response(AccountAuthSerializer(account).data)
 
 
 @api_view(["POST"])

@@ -110,19 +110,9 @@
               <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
-          <div class="submenu open">
-            <button class="sub-btn active" data-pair="EUR/USD">
-              <span class="sub-icon">€</span>
-              Euro / Dollar
-            </button>
-            <button class="sub-btn" data-pair="GBP/USD">
-              <span class="sub-icon">£</span>
-              Pound / Dollar
-            </button>
-            <button class="sub-btn" data-pair="USD/JPY">
-              <span class="sub-icon">¥</span>
-              Dollar / Yen
-            </button>
+          <!-- Список пар наполняется из /api/assets/ (terminal-script.js, loadAssets). -->
+          <div class="submenu open" id="pairs-menu">
+            <button class="sub-btn" disabled>Загрузка пар…</button>
           </div>
         </div>
         <div class="category-divider"></div>
