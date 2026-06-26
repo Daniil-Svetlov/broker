@@ -112,10 +112,6 @@ function toggleLeft() {
   document.getElementById('left-bar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('active');
 }
-function toggleRight() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('overlay').classList.toggle('active');
-}
 function closePanels() {
   document.getElementById('left-bar').classList.remove('open');
   document.getElementById('sidebar').classList.remove('open');

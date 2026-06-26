@@ -795,11 +795,6 @@ header {
     top: calc(var(--header-h) + 30px);
 }
 
-#mobile-right {
-    right: 20px;
-    top: calc(var(--header-h) + 30px);
-}
-
 .overlay {
     display: none;
     position: fixed;
@@ -918,10 +913,6 @@ header {
     }
 
     #status-bar {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-        width: 50%;
         padding: 6px 10px;
         font-size: 11px;
         margin-top: 8px;
