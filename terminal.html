@@ -1,13 +1,4 @@
 <!DOCTYPE html>
-<!--
-  ЛОКАЛЬНАЯ проверочная версия терминала (ветка main + новый бэкенд).
-  Отличия от main/terminal.html:
-   * убран <script socket.io> — данные берём по REST (Go /price + Django /api);
-   * подключён config.js (адреса бэка + accountId демо-счёта);
-   * валютные пары заменены на те, что реально отдаёт quotes-service (форекс);
-   * onclick="socket.emit(...)" убраны (сокета больше нет).
-  В прод НЕ идёт: это стенд для проверки связки фронт↔бэк.
--->
 <html lang="ru">
   <head>
     <meta charset="UTF-8">
@@ -115,7 +106,62 @@
             <button class="sub-btn" disabled>Загрузка пар…</button>
           </div>
         </div>
+        <div class="category-item">
+          <button class="main-category">
+            <div class="category-name">
+              <svg class="bar-chart-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                <path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>Вид графика</span>
+            </div>
+            <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+              <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="submenu">
+            <button class="sub-btn">
+              <span class="sub-icon">
+                <svg class="trend-up-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                  <path d="M23 6l-9.5 9.5-5-5L1 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg> 
+              </span>
+              Линия
+            </button>
+            <button class="sub-btn">
+              <span class="sub-icon">
+                <svg class="bar-chart-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                  <path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              Свечи
+            </button>
+          </div>
+        </div>
         <div class="category-divider"></div>
+        <div class="category-item">
+          <button class="main-category">
+            <div class="category-name">
+              <svg class="history-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>История</span>
+            </div>
+            <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+              <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="submenu">
+            <button class="sub-btn" onclick="socket.emit('get_history')">
+              <span class="sub-icon">
+                <svg class="bar-chart-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                  <path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span> 
+              Мои сделки
+            </button>
+          </div>
+        </div>
         <div class="category-item">
           <button class="main-category">
             <div class="category-name">
@@ -138,6 +184,15 @@
               Обновить баланс
             </button>
           </div>
+        </div>
+        <div class="settings">
+          <a class="settings-link" href="http://localhost:3030/profile">
+            <svg class="settings-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Настройки</span>
+          </a>
         </div>
       </div>
       <div id="chart"></div>
@@ -163,8 +218,22 @@
         <div id="status-bar">Подключение...</div>
         <div class="active-trades" id="active-trades-container"></div>
         <div class="trade-actions">
-          <button class="btn-trade btn-up" id="btnUp">ВЫШЕ ▲</button>
-          <button class="btn-trade btn-down" id="btnDown">НИЖЕ ▼</button>
+          <button class="btn-trade btn-up" id="btnUp">
+            <div>
+              <span>ВЫШЕ</span>
+              <svg class="trade-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://w3.org">
+                <path d="M12 4L22 20H2L12 4Z"/>
+              </svg>
+            </div>
+          </button>
+          <button class="btn-trade btn-down" id="btnDown">
+            <div>
+              <span>НИЖЕ</span>
+              <svg class="trade-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://w3.org">
+                <path d="M12 20L2 4H22L12 20Z"/>
+              </svg>
+            </div>
+          </button>
         </div>
         <button class="btn-reset" onclick="resetDemo()">
           <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
