@@ -2,9 +2,11 @@
 <html>
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Форум LUMIT Trade</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="css/forum.css">
+        <script defer src="scripts/forum3-script.js"></script>
     </head>
     <body>
         <div class="ambient-bg">
@@ -23,177 +25,127 @@
                 <a href="terminal.html" class="nav-link">Торговый терминал</a>
                 <a href="profile.html" class="nav-link profile-link">
                     <svg class="profile-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
-                        <path d="M20 21C20 19.6044 20 18.9067 19.7578 18.3578C19.4322 17.6194 18.8413 17.0285 18.1029 16.7029C17.554 16.4607 16.8562 16.4607 15.4607 16.4607H8.53934C7.14378 16.4607 6.446 16.4607 5.89711 16.7029C5.15873 17.0285 4.56779 17.6194 4.24221 18.3578C4 18.9067 4 19.6044 4 21M16.5 7.5C16.5 9.98528 14.4853 12.0 12 12.0C9.51472 12.0 7.5 9.98528 7.5 7.5C7.5 5.01472 9.51472 3.0 12 3.0C14.4853 3.0 16.5 5.01472 16.5 7.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path
+                            d="M20 21C20 19.6044 20 18.9067 19.7578 18.3578C19.4322 17.6194 18.8413 17.0285 18.1029 16.7029C17.554 16.4607 16.8562 16.4607 15.4607 16.4607H8.53934C7.14378 16.4607 6.446 16.4607 5.89711 16.7029C5.15873 17.0285 4.56779 17.6194 4.24221 18.3578C4 18.9067 4 19.6044 4 21M16.5 7.5C16.5 9.98528 14.4853 12.0 12 12.0C9.51472 12.0 7.5 9.98528 7.5 7.5C7.5 5.01472 9.51472 3.0 12 3.0C14.4853 3.0 16.5 5.01472 16.5 7.5Z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                     <span>Профиль</span>
                 </a>
             </nav>
         </header>
         <div class="forum">
-            <h1>Форум</h1>
-            <div class="content">
-                <div class="left-panel">
-                    <button class="new-theme glass-strong">Создать новую тему</button>
-                    <div class="main-content">
-                        <section class="category">
-                            <h2>Категория 1</h2>
-                            <ul class="theme-list">
-                                <li class="glass">
-                                    <h3>Тема: <a href="#" class="theme-link forum-link">Что делать, если что-то там где-то там бла-бла-бла и так далее</a></h3>
-                                    <div>Автор: <a href="#" class="autor forum-link">кто-то</a></div>
-                                    <div class="question-statistics">
-                                        <span>Ответы: 10</span>
-                                        <span>Просмотры: 50</span>
-                                    </div>
-                                </li>
-                                <li class="glass">
-                                    <h3>Тема: <a href="#" class="theme-link forum-link">Что делать, если что-то там где-то там бла-бла-бла и так далее и тому подобное</a></h3>
-                                    <div>Автор: <a href="#" class="autor forum-link">Господин Лягушка</a></div>
-                                    <div class="question-statistics">
-                                        <span>Ответы: 50</span>
-                                        <span>Просмотры: 200</span>
-                                    </div>
-                                </li>
-                                <li class="glass">
-                                    <h3>Тема: <a href="#" class="theme-link forum-link">Пример темы</a></h3>
-                                    <div>Автор: <a href="#" class="autor forum-link">человек</a></div>
-                                    <div class="question-statistics">
-                                        <span>Ответы: 4</span>
-                                        <span>Просмотры: 5</span>
-                                    </div>
-                                </li>
-                            </ul>
-                        </section>
-                        <section class="category">
-                            <h2>Категория 2</h2>
-                            <ul class="theme-list">
-                                <li class="glass">
-                                    <h3>Тема: <a href="#" class="theme-link forum-link">Пример вопроса</a></h3>
-                                    <div>Автор: <a href="#" class="autor forum-link">Пользователь</a></div>
-                                    <div class="question-statistics">
-                                        <span>Ответы: 8</span>
-                                        <span>Просмотры: 30</span>
-                                    </div>
-                                </li>
-                                <li class="glass">
-                                    <h3>Тема: <a href="#" class="theme-link forum-link">Какой-то длинный текст о чём-то, связянном с этим сайтом и так далее бла-бла-бла что-то там один два три</a></h3>
-                                    <div>Автор: <a href="#" class="autor forum-link">Andrey2005</a></div>
-                                    <div class="question-statistics">
-                                        <span>Ответы: 10</span>
-                                        <span>Просмотры: 100</span>
-                                    </div>
-                                </li>
-                                <li class="glass">
-                                    <h3>Тема: <a href="#" class="theme-link forum-link">Что делать, если что-то там где-то там бла-бла-бла и так далее</a></h3>
-                                    <div>Автор: <a href="#" class="autor forum-link">кто-то</a></div>
-                                    <div class="question-statistics">
-                                        <span>Ответы: 26</span>
-                                        <span>Просмотры: 100</span>
-                                    </div>
-                                </li>
-                                <li class="glass">
-                                    <h3>Тема: <a href="#" class="theme-link forum-link">Что делать, если что-то там где-то там бла-бла-бла и так далее</a></h3>
-                                    <div>Автор: <a href="#" class="autor forum-link">кто-то</a></div>
-                                    <div class="question-statistics">
-                                        <span>Ответы: 11</span>
-                                        <span>Просмотры: 55</span>
-                                    </div>
-                                </li>
-                            </ul>
-                        </section>
+            <div class="left-content panel">
+                <div class="top-buttons">
+                    <button class="new-theme-btn">
+                        <svg class="plus-icon" xmlns="http://w3.org" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14" />
+                            <path d="M12 5v14" />
+                        </svg>
+                        <div>Создать тему</div>
+                    </button>
+                    <div class="drop-down-list">
+                        <button class="left-block open">
+                            <div class="drop-down-block">
+                                <div class="block-title">
+                                    <svg class="folder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                                        <path d="M4 17V6a2 2 0 0 1 2-2h3.5l2 2.5H18a2 2 0 0 1 2 2v2" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path d="M3 11h18l-1.5 9h-15L3 11z" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <span>Категории</span>
+                                </div>
+                                <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                                    <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </button>
+                        <ul class="submenu open">
+                            <div class="submenu-wrapper"></div>
+                            <li class="category">
+                                <div class="block-title">
+                                    <svg class="history-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <div>Категория 1</div>
+                                </div>
+                            </li>
+                            <li class="category">
+                                <div class="block-title">
+                                    <svg class="history-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <div>Категория 2</div>
+                                </div>
+                            </li>
+                            <li class="category">
+                                <div class="block-title">
+                                    <svg class="history-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <div>Категория 3</div>
+                                </div>
+                            </li>
+                            <li class="category">
+                                <div class="block-title">
+                                    <svg class="history-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <div>Категория 4</div>
+                                </div>
+                            </li>
+                        </ul>
                     </div>
-                    <nav class="pagination glass">
-                        <ul class="pagination-list">
-                            <li class="pagination-item">
-                                <a href="#" class="pagination-link prev">
-                                    <svg xmlns="http://w3.org" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="15 18 9 12 15 6"></polyline>
-                                    </svg>
-                                </a>
-                            </li>
-                            <li class="pagination-item">
-                                <a href="#" class="pagination-link current">1</a>
-                            </li>
-                            <li class="pagination-item">
-                                <a href="#" class="pagination-link">2</a>
-                            </li>
-                            <li class="pagination-item">
-                                <a href="#" class="pagination-link">3</a>
-                            </li>
-                            <li class="pagination-item">
-                                <a href="#" class="pagination-link">4</a>
-                            </li>
-                            <li class="pagination-item">
-                                <span class="pagination-separator">&hellip;</span>
-                            </li>
-                            <li class="pagination-item">
-                                <a href="#" class="pagination-link">12</a>
-                            </li>
-                            <li class="pagination-item">
-                                <a href="#" class="pagination-link next">
-                                    <svg xmlns="http://w3.org" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="9 18 15 12 9 6"></polyline>
-                                    </svg>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
-                <div class="right-panel">
-                    <section class="right-section small-profile glass">
-                        <a href="profile.html" class="small-profile-link">
-                            <h2>Профиль</h2>
-                        </a>
-                        <div class="nickname">Nickname</div>
-                        <div class="profile-statistics">
-                            <span>Сообщения: 20</span>
-                            <span>Уведомления: 1</span>
-                        </div>
-                    </section>
-                    <section class="right-section glass">
-                        <h2>Популярные теги</h2>
-                        <ul class="tags-list">
-                            <li><a href="#" class="tag-link forum-link">#РедкийТег1</a></li>
-                            <li><a href="#" class="tag-link forum-link">#Тег2</a></li>
-                            <li><a href="#" class="tag-link forum-link">#Тег3</a></li>
-                            <li><a href="#" class="tag-link forum-link">#ПопулярныйТег4</a></li>
-                            <li><a href="#" class="tag-link forum-link">#Тег5</a></li>
-                            <li><a href="#" class="tag-link forum-link">#Тег6</a></li>
-                            <li><a href="#" class="tag-link forum-link">#Тег7</a></li>
-
-                        </ul>
-                    </section>
-                    <section class="right-section statistics glass">
-                        <h2>Статистика форума</h2>
-                        <div>Пользователей: 100</div>
-                        <div>Категории: 3</div>
-                        <div>Тем создано: 10</div>
-                        <div>Онлайн: 14</div>
-                    </section>
-                    <section class="right-section glass">
-                        <h2>Правила форума</h2>
-                        <ol class="rules-list">
-                            <li class="rule">Уважайте других</li>
-                            <li class="rule">Не спамьте в темах</li>
-                            <li class="rule">Пишите по теме</li>
-                            <li class="rule">Перед созданием новой темы, убедитесь что она ещё не создана</li>
-                            <li class="rule">Выбирайте правильный раздел</li>
-                            <li class="rule">Оскорбления и нецензурная лексика запрещены</li>
-                        </ol>
-                    </section>
-                </div>
+                </div> 
+                <button class="small-profile">
+                    <div class="block-title">
+                        <div class="small-profile-icon">U</div>
+                        <div>User00001</div>
+                    </div>
+                    <svg class="settings-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
             </div>
-            <footer class="glass footer">
-                <span>© 2026 LumitTrade. Все права защищены.</span>
-                <nav class="nav-menu">
-                    <a href="technical-support.html" class="nav-link">Помощь</a>
-                    <a href="#" class="nav-link">Контакты</a>
-                </nav>
-            </footer>
+            <div class="main-content panel">
+                <h1>Форум</h1>
+            </div>
+            <div class="right-content panel">
+
+            </div>
         </div>
         <script>
             window.addEventListener('scroll', () => {
                 document.getElementById('header').classList.toggle('scrolled', window.scrollY > 50);
+            });
+
+            document.querySelectorAll('.drop-down-list').forEach(container => {
+                const button = container.querySelector('.left-block');
+                const submenu = container.querySelector('.submenu');
+
+                button.addEventListener('click', () => {
+                    button.classList.toggle('open');
+                    submenu.classList.toggle('open');
+                });
             });
         </script>
     </body>
