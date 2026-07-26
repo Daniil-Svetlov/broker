@@ -3,7 +3,7 @@ window.addEventListener('scroll', () => {
 });
 
 document.querySelectorAll('.drop-down-list').forEach(container => {
-    const button = container.querySelector('.left-block');
+    const button = container.querySelector('.block');
     const submenu = container.querySelector('.submenu');
     button.addEventListener('click', () => {
         button.classList.toggle('open');
@@ -19,10 +19,10 @@ document.querySelectorAll('.filter-btn').forEach(button => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    const heartButton = document.querySelector('.footer-pill:has(.heart-icon)');
-    if (heartButton) {
-        heartButton.addEventListener('click', () => {
-            heartButton.classList.toggle('active');
+    const heartButtons = document.querySelectorAll('.footer-pill:has(.heart-icon)');
+    heartButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle('active');
         });
-    }
+    });
 });

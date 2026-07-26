@@ -45,7 +45,7 @@
                         <div>Создать тему</div>
                     </button>
                     <div class="drop-down-list">
-                        <button class="left-block open">
+                        <button class="block open">
                             <div class="drop-down-block">
                                 <div class="block-title">
                                     <svg class="folder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
@@ -151,11 +151,16 @@
                                 <div class="user-name">Person22680</div>
                             </div>
                             <span class="meta-separator">•</span>
-                            <div class="tag">Категория 1</div>
+                            <div class="post-category">Категория 1</div>
                         </div>
                         <div class="post-time">18 минут назад</div>
                     </div>
                     <h2>Какое-то название</h2>
+                    <ul class="tag-list">
+                        <li>#тег1</li>
+                        <li>#тег3</li>
+                        <li>#Какой-то_тег</li>
+                    </ul>
                     <p>
                         Отказ от явных индексов в name: чтобы избежать багов, когда парсер Express сбивает ручную сортировку элементов из-за старых 
                         зашитых индексов (например, advantages[titleText]), все динамические поля переведены на плоские одинаковые имена (name="titleText"). 
@@ -206,11 +211,15 @@
                                 <div class="user-name">Genius</div>
                             </div>
                             <span class="meta-separator">•</span>
-                            <div class="tag">Категория 4</div>
+                            <div class="post-category">Категория 4</div>
                         </div>
                         <div class="post-time">40 минут назад</div>
                     </div>
                     <h2>Ещё какое-то название</h2>
+                    <ul class="tag-list">
+                        <li>#тег2</li>
+                        <li>#тег3</li>
+                    </ul>
                     <p>
                         Кольцевой сдвиг на уровне DOM: перемещение элементов в админке реализовано сдвигом HTML-узлов с помощью методов 
                         parent.insertBefore() и parent.appendChild(). Это исключает необходимость совершать ресурсоемкие операции по 
@@ -258,12 +267,14 @@
                                 <div class="user-name">Pentris</div>
                             </div>
                             <span class="meta-separator">•</span>
-                            <div class="tag">Категория 2</div>
-                            <div class="tag">Категория 3</div>
+                            <div class="post-category">Категория 2</div>
                         </div>
                         <div class="post-time">1 час назад</div>
                     </div>
                     <h2>Другое название</h2>
+                    <ul class="tag-list">
+                        <li>#Какой-то_тег</li>
+                    </ul>
                     <p>
                         Петр I законодательно закрепил использование бело-сине-красного флага. В 1705 году он издал указ, согласно 
                         которому «на торговых всяких судах» должен подниматься флаг из трёх горизонтальных полос. Петр сам определил 
@@ -313,11 +324,19 @@
                                 <div class="user-name">User00001</div>
                             </div>
                             <span class="meta-separator">•</span>
-                            <div class="tag">Категория 4</div>
+                            <div class="post-category">Категория 4</div>
                         </div>
                         <div class="post-time">1 день назад</div>
                     </div>
                     <h2>Заголовок, раскрывающий тему</h2>
+                    <ul class="tag-list">
+                        <li>#тег1</li>
+                        <li>#тег2</li>
+                        <li>#тег3</li>
+                        <li>#Какой-то_тег</li>
+                        <li>#Ещё_какой-то_тег</li>
+                        <li>#Последний_тег</li>
+                    </ul>
                     <p>
                         Публичная страница получает данные посредством классического серверного рендеринга (SSR). Браузер 
                         пользователя не совершает никаких AJAX/Fetch запросов к API и не тратит ресурсы на сборку страницы. 
@@ -360,7 +379,79 @@
                 </div>
             </div>
             <div class="right-content panel">
+                <div class="drop-down-list">
+                    <button class="block open">
+                        <div class="drop-down-block">
+                            <div class="block-title">
+                                <svg class="trend-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                                    <path d="M3 3v18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M18.5 7.5L13.5 12.5L10.5 9.5L4.5 15.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <span>Популярные теги</span>
+                            </div>
+                            <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                                <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                    </button>
+                    <ul class="submenu open">
+                        <div class="submenu-wrapper"></div>
+                        <li class="popular-tag">#тег1</li>
+                        <li class="popular-tag">#Какой-то_тег</li>
+                        <li class="popular-tag">#тег3</li>
+                        <li class="popular-tag">#тег2</li>
+                    </ul>
+                </div>
 
+                <div class="drop-down-list">
+                    <button class="block open">
+                        <div class="drop-down-block">
+                            <div class="block-title">
+                                <svg class="best-users-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <span>Лучшие авторы</span>
+                            </div>
+                            <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                                <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                    </button>
+                    <ul class="submenu open">
+                        <div class="submenu-wrapper"></div>
+                        <li class="best-user">
+                            <div class="user">
+                                <div class="user-avatar">G</div>
+                                <div class="user-name">Genius</div>
+                            </div>
+                            <span>99+</span>
+                        </li>
+                        <li class="best-user">
+                            <div class="user">
+                                <div class="user-avatar">M</div>
+                                <div class="user-name">Mr. Frog</div>
+                            </div>
+                            <span>50</span>
+                        </li>
+                        <li class="best-user">
+                            <div class="user">
+                                <div class="user-avatar">U</div>
+                                <div class="user-name">User00001</div>
+                            </div>
+                            <span>45</span>
+                        </li>
+                        <li class="best-user">
+                            <div class="user">
+                                <div class="user-avatar">S</div>
+                                <div class="user-name">Suspicious_User</div>
+                            </div>
+                            <span>44</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </body>
