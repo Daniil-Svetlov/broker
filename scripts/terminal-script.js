@@ -6,8 +6,8 @@
 // UI-функции (меню, отрисовка) — как в main.
 
 const CFG = window.LUMIT_CONFIG || {};
-const QUOTES = CFG.quotesBase || 'http://localhost:8090';
-const API = CFG.apiBase || 'http://localhost:8000';
+const QUOTES = CFG.quotesBase || 'https://zippy-mercy-production.up.railway.app';
+const API = CFG.apiBase || 'https://broker-production-5adc.up.railway.app';
 const POLL = CFG.pollMs || 1000;
 // accountId: localStorage переопределяет config.js (удобно не трогать файл).
 const ACCOUNT_ID = localStorage.getItem('lumit_account_id') || CFG.accountId || '';
