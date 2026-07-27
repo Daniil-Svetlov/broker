@@ -131,3 +131,17 @@ CSRF_TRUSTED_ORIGINS = [
     "https://broker-production-5adc.up.railway.app",
     "https://frontend-production-f820.up.railway.app",
 ]
+# --- Настройки безопасности для Railway HTTPS/Proxy ---
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://broker-production-5adc.up.railway.app",
+    "https://frontend-production-f820.up.railway.app",
+]
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SAMESITE = 'None'
