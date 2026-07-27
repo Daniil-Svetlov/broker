@@ -39,7 +39,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    # "django.middleware.csrf.CsrfViewMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -49,7 +49,7 @@ ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "BACKEND": "django.template.backends.DjangoTemplates",
         "DIRS": [],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -108,11 +108,6 @@ REST_FRAMEWORK = {
 
 # Кросс-доступ для фронтенда (socket.io/HTML на другом порту).
 CORS_ALLOW_ALL_ORIGINS = True
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in env("CSRF_TRUSTED_ORIGINS", "https://broker-production-5adc.up.railway.app,https://*.up.railway.app").split(",")
-    if origin.strip()
-]
 
 # --- Доменные настройки брокера ---
 
@@ -123,14 +118,7 @@ QUOTES_SERVICE_TIMEOUT = float(env("QUOTES_SERVICE_TIMEOUT", "5"))
 # Минимальная и максимальная длительность опциона (секунды).
 TRADE_MIN_DURATION = int(env("TRADE_MIN_DURATION", "5"))
 TRADE_MAX_DURATION = int(env("TRADE_MAX_DURATION", "3600"))
-# Указываем Django доверять HTTPS-заголовкам от прокси Railway
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# Доверенные домены
-CSRF_TRUSTED_ORIGINS = [
-    "https://broker-production-5adc.up.railway.app",
-    "https://frontend-production-f820.up.railway.app",
-]
 # --- Настройки безопасности для Railway HTTPS/Proxy ---
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
