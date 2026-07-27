@@ -123,3 +123,11 @@ QUOTES_SERVICE_TIMEOUT = float(env("QUOTES_SERVICE_TIMEOUT", "5"))
 # Минимальная и максимальная длительность опциона (секунды).
 TRADE_MIN_DURATION = int(env("TRADE_MIN_DURATION", "5"))
 TRADE_MAX_DURATION = int(env("TRADE_MAX_DURATION", "3600"))
+# Указываем Django доверять HTTPS-заголовкам от прокси Railway
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Доверенные домены
+CSRF_TRUSTED_ORIGINS = [
+    "https://broker-production-5adc.up.railway.app",
+    "https://frontend-production-f820.up.railway.app",
+]
