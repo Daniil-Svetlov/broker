@@ -49,7 +49,7 @@ ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
-        "BACKEND": "django.template.backends.DjangoTemplates",
+        "BACKEND": "django.template.backends.django.DjangoTemplates",  # <-- Убедись, что тут написано django.template.backends.django.DjangoTemplates
         "DIRS": [],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -61,6 +61,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
