@@ -110,7 +110,7 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = True
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
-    for origin in env("CSRF_TRUSTED_ORIGINS", "https://*.up.railway.app").split(",")
+    for origin in env("CSRF_TRUSTED_ORIGINS", "https://broker-production-5adc.up.railway.app,https://*.up.railway.app").split(",")
     if origin.strip()
 ]
 
