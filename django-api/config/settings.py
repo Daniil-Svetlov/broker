@@ -108,6 +108,11 @@ REST_FRAMEWORK = {
 
 # Кросс-доступ для фронтенда (socket.io/HTML на другом порту).
 CORS_ALLOW_ALL_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in env("CSRF_TRUSTED_ORIGINS", "https://*.up.railway.app").split(",")
+    if origin.strip()
+]
 
 # --- Доменные настройки брокера ---
 
