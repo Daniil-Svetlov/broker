@@ -1119,3 +1119,42 @@ header {
         height: 22px;
     }
 }
+
+/* ==========================================
+   FIX: Гарантия кликабельности на мобилках
+   ========================================== */
+
+/* 1. Отключаем перехват кликов у скрытого бокового меню */
+.left-bar {
+    pointer-events: none;
+}
+
+/* Включаем клики обратно только когда левое меню открыто */
+.left-bar.open {
+    pointer-events: auto;
+}
+
+/* 2. Делаем мобильный сайдбар с кнопками и полями ввода поверх всех слоев */
+@media (max-width: 900px) {
+    .sidebar {
+        position: fixed;
+        z-index: 600 !important; /* Поднимаем выше всего */
+        pointer-events: auto !important;
+    }
+
+    .input-group,
+    .input-group input,
+    .btn-trade,
+    .btn-reset,
+    .mobile-btn {
+        position: relative;
+        z-index: 601 !important;
+        pointer-events: auto !important;
+        touch-action: manipulation; /* Убирает задержку в 300мс при тапе на смартфонах */
+    }
+
+    /* Подстраиваем график, чтобы он не уходил под панель управления */
+    #chart {
+        padding-bottom: 300px;
+    }
+}
