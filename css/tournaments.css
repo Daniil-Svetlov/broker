@@ -10,6 +10,7 @@
     --accent-tertiary: #00D4AA;
     --accent-quaternary: #FF9F0A;
     --green: #30D158;
+    --green-glow: #30d15871;
     --red: #FF453A;
     --orange: #FF9F0A;
     --light-blue: #00add8;
@@ -256,7 +257,7 @@ header.scrolled {
 .tournament {
     min-height: 100vh;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: flex-start;
     text-align: center;
     position: relative;
@@ -279,38 +280,54 @@ h1 {
 .panel {
     display: flex;
     flex-direction: column;
-    gap: 35px;
 }
 
-.left-bar {
+.left-bar, .right-bar {
+    position: fixed;
+    padding: 10px;
+    top: calc(var(--header-h, 0px) + 10px);
     width: 250px;
-    height: calc(100vh - (var(--header-h, 0px) + 20px));
-    padding: 16px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    overflow-y: auto;
-    flex-shrink: 0;
-    border-right: 1px solid var(--glass-border);
+    height: calc(100vh - (var(--header-h, 0px) + 16px));
     background: rgba(10, 10, 10, 0.4);
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
     animation: fadeInUp 1s ease-out 0.8s both;
+    z-index: 10;
 }
+
 
 .main {
     width: 100%;
+    margin-top: 20px;
     padding-left: 250px;
     padding-right: 250px;
+    align-items: center;
+    gap: 30px;
     animation: fadeInUp 1s ease-out 0.5s both;
 }
 
-.crown-icon {
+.left-bar {
+    border-right: 1px solid var(--glass-border);
+    left: 0;
+}
+
+.right-bar {
+    right: 0;
+    border-left: 1px solid var(--glass-border); 
+    justify-content: space-evenly;
+}
+
+.crown-icon, .trend-icon {
     width: 28px;
     height: 28px;
 }
 
-.block {
+.arrow {
+    width: 30px;
+    height: 30px;
+}
+
+.block, .right-block {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: 15px;
@@ -324,7 +341,8 @@ h1 {
     color: var(--text-primary);
     width: 100%;
     font-family: inherit;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
+    margin-top: 20px;
     transition: all 0.3s;
 }
 
@@ -334,15 +352,23 @@ h1 {
     border-color: var(--accent);
 }
 
+.user-position {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .block-title {
     display: flex;
     align-items: center;
     gap: 7px;
+    text-align: left;
 }
 
 .list-element {
     background: transparent;
-    border: 1px solid transparent;
+    border: 2px solid transparent;
     border-radius: 15px;
     padding: 10px 12px;
     display: flex;
@@ -354,15 +380,16 @@ h1 {
     width: 100%;
     font-family: inherit;
     text-align: left;
+    border: 1px solid;
     margin-bottom: 5px;
     transition: all 0.3s;
 }
 
 .list-element:hover {
-    color: var(--text-primary);
+    color: var(--accent);
 }
 
-.list-element:not(.first):hover, .list-element:not(.first):hover, .list-element:not(.third):hover{
+.list-element:not(.first):not(.second):not(.third):hover {
     background: var(--glass-bg);
 }
 
@@ -421,4 +448,233 @@ h1 {
 .user-name {
     font-weight: 600;
     font-size: 15px;
+}
+
+.position {
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--text-primary) !important;
+}
+
+.separator {
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: center;
+    margin-bottom: 5px;
+}
+
+.dot-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.tournament-card {
+    width: 90%;
+    max-width: 1000px;
+    height: 500px;
+    border-radius: var(--radius-xl);
+    border: 2px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tournament-card:hover {
+    border-color: var(--orange);
+}
+
+.tournament-header {
+    height: 70px;
+    border-bottom: 2px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tournament-header h2 {
+    font-weight: 700;
+    font-size: 40px;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+}
+
+.prize-fund {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.prize-fund p {
+    font-weight: 600;
+    font-size: 25px;
+    color: var(--text-secondary);
+}
+
+.prize-fund div {
+    font-weight: 800;
+    font-size: 60px;
+    color: var(--green);
+    text-shadow: 0 6px 24px var(--green-glow);
+}
+
+.tournament-statistics {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+}
+
+.time-left, .tournament-balance {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.time-left p, .tournament-balance p {
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: 0.7px;
+    color: var(--text-secondary);
+}
+
+.time, .tournament-balance div {
+    font-weight: 600;
+    font-size: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    color: var(--accent-quaternary);
+}
+
+.time-separator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    /* animation: blink 1s infinite steps(1, start);  */
+}
+
+.time-dot-icon {
+    width: 4px;
+    height: 4px;
+}
+
+/* Анимация для мигания таймера */
+/* @keyframes blink {
+    0%, 100% {
+        opacity: 1; 
+    }
+    50% {
+        opacity: 0; 
+    }
+} */
+
+.tournament-balance div {
+    color: var(--green);
+}
+
+.button-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.join-bth {
+    width: 50%;
+    max-width: 350px;
+    padding: 20px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px var(--accent-glow);
+    margin-top: 30px;
+    transition: all 0.2s ease;
+}
+
+.join-bth:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--accent-glow);
+}
+
+.right-block {
+    margin-bottom: 0px;
+}
+
+.right-block .arrow {
+    transition: transform 0.3s;
+    font-size: 10px;
+    color: var(--text-tertiary);
+}
+
+.right-block.open .arrow {
+    transform: rotate(90deg);
+}
+
+.right-block:hover {
+    background: var(--glass-bg-hover);
+}
+
+.drop-down-block {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.submenu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 4px;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-20px); 
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out, 
+                opacity 0.3s ease-out, 
+                transform 0.4s ease-out, 
+                margin-top 0.4s;
+}
+
+.submenu.open {
+    max-height: 500px; 
+    opacity: 1;
+    margin-top: 6px;
+    transform: translateY(0); 
+}
+
+.submenu-wrapper {
+    min-height: 0;
+}
+
+.completed-tournament {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 15px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 100%;
+    font-family: inherit;
+    text-align: left;
+    transition: all 0.3s;
+}
+
+.completed-tournament:hover {
+    background: var(--glass-bg);
+    color: var(--text-primary);
 }

@@ -54,27 +54,133 @@
                 </div>
                 <ul class="block-list">
                     <li class="list-element first">
-                        <div class="block-title">
-                            <div class="user-avatar">R</div>
-                            <div class="user-name">Random_User</div>
+                        <div class="user-position">
+                            <div class="block-title">
+                                <div class="user-avatar">R</div>
+                                <div class="user-name">Random_User</div>
+                            </div>
+                             <span class="position">1</span>
                         </div>
                     </li>
                     <li class="list-element second">
-                        <div class="block-title">
-                            <div class="user-avatar">I</div>
-                            <div class="user-name">Interesting_Man</div>
+                        <div class="user-position">
+                            <div class="block-title">
+                                <div class="user-avatar">I</div>
+                                <div class="user-name">Interesting_Man</div>
+                            </div>
+                            <span class="position">2</span>
                         </div>
                     </li>
                     <li class="list-element third">
-                        <div class="block-title">
-                            <div class="user-avatar">M</div>
-                            <div class="user-name">Mr.Frog</div>
+                        <div class="user-position">
+                            <div class="block-title">
+                                <div class="user-avatar">M</div>
+                                <div class="user-name">Mr.Frog</div>
+                            </div>
+                            <span class="position">3</span>
+                        </div>
+                    </li>
+                    <div class="separator">
+                        <svg class="dot-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                            <circle cx="12" cy="12" r="4" fill="currentColor" />
+                        </svg>
+                        <svg class="dot-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                            <circle cx="12" cy="12" r="4" fill="currentColor" />
+                        </svg>
+                        <svg class="dot-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                            <circle cx="12" cy="12" r="4" fill="currentColor" />
+                        </svg>
+                    </div>
+                    <li class="list-element">
+                        <div class="user-position">
+                            <div class="block-title">
+                                <div class="user-avatar">U</div>
+                                <div class="user-name">User00001</div>
+                            </div>
+                            <span class="position">8</span>
                         </div>
                     </li>
                 </ul>
             </div>
             <div class="main panel">
-                
+                <h1>Турниры</h1>
+                <div class="tournament-card glass">
+                    <div class="tournament-header">
+                        <h2>Название турнира</h2>
+                    </div>
+                    <div class="prize-fund">
+                        <p>Призовой фонд</p>
+                        <div>10 000 ₽</div>
+                    </div>
+                    <div class="tournament-statistics">
+                        <div class="time-left">
+                            <p>Время до конца</p>
+                            <div class="time">
+                                <span>1 ч</span>
+                                <div class="time-separator">
+                                    <svg class="time-dot-icon" viewBox="0 0 8 8" fill="none" xmlns="http://w3.org">
+                                        <circle cx="4" cy="4" r="4" fill="currentColor" />
+                                    </svg>
+                                    <svg class="time-dot-icon" viewBox="0 0 8 8" fill="none" xmlns="http://w3.org">
+                                        <circle cx="4" cy="4" r="4" fill="currentColor" />
+                                    </svg>
+                                </div>
+                                <span>20 мин</span>
+                            </div>
+                        </div>
+                        <div class="tournament-balance">
+                            <p>Турнирный баланс</p>
+                            <div>1 000 ₽</div>
+                        </div>
+                    </div>
+                    <div class="button-container">
+                        <button class="join-bth">Участвовать</button>
+                    </div>
+                </div>
+            </div>
+            <div class="right-bar">
+                <div class="drop-down-list">
+                    <button class="right-block open">
+                        <div class="drop-down-block">
+                            <div class="block-title">
+                                <span>Активные турниры</span>
+                            </div>
+                            <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                                <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                    </button>
+                    <ul class="submenu open">
+                        <div class="submenu-wrapper"></div>
+                        <li class="completed-tournament">Название турнира</li>
+                        <li class="completed-tournament">Ещё один активный турнир</li>
+                        <li class="completed-tournament">Интересный турнир</li>
+                    </ul>
+                </div>
+                <div class="drop-down-list">
+                    <button class="right-block">
+                        <div class="drop-down-block">
+                            <div class="block-title">
+                                <span>Завершённые турниры</span>
+                            </div>
+                            <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                                <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                    </button>
+                    <ul class="submenu">
+                        <div class="submenu-wrapper"></div>
+                        <li class="completed-tournament">Самый первый турнир</li>
+                        <li class="completed-tournament">Ещё один турнир</li>
+                        <li class="completed-tournament">Легендарный турнир</li>
+                        <li class="completed-tournament">Ещё один заурядный турнир</li>
+                        <li class="completed-tournament">Ещё один заурядный турнир</li>
+                        <li class="completed-tournament">Ещё один заурядный турнир</li>
+                        <li class="completed-tournament">Последний завершённый турнир</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </body>
