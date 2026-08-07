@@ -1,12 +1,105 @@
-let currentPair = 'BTC/USDT';
+// Проверочный data-слой: ветка main, но вместо socket.io — REST к новому бэку.
+//   живая цена  -> GET  {quotesBase}/price?symbol=PAIR        (Go quotes-service)
+//   открыть     -> POST {apiBase}/api/trades/                 (Django)
+//   закрыть     -> POST {apiBase}/api/trades/<id>/settle/     (когда истёк срок)
+//   баланс      -> GET  {apiBase}/api/accounts/<accountId>/   (Django)
+// UI-функции (меню, отрисовка) — как в main.
+
+const CFG = window.LUMIT_CONFIG || {};
+const QUOTES = CFG.quotesBase || 'https://zippy-mercy-production.up.railway.app';
+const API = CFG.apiBase || 'https://broker-production-5adc.up.railway.app';
+const POLL = CFG.pollMs || 1000;
+// accountId: localStorage переопределяет config.js (удобно не трогать файл).
+const ACCOUNT_ID = localStorage.getItem('lumit_account_id') || CFG.accountId || '';
+// Плейсхолдер из config.js — значит bootstrap.sh не запускали. Считаем «не задан»,
+// иначе POST уйдёт с '__ACCOUNT_ID__' и Django ответит невнятным «not a valid UUID».
+const ACCOUNT_OK = !!ACCOUNT_ID && ACCOUNT_ID !== '__ACCOUNT_ID__';
+
+// --- кэш свечей для мгновенного рендера при повторном заходе ---
+const CHART_CACHE_PREFIX = 'lumit_chart_cache_';
+const CHART_CACHE_MAX_POINTS = 300;    
+const CHART_CACHE_SAVE_INTERVAL_MS = 5000; 
+
+let priceHistory = [];
+let lastCacheSaveAt = 0;
+let skeletonHidden = false;
+
+let currentPair = 'EUR/USD';
 let lineSeries = null;
 let chart = null;
-let socket = null;
-let balance = 10000.00;
+let balance = 0;
 let activeTrades = [];
 let countdownIntervals = [];
 let tradeMarkers = [];
+let lastChartTime = 0;
+// Статистика сессии (бэкенд агрегатов не отдаёт — считаем локально).
+let stats = { wins: 0, total: 0, profit: 0 };
 
+// --- форматирование цены: форекс требует больше знаков, чем .toFixed(2) ---
+function fmtPrice(v) {
+  if (!isFinite(v)) return '—';
+  return v >= 100 ? v.toFixed(3) : v.toFixed(5);
+}
+
+function fmtMoney(v) {
+  return `$${Number(v).toFixed(2)}`;
+}
+
+function cacheKeyFor(pair) {
+  return CHART_CACHE_PREFIX + pair.replace('/', '_');
+}
+
+function loadCachedHistory(pair) {
+  try {
+    const raw = localStorage.getItem(cacheKeyFor(pair));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.warn('Кэш графика повреждён, игнорирую:', err);
+    return [];
+  }
+}
+
+function saveCachedHistory(pair, history) {
+  try {
+    const trimmed = history.slice(-CHART_CACHE_MAX_POINTS);
+    localStorage.setItem(cacheKeyFor(pair), JSON.stringify(trimmed));
+  } catch (err) {
+    // localStorage переполнен/недоступен (приватный режим) — не критично.
+    console.warn('Не удалось сохранить кэш графика:', err);
+  }
+}
+
+function maybePersistHistory() {
+  const now = Date.now();
+  if (now - lastCacheSaveAt < CHART_CACHE_SAVE_INTERVAL_MS) return;
+  lastCacheSaveAt = now;
+  saveCachedHistory(currentPair, priceHistory);
+}
+
+function hideSkeleton() {
+  if (skeletonHidden) return;
+  skeletonHidden = true;
+  const el = document.getElementById('chart-skeleton');
+  if (el) el.classList.add('hidden');
+}
+
+// DRF возвращает ошибки по-разному: {error}, {detail} или {поле: [сообщения]}.
+// Сводим к читаемой строке, чтобы видеть реальную причину, а не «Ошибка».
+function describeApiError(data) {
+  if (!data || typeof data !== 'object') return 'неизвестная ошибка';
+  if (data.error) return data.error;
+  if (data.detail) return data.detail;
+  const parts = [];
+  for (const [field, val] of Object.entries(data)) {
+    const text = Array.isArray(val) ? val.join(', ') : String(val);
+    parts.push(`${field}: ${text}`);
+  }
+  return parts.join('; ') || 'неизвестная ошибка';
+}
+
+// --- меню/панели (без изменений относительно main) ---
 document.querySelectorAll('.main-category').forEach(button => {
   button.addEventListener('click', () => {
     const submenu = button.nextElementSibling;
@@ -15,228 +108,371 @@ document.querySelectorAll('.main-category').forEach(button => {
   });
 });
 
-document.querySelectorAll('.sub-btn[data-pair]').forEach(btn => {
-  btn.addEventListener('click', function() {
-    currentPair = this.getAttribute('data-pair');
-    document.querySelectorAll('.sub-btn[data-pair]').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    if (lineSeries) {
+// Символ валюты для иконки (база пары). Фолбэк — первая буква.
+const CURRENCY_ICON = {
+  EUR: '€', USD: '$', GBP: '£', JPY: '¥', AUD: 'A$',
+  CAD: 'C$', CHF: '₣', NZD: 'NZ$', CNY: '¥', RUB: '₽',
+};
+
+function selectPair(pair) {
+  currentPair = pair;
+  document.querySelectorAll('.sub-btn[data-pair]').forEach(b =>
+    b.classList.toggle('active', b.getAttribute('data-pair') === pair));
+
+  tradeMarkers = [];
+  if (lineSeries) lineSeries.setMarkers([]);
+  document.getElementById('current-pair').innerText = pair;
+
+  const cached = loadCachedHistory(pair);
+  priceHistory = cached.slice();
+
+  if (lineSeries) {
+    if (cached.length) {
+      lineSeries.setData(cached);
+      lastChartTime = cached[cached.length - 1].time;
+      hideSkeleton();
+      document.getElementById('status-bar').innerText = 'Рынок: ' + pair + ' (кэш)';
+    } else {
       lineSeries.setData([]);
-      tradeMarkers = [];
-      lineSeries.setMarkers([]);
+      lastChartTime = 0;
+      document.getElementById('status-bar').innerText = 'Рынок: ' + pair;
     }
-    document.getElementById('current-pair').innerText = currentPair;
-    document.getElementById('status-bar').innerText = "Рынок: " + currentPair;
-  });
-});
+  }
+}
+
+// Список валютных пар берём из Django (/api/assets/), а не из захардкоженного HTML —
+// сколько пар отдаёт бэк, столько и показываем.
+async function loadAssets() {
+  const menu = document.getElementById('pairs-menu');
+  try {
+    const res = await fetch(`${API}/api/assets/`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const assets = await res.json();
+    if (!Array.isArray(assets) || assets.length === 0) throw new Error('пусто');
+
+    menu.innerHTML = '';
+    assets.forEach((a, i) => {
+      const base = (a.symbol || '').split('/')[0];
+      const icon = CURRENCY_ICON[base] || (base[0] || '?');
+      const btn = document.createElement('button');
+      btn.className = 'sub-btn' + (i === 0 ? ' active' : '');
+      btn.setAttribute('data-pair', a.symbol);
+      btn.innerHTML = `<span class="sub-icon">${icon}</span> ${a.name || a.symbol}`;
+      btn.addEventListener('click', () => selectPair(a.symbol));
+      menu.appendChild(btn);
+    });
+    // Активируем первую пару (или сохраняем текущую, если она есть в списке).
+    const symbols = assets.map(a => a.symbol);
+    selectPair(symbols.includes(currentPair) ? currentPair : symbols[0]);
+  } catch (err) {
+    console.error('Не удалось загрузить список пар:', err);
+    menu.innerHTML = '<button class="sub-btn" disabled>Пары недоступны</button>';
+  }
+}
 
 function toggleLeft() {
   document.getElementById('left-bar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('active');
 }
-
-function toggleRight() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('overlay').classList.toggle('active');
-}
-
 function closePanels() {
   document.getElementById('left-bar').classList.remove('open');
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('overlay').classList.remove('active');
 }
 
-window.addEventListener('load', function() {
-  console.log('Загрузка LUMIT Trading Engine...');
+window.addEventListener('load', function () {
+  console.log('Загрузка LUMIT Trading Engine (REST)...');
   const chartElement = document.getElementById('chart');
 
   if (typeof LightweightCharts === 'undefined') {
     console.error('LightweightCharts не загружена!');
-    document.getElementById('status-bar').innerText = "Ошибка загрузки графика";
+    document.getElementById('status-bar').innerText = 'Ошибка загрузки графика';
     return;
+  }
+  if (!ACCOUNT_OK) {
+    document.getElementById('status-bar').innerText =
+      'Войдите или зарегистрируйтесь, чтобы торговать';
+    console.error('accountId не задан — нужна регистрация/вход');
   }
 
   try {
     chart = LightweightCharts.createChart(chartElement, {
-      layout: {
-        background: { color: 'transparent' },
-        textColor: 'rgba(255,255,255,0.6)'
-      },
+      // autoSize: график сам подстраивается под контейнер через ResizeObserver —
+      // не зависит от того, успел ли примениться CSS на момент создания (иначе
+      // при clientHeight=0 график рисуется невидимым).
+      autoSize: true,
+      layout: { background: { color: 'transparent' }, textColor: 'rgba(255,255,255,0.6)' },
       grid: {
         vertLines: { color: 'rgba(255,255,255,0.06)' },
-        horzLines: { color: 'rgba(255,255,255,0.06)' }
+        horzLines: { color: 'rgba(255,255,255,0.06)' },
       },
-      width: chartElement.clientWidth,
-      height: chartElement.clientHeight,
-      timeScale: {
-        timeVisible: true,
-        secondsVisible: true,
-        borderColor: 'rgba(255,255,255,0.1)'
-      },
-      rightPriceScale: {
-        borderColor: 'rgba(255,255,255,0.1)'
-      },
-      crosshair: {
-        mode: LightweightCharts.CrosshairMode.Normal
-      }
+      width: chartElement.clientWidth || 800,
+      height: chartElement.clientHeight || 420,
+      timeScale: { timeVisible: true, secondsVisible: true, borderColor: 'rgba(255,255,255,0.1)' },
+      rightPriceScale: { borderColor: 'rgba(255,255,255,0.1)' },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
     });
-
-    lineSeries = chart.addLineSeries({
-      color: '#007AFF',
-      lineWidth: 2,
-      priceLineVisible: false
-    });
-
+    lineSeries = chart.addLineSeries({ color: '#007AFF', lineWidth: 2, priceLineVisible: false });
     console.log('✅ График создан');
   } catch (error) {
     console.error('Ошибка создания графика:', error);
     return;
   }
 
-  socket = io();
+  document.getElementById('current-pair').innerText = currentPair;
+  document.getElementById('status-bar').innerText = 'Рынок: ' + currentPair;
 
-  socket.on('connect', () => {
-    console.log('✅ Подключено к серверу');
-    document.getElementById('status-bar').innerText = "Рынок: " + currentPair;
-  });
-
-  socket.on('price_update', (data) => {
-    try {
-      if (data.pairs && data.pairs[currentPair]) {
-        const price = parseFloat(data.pairs[currentPair]);
-        if (price > 0 && !isNaN(price)) {
-          lineSeries.update({ time: data.time, value: price });
-          document.getElementById('current-price').innerText = `$${price.toFixed(2)}`;
-        }
-      }
-    } catch (error) {
-      console.error('Ошибка обновления графика:', error);
-    }
-  });
-
-  socket.on('balance_update', (data) => {
-    balance = data.balance;
-    document.getElementById('balance-amount-header').innerText = `$${balance.toFixed(2)}`;
-    const profit = data.totalProfit - data.totalLoss;
-    document.getElementById('total-profit').innerText = `${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`;
-    document.getElementById('total-profit').className = `stat-value ${profit >= 0 ? 'profit' : 'loss'}`;
-    document.getElementById('win-rate').innerText = `${data.winRate}%`;
-  });
-
-  socket.on('trade_opened', (data) => {
-    activeTrades.push(data);
-    renderActiveTrades();
-    const currentTime = Math.floor(Date.now() / 1000);
-    const newMarker = {
-      time: currentTime,
-      position: 'inBar',
-      color: data.type === 'higher' ? '#30D158' : '#FF453A',
-      shape: data.type === 'higher' ? 'arrowUp' : 'arrowDown',
-      text: `${data.type === 'higher' ? '▲' : '▼'} $${data.amount} @ $${data.startPrice.toFixed(2)}`,
-      id: data.tradeId
-    };
-    tradeMarkers.push(newMarker);
-    lineSeries.setMarkers(tradeMarkers);
-    console.log('📍 Маркер добавлен на график:', newMarker);
-    document.getElementById('status-bar').innerText = `Сделка открыта: ${data.type === 'higher' ? '▲' : '▼'} $${data.amount}`;
-  });
-
-  socket.on('trade_result', (data) => {
-    activeTrades = activeTrades.filter(t => t.tradeId !== data.tradeId);
-    renderActiveTrades();
-    const markerIndex = tradeMarkers.findIndex(m => m.id === data.tradeId);
-    if (markerIndex !== -1) {
-      tradeMarkers[markerIndex].color = data.result === 'WIN' ? '#30D158' : '#FF453A';
-      tradeMarkers[markerIndex].text = `${data.result === 'WIN' ? '✅' : '❌'} ${data.profit >= 0 ? '+' : ''}$${data.profit.toFixed(2)}`;
-      const exitMarker = {
-        time: Math.floor(Date.now() / 1000),
-        position: 'inBar',
-        color: data.result === 'WIN' ? '#30D158' : '#FF453A',
-        shape: 'circle',
-        text: `Exit: $${data.endPrice}`,
-        id: `${data.tradeId}_exit`
-      };
-      tradeMarkers.push(exitMarker);
-      lineSeries.setMarkers(tradeMarkers);
-      console.log('📍 Маркер выхода добавлен:', exitMarker);
-    }
-    const resultText = data.result === 'WIN' ? '✅ ВЫИГРЫШ' : '❌ ПРОИГРЫШ';
-    document.getElementById('status-bar').innerText = `${resultText}: ${data.profit >= 0 ? '+' : ''}$${data.profit.toFixed(2)}`;
-    setTimeout(() => {
-      document.getElementById('status-bar').innerText = "Рынок: " + currentPair;
-    }, 4000);
-  });
-
-  socket.on('trade_error', (data) => {
-    alert(data.message);
-  });
-
-  socket.on('demo_reset', (data) => {
-    activeTrades = [];
-    tradeMarkers = [];
-    if (lineSeries) lineSeries.setMarkers([]);
-    renderActiveTrades();
-    alert('Демо-счет сброшен до $10,000');
-  });
-
-  socket.on('disconnect', () => {
-    console.log('⚠️ Отключено от серверу');
-    document.getElementById('status-bar').innerText = "Нет соединения";
-  });
+  // Подгружаем список пар из бэка, баланс и стартуем опрос цены.
+  loadAssets();
+  loadBalance();
+  pollPrice();
+  setInterval(pollPrice, POLL);
 
   window.addEventListener('resize', () => {
     if (chart) {
-      chart.applyOptions({
-        width: chartElement.clientWidth,
-        height: chartElement.clientHeight
-      });
+      chart.applyOptions({ width: chartElement.clientWidth, height: chartElement.clientHeight });
     }
   });
 
   document.getElementById('btnUp').addEventListener('click', () => sendTrade('higher'));
   document.getElementById('btnDown').addEventListener('click', () => sendTrade('lower'));
+
+  // Если ни кэша, ни живых данных не пришло за 8 сек — не держим скелетон вечно.
+  setTimeout(() => {
+    if (!skeletonHidden) {
+      hideSkeleton();
+      document.getElementById('status-bar').innerText = 'Не удалось получить котировки';
+    }
+  }, 8000);
+
+  window.addEventListener('beforeunload', () => {
+    saveCachedHistory(currentPair, priceHistory);
+  });  
 });
 
-function sendTrade(type) {
-  const amount = parseFloat(document.getElementById('amount').value);
-  const time = parseInt(document.getElementById('time').value);
-  if (amount > balance) { alert("Недостаточно средств на балансе"); return; }
-  if (amount < 1) { alert("Минимальная ставка: $1"); return; }
-  if (!socket || !socket.connected) { alert("Нет подключения к серверу"); return; }
-  socket.emit('make_trade', { type, amount, time, pair: currentPair });
+// --- живая цена: опрос Go quotes-service ---
+async function pollPrice() {
+  try {
+    const res = await fetch(`${QUOTES}/price?symbol=${encodeURIComponent(currentPair)}`);
+    if (!res.ok) {
+      document.getElementById('current-price').innerText = '—';
+      return;
+    }
+    const data = await res.json();
+    const price = parseFloat(data.mid);
+    if (!(price > 0) || isNaN(price)) return;
+
+    let t = Math.floor(Date.now() / 1000);
+    if (t <= lastChartTime) t = lastChartTime + 1;
+    lastChartTime = t;
+
+    const point = { time: t, value: price };
+    lineSeries.update(point);
+
+    priceHistory.push(point);
+    if (priceHistory.length > CHART_CACHE_MAX_POINTS) {
+      priceHistory = priceHistory.slice(-CHART_CACHE_MAX_POINTS);
+    }
+    maybePersistHistory();
+
+    document.getElementById('current-price').innerText = `$${fmtPrice(price)}`;
+    hideSkeleton();
+  } catch (err) {
+    console.error('Ошибка опроса цены:', err);
+  }
 }
 
-function resetDemo() {
-  if (confirm('Вы уверены, что хотите сбросить демо-счет до $10,000? Вся история будет удалена.')) {
-    socket.emit('reset_demo');
+// --- баланс счёта ---
+async function loadBalance() {
+  if (!ACCOUNT_OK) return;
+  try {
+    const res = await fetch(`${API}/api/accounts/${ACCOUNT_ID}/`);
+    if (!res.ok) return;
+    const acc = await res.json();
+    balance = parseFloat(acc.balance);
+    document.getElementById('balance-amount-header').innerText = fmtMoney(balance);
+  } catch (err) {
+    console.error('Ошибка загрузки баланса:', err);
   }
+}
+
+function updateStats() {
+  const el = document.getElementById('total-profit');
+  el.innerText = `${stats.profit >= 0 ? '+' : ''}${fmtMoney(stats.profit)}`;
+  el.className = `stat-value ${stats.profit >= 0 ? 'profit' : 'loss'}`;
+  const wr = stats.total ? Math.round((stats.wins / stats.total) * 100) : 0;
+  document.getElementById('win-rate').innerText = `${wr}%`;
+}
+
+// --- открытие сделки: POST в Django ---
+async function sendTrade(type) {
+  const amount = parseFloat(document.getElementById('amount').value);
+  const time = parseInt(document.getElementById('time').value);
+  if (!ACCOUNT_OK) { alert('Сначала войдите или зарегистрируйтесь на главной странице'); return; }
+  if (isNaN(amount) || amount < 1) { alert('Минимальная ставка: $1'); return; }
+  if (amount > balance) { alert('Недостаточно средств на балансе'); return; }
+
+  const direction = type === 'higher' ? 'UP' : 'DOWN';
+  try {
+    const res = await fetch(`${API}/api/trades/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        account_id: ACCOUNT_ID,
+        asset_pair: currentPair,
+        amount: amount,
+        direction: direction,
+        duration: time,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const msg = describeApiError(data);
+      console.error('Открытие сделки отклонено:', res.status, data);
+      document.getElementById('status-bar').innerText = 'Ошибка: ' + msg;
+      alert(`Не удалось открыть сделку (${res.status}): ${msg}`);
+      return;
+    }
+    onTradeOpened(data, type, time);
+  } catch (err) {
+    console.error('Ошибка открытия сделки:', err);
+    alert('Сеть/бэкенд недоступны: ' + err.message);
+  }
+}
+
+function onTradeOpened(trade, type, time) {
+  const startPrice = parseFloat(trade.entry_price);
+  const t = {
+    tradeId: trade.id,
+    type: type, // higher/lower — для разметки
+    amount: parseFloat(trade.amount),
+    startPrice: startPrice,
+    pair: trade.asset_pair,
+    expirationTime: time,
+    expiresAt: Date.now() + time * 1000,
+  };
+  activeTrades.push(t);
+  renderActiveTrades();
+
+  const marker = {
+    time: Math.floor(Date.now() / 1000),
+    position: 'inBar',
+    color: type === 'higher' ? '#30D158' : '#FF453A',
+    shape: type === 'higher' ? 'arrowUp' : 'arrowDown',
+    text: `${type === 'higher' ? '▲' : '▼'} $${t.amount} @ ${fmtPrice(startPrice)}`,
+    id: t.tradeId,
+  };
+  tradeMarkers.push(marker);
+  lineSeries.setMarkers(tradeMarkers);
+
+  document.getElementById('status-bar').innerText =
+    `Сделка открыта: ${type === 'higher' ? '▲' : '▼'} $${t.amount}`;
+  loadBalance(); // ставка уже списана на бэке
+  watchTrade(t);
+}
+
+// Ждём истечения срока, затем закрываем сделку через settle и показываем итог.
+// settle идемпотентен и закроет только когда срок истёк (без force).
+function watchTrade(t) {
+  const timer = setInterval(async () => {
+    if (Date.now() < t.expiresAt) return;
+    clearInterval(timer);
+    let trade = null;
+    try {
+      // Сначала пробуем закрыть (если settler-воркер не запущен).
+      let res = await fetch(`${API}/api/trades/${t.tradeId}/settle/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      if (res.ok) {
+        trade = await res.json();
+      } else {
+        // Возможно, уже закрыл settler-воркер — читаем сделку.
+        res = await fetch(`${API}/api/trades/${t.tradeId}/`);
+        if (res.ok) trade = await res.json();
+      }
+    } catch (err) {
+      console.error('Ошибка закрытия сделки:', err);
+    }
+    if (trade && trade.status && trade.status !== 'OPEN') {
+      onTradeResult(trade, t);
+    }
+  }, POLL);
+  countdownIntervals.push(timer);
+}
+
+function onTradeResult(trade, local) {
+  activeTrades = activeTrades.filter(x => x.tradeId !== trade.id);
+  renderActiveTrades();
+
+  const win = trade.status === 'WIN';
+  const payout = parseFloat(trade.payout || 0);
+  // Чистый результат: на выигрыш payout включает возврат ставки.
+  const profit = win ? payout - local.amount : -local.amount;
+  stats.total += 1;
+  if (win) stats.wins += 1;
+  stats.profit += profit;
+  updateStats();
+
+  const idx = tradeMarkers.findIndex(m => m.id === trade.id);
+  if (idx !== -1) {
+    tradeMarkers[idx].color = win ? '#30D158' : '#FF453A';
+    tradeMarkers[idx].text = `${win ? '✅' : '❌'} ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`;
+    tradeMarkers.push({
+      time: Math.floor(Date.now() / 1000),
+      position: 'inBar',
+      color: win ? '#30D158' : '#FF453A',
+      shape: 'circle',
+      text: `Exit: ${fmtPrice(parseFloat(trade.exit_price))}`,
+      id: `${trade.id}_exit`,
+    });
+    lineSeries.setMarkers(tradeMarkers);
+  }
+
+  const resultText = win ? '✅ ВЫИГРЫШ' : '❌ ПРОИГРЫШ';
+  document.getElementById('status-bar').innerText =
+    `${resultText}: ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`;
+  loadBalance();
+  setTimeout(() => {
+    document.getElementById('status-bar').innerText = 'Рынок: ' + currentPair;
+  }, 4000);
+}
+
+// В REST-бэке нет «сброса демо». Просто перечитываем баланс и чистим разметку.
+function resetDemo() {
+  activeTrades = [];
+  tradeMarkers = [];
+  if (lineSeries) lineSeries.setMarkers([]);
+  renderActiveTrades();
+  loadBalance();
+  document.getElementById('status-bar').innerText = 'Баланс обновлён';
 }
 
 function renderActiveTrades() {
   const container = document.getElementById('active-trades-container');
-  countdownIntervals.forEach(interval => clearInterval(interval));
+  countdownIntervals.forEach(i => clearInterval(i));
   countdownIntervals = [];
   if (activeTrades.length === 0) { container.innerHTML = ''; return; }
   container.innerHTML = activeTrades.map((trade, index) => {
-    const timeLeft = Math.max(0, trade.expirationTime - Math.floor((Date.now() - new Date().getTime()) / 1000));
+    const timeLeft = Math.max(0, Math.ceil((trade.expiresAt - Date.now()) / 1000));
     return `
       <div class="active-trade-item" id="trade-${index}">
         <div class="active-trade-header">
           <span>${trade.pair} ${trade.type === 'higher' ? '▲' : '▼'}</span>
           <span class="countdown" id="countdown-${index}">${timeLeft}s</span>
         </div>
-        <div>Ставка: $${trade.amount} | Цена: $${trade.startPrice.toFixed(2)}</div>
+        <div>Ставка: $${trade.amount} | Цена: ${fmtPrice(trade.startPrice)}</div>
       </div>
     `;
   }).join('');
   activeTrades.forEach((trade, index) => {
-    let timeLeft = trade.expirationTime;
     const interval = setInterval(() => {
-      timeLeft--;
+      const left = Math.max(0, Math.ceil((trade.expiresAt - Date.now()) / 1000));
       const el = document.getElementById(`countdown-${index}`);
-      if (el) el.innerText = `${Math.max(0, timeLeft)}s`;
-      if (timeLeft <= 0) clearInterval(interval);
-    }, 1000);
+      if (el) el.innerText = `${left}s`;
+      if (left <= 0) clearInterval(interval);
+    }, 500);
     countdownIntervals.push(interval);
   });
 }

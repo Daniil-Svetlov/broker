@@ -129,6 +129,7 @@ body {
     background-repeat: repeat;
     background-size: 256px 256px;
 }
+
 .glass {
     background: var(--glass-bg);
     backdrop-filter: blur(40px) saturate(180%);
@@ -490,7 +491,7 @@ header {
 }
 
 .settings {
-    margin-top:auto; 
+    margin-top: auto;
     padding: 12px;
 }
 
@@ -505,7 +506,7 @@ header {
     border: 1px solid var(--glass-border);
     text-decoration: none;
     color: var(--text-secondary);
-    transition:all 0.3s;
+    transition: all 0.3s;
 }
 
 .settings-icon {
@@ -524,6 +525,94 @@ header {
     position: relative;
     z-index: 5;
     min-width: 0;
+}
+
+/* --- CHART SKELETON LOADER --- */
+.chart-skeleton {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: radial-gradient(circle at 50% 40%, rgba(0, 122, 255, 0.08), transparent 60%),
+        rgba(5, 5, 5, 0.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    transition: opacity .45s ease, visibility .45s ease;
+}
+
+.chart-skeleton.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.chart-skeleton .skel-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 120px;
+}
+
+.chart-skeleton .skel-bar {
+    width: 14px;
+    border-radius: 4px 4px 0 0;
+    background: linear-gradient(180deg, rgba(0, 122, 255, .45), rgba(0, 122, 255, .08));
+    animation: skel-pulse 1.4s ease-in-out infinite;
+}
+
+.chart-skeleton .skel-bar:nth-child(1) {
+    height: 40%;
+    animation-delay: 0s;
+}
+
+.chart-skeleton .skel-bar:nth-child(2) {
+    height: 70%;
+    animation-delay: .12s;
+}
+
+.chart-skeleton .skel-bar:nth-child(3) {
+    height: 50%;
+    animation-delay: .24s;
+}
+
+.chart-skeleton .skel-bar:nth-child(4) {
+    height: 85%;
+    animation-delay: .36s;
+}
+
+.chart-skeleton .skel-bar:nth-child(5) {
+    height: 60%;
+    animation-delay: .48s;
+}
+
+.chart-skeleton .skel-bar:nth-child(6) {
+    height: 75%;
+    animation-delay: .6s;
+}
+
+@keyframes skel-pulse {
+
+    0%,
+    100% {
+        opacity: .35;
+        transform: scaleY(.85);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+}
+
+.chart-skeleton .skel-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    letter-spacing: .3px;
 }
 
 /* --- TRADE PANEL --- */
@@ -702,6 +791,18 @@ header {
     cursor: not-allowed;
 }
 
+.btn-trade div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.trade-icon {
+    width: 18px;
+    height: 18px;
+}
+
 .btn-up {
     background: linear-gradient(135deg, #30d158, #28a745);
     color: white;
@@ -780,10 +881,7 @@ header {
 
 #mobile-left {
     left: 20px;
-}
-
-#mobile-right {
-    right: 20px;
+    top: calc(var(--header-h) + 30px);
 }
 
 .overlay {
@@ -834,23 +932,138 @@ header {
 
     .sidebar {
         position: fixed;
-        padding-top: 100px;
-        right: 0;
-        top: 0;
+        top: auto;
         bottom: 0;
-        z-index: 500;
-        width: 300px;
-        transform: translateX(100%);
-        transition: transform 0.4s;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: auto;
+        max-height: 35vh;
+        padding: 10px 12px;
+        gap: 8px;
+        overflow-y: auto;
+        border-left: none;
+        border-top: 1px solid var(--glass-border);
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
     }
 
-    .sidebar.open {
-        transform: translateX(0);
+    .trade-info-card {
+        padding: 8px 12px;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
     }
 
-    .mobile-btn {
+    .trade-info-row {
+        padding: 0;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .trade-info-label {
+        font-size: 11px;
+    }
+
+    .trade-info-value {
+        font-size: 13px;
+    }
+
+    .input-group {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .sidebar>.input-group {
+        display: inline-block;
+        width: calc(50% - 4px);
+        vertical-align: top;
+    }
+
+    .sidebar {
+        display: block;
+    }
+
+    .trade-info-card,
+    .trade-actions,
+    .active-trades {
+        display: flex !important;
+        margin-bottom: 8px;
+    }
+
+    .input-group label {
+        font-size: 10px;
+        margin-bottom: 4px;
+    }
+
+    .input-group input {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    #status-bar {
+        padding: 6px 10px;
+        font-size: 11px;
+        margin-top: 8px;
+        margin-bottom: 8px;
+    }
+
+    .active-trades {
+        max-height: 80px;
+        gap: 4px;
+        margin-bottom: 8px;
+    }
+
+    .active-trade-item {
+        padding: 8px;
+        font-size: 11px;
+    }
+
+    .trade-actions {
+        flex-direction: row;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .btn-trade {
+        flex: 1;
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .btn-trade:hover:not(:disabled) {
+        transform: none;
+    }
+
+    .btn-trade div {
+        gap: 6px;
+    }
+
+    .trade-icon {
+        width: 14px;
+        height: 14px;
+    }
+
+    .btn-reset {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        border: 2px solid var(--glass-border);
+        padding: 8px;
+        font-size: 11px;
+        width: 50%;
+    }
+
+    #chart {
+        padding-bottom: 260px;
+    }
+
+    #mobile-left {
         display: flex !important;
     }
+
 }
 
 @media (max-width: 768px) {
@@ -995,5 +1208,48 @@ header {
     .currency-trend-icon {
         width: 22px;
         height: 22px;
+    }
+}
+
+/* ==========================================
+   FIX: Гарантия кликабельности на мобилках
+   ========================================== */
+
+/* 2. Делаем мобильный сайдбар с кнопками и полями ввода поверх всех слоев */
+@media (max-width: 900px) {
+
+    /* не работало на десктопе, пока не перенёс в медиа left-bar и left-bar.open*/
+    /* 1. Отключаем перехват кликов у скрытого бокового меню */
+    .left-bar {
+        pointer-events: none;
+    }
+
+    /* Включаем клики обратно только когда левое меню открыто */
+    .left-bar.open {
+        pointer-events: auto;
+    }
+
+    .sidebar {
+        position: fixed;
+        z-index: 600 !important;
+        /* Поднимаем выше всего */
+        pointer-events: auto !important;
+    }
+
+    .input-group,
+    .input-group input,
+    .btn-trade,
+    .btn-reset,
+    .mobile-btn {
+        position: relative;
+        z-index: 601 !important;
+        pointer-events: auto !important;
+        touch-action: manipulation;
+        /* Убирает задержку в 300мс при тапе на смартфонах */
+    }
+
+    /* Подстраиваем график, чтобы он не уходил под панель управления */
+    #chart {
+        padding-bottom: 300px;
     }
 }

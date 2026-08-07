@@ -3,11 +3,27 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Торговля — LUMIT Trade</title>
+    <title>Торговля — LUMIT Trade (local)</title>
     <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
-    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Критический минимум: чтобы страница не была белой и у графика была
+         высота ДАЖЕ если внешний css/terminal.css не подгрузился (404/не та
+         папка). Полный стиль ниже во внешнем файле — он переопределит эти
+         правила, когда доступен. -->
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        background: #000; color: #fff;
+        font-family: 'Inter', -apple-system, sans-serif;
+        overflow-x: hidden;
+      }
+      .main { display: flex; height: 100vh; width: 100%; }
+      /* Без этой высоты график создаётся 0×0 и не виден. */
+      #chart { flex: 1; min-height: 420px; position: relative; }
+    </style>
     <link rel="stylesheet" href="css/terminal.css">
+    <script src="config.js"></script>
     <script defer src="scripts/terminal-script.js"></script>
   </head>
   <body>
@@ -37,7 +53,7 @@
         </div>
         <div class="balance-block">
           <span class="balance-label">Демо-баланс</span>
-          <span class="balance-amount" id="balance-amount-header">$10,000.00</span>
+          <span class="balance-amount" id="balance-amount-header">$0.00</span>
         </div>
         <button class="right-btn" title="Уведомления">
           <svg class="bell-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
@@ -79,30 +95,15 @@
                 <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
                 <path d="M12 7v10M14 9h-3a1.5 1.5 0 0 0 0 3h2a1.5 1.5 0 0 1 0 3H9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
-            <span>Криптовалюта</span>
+            <span>Валютные пары</span>
             </div>
             <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
               <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
-          <div class="submenu open">
-            <button class="sub-btn active" data-pair="BTC/USDT">
-              <span class="sub-icon">₿</span>
-              Bitcoin
-            </button>
-            <button class="sub-btn" data-pair="ETH/USDT">
-              <span class="sub-icon">Ξ</span>
-              Ethereum
-            </button>
-            <button class="sub-btn" data-pair="LUMIT/OTC">
-              <span class="sub-icon">
-                <svg class="diamond-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
-                  <path d="M6 3h12l4 5-10 13L2 8l4-5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M2 8h20M6 3l6 5 6-5M12 8v13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </span>
-              LUMIT OTC
-            </button>
+          <!-- Список пар наполняется из /api/assets/ (terminal-script.js, loadAssets). -->
+          <div class="submenu open" id="pairs-menu">
+            <button class="sub-btn" disabled>Загрузка пар…</button>
           </div>
         </div>
         <div class="category-item">
@@ -180,7 +181,7 @@
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l.73-1.19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </span>
-              Сбросить счет
+              Обновить баланс
             </button>
           </div>
         </div>
@@ -194,7 +195,19 @@
           </a>
         </div>
       </div>
-      <div id="chart"></div>
+      <div id="chart">
+        <div class="chart-skeleton" id="chart-skeleton">
+          <div class="skel-bars">
+            <div class="skel-bar"></div>
+            <div class="skel-bar"></div>
+            <div class="skel-bar"></div>
+            <div class="skel-bar"></div>
+            <div class="skel-bar"></div>
+            <div class="skel-bar"></div>
+          </div>
+          <div class="skel-text">Загрузка графика…</div>
+        </div>
+      </div>
       <div class="sidebar" id="sidebar">
         <div class="trade-info-card">
           <div class="trade-info-row">
@@ -203,7 +216,7 @@
           </div>
           <div class="trade-info-row">
             <span class="trade-info-label">Пара</span>
-            <span class="trade-info-value" id="current-pair">BTC/USDT</span>
+            <span class="trade-info-value" id="current-pair">EUR/USD</span>
           </div>
         </div>
         <div class="input-group">
@@ -212,30 +225,39 @@
         </div>
         <div class="input-group">
           <label>Время экспирации (сек)</label>
-          <input type="number" id="time" value="60" min="5" max="300" step="5">
+          <input type="number" id="time" value="30" min="5" max="300" step="5">
         </div>
         <div id="status-bar">Подключение...</div>
         <div class="active-trades" id="active-trades-container"></div>
         <div class="trade-actions">
-          <button class="btn-trade btn-up" id="btnUp">ВЫШЕ ▲</button>
-          <button class="btn-trade btn-down" id="btnDown">НИЖЕ ▼</button>
+          <button class="btn-trade btn-up" id="btnUp">
+            <div>
+              <span>ВЫШЕ</span>
+              <svg class="trade-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://w3.org">
+                <path d="M12 4L22 20H2L12 4Z"/>
+              </svg>
+            </div>
+          </button>
+          <button class="btn-trade btn-down" id="btnDown">
+            <div>
+              <span>НИЖЕ</span>
+              <svg class="trade-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://w3.org">
+                <path d="M12 20L2 4H22L12 20Z"/>
+              </svg>
+            </div>
+          </button>
         </div>
         <button class="btn-reset" onclick="resetDemo()">
           <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l.73-1.19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span>Сбросить демо-счет</span>
+          <span>Обновить баланс</span>
         </button>
       </div>
     </div>
     <button class="mobile-btn" id="mobile-left" onclick="toggleLeft()">
       <svg class="menu-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
         <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-    <button class="mobile-btn" id="mobile-right" onclick="toggleRight()">
-      <svg class="currency-trend-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
-        <path d="M3 3v16a2 2 0 0 0 2 2h16M7 14l4-4 4 4 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
   </body>
