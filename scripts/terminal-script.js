@@ -24,8 +24,14 @@ let priceHistory = [];
 let lastCacheSaveAt = 0;
 let skeletonHidden = false;
 
+let accountType = localStorage.getItem('lumit_account_type') || 'demo'; // 'demo' | 'real'
+let balances = { demo: 0, real: 0 };
+
 let currentPair = 'EUR/USD';
-let lineSeries = null;
+let activeSeries = null;
+let chartType = localStorage.getItem('lumit_chart_type') || 'line'; // 'line' | 'candles' | 'bars'
+let candleIntervalSec = parseInt(localStorage.getItem('lumit_candle_interval') || '60', 10);
+let candles = [];
 let chart = null;
 let balance = 0;
 let activeTrades = [];
@@ -34,6 +40,41 @@ let tradeMarkers = [];
 let lastChartTime = 0;
 // Статистика сессии (бэкенд агрегатов не отдаёт — считаем локально).
 let stats = { wins: 0, total: 0, profit: 0 };
+
+function toggleAccountMenu(evt) {
+  if (evt) evt.stopPropagation();
+  document.getElementById('account-switcher').classList.toggle('open');
+}
+
+function closeAccountMenu() {
+  document.getElementById('account-switcher').classList.remove('open');
+}
+
+function selectAccountType(type) {
+  if (type === accountType) { closeAccountMenu(); return; }
+  accountType = type;
+  localStorage.setItem('lumit_account_type', type);
+  updateAccountUI();
+  closeAccountMenu();
+  document.getElementById('status-bar').innerText =
+    type === 'real' ? 'Переключено на реальный счёт' : 'Переключено на демо-счёт';
+}
+
+function updateAccountUI() {
+  const badge = document.getElementById('account-badge');
+  badge.innerText = accountType === 'real' ? 'REAL' : 'DEMO';
+  badge.classList.toggle('real', accountType === 'real');
+
+  document.getElementById('balance-amount-header').innerText = fmtMoney(balances[accountType]);
+  document.getElementById('account-balance-demo').innerText = fmtMoney(balances.demo);
+  document.getElementById('account-balance-real').innerText = fmtMoney(balances.real);
+
+  document.querySelectorAll('.account-option').forEach(b =>
+    b.classList.toggle('active', b.getAttribute('data-account-type') === accountType));
+
+  // balance используется в sendTrade для проверки "хватает ли средств"
+  balance = balances[accountType];
+}
 
 // --- форматирование цены: форекс требует больше знаков, чем .toFixed(2) ---
 function fmtPrice(v) {
@@ -85,6 +126,93 @@ function hideSkeleton() {
   if (el) el.classList.add('hidden');
 }
 
+function createSeriesForType(type) {
+  if (type === 'candles') {
+    return chart.addCandlestickSeries({
+      upColor: '#30D158', downColor: '#FF453A',
+      borderUpColor: '#30D158', borderDownColor: '#FF453A',
+      wickUpColor: '#30D158', wickDownColor: '#FF453A',
+      priceLineVisible: false,
+    });
+  }
+  if (type === 'bars') {
+    return chart.addBarSeries({
+      upColor: '#30D158', downColor: '#FF453A',
+      thinBars: false,
+      priceLineVisible: false,
+    });
+  }
+  return chart.addLineSeries({ color: '#007AFF', lineWidth: 2, priceLineVisible: false });
+}
+
+function buildCandlesFromHistory(history, intervalSec) {
+  const result = [];
+  let cur = null;
+  for (const pt of history) {
+    const bucket = Math.floor(pt.time / intervalSec) * intervalSec;
+    if (!cur || cur.time !== bucket) {
+      if (cur) result.push(cur);
+      cur = { time: bucket, open: pt.value, high: pt.value, low: pt.value, close: pt.value };
+    } else {
+      cur.high = Math.max(cur.high, pt.value);
+      cur.low = Math.min(cur.low, pt.value);
+      cur.close = pt.value;
+    }
+  }
+  if (cur) result.push(cur);
+  return result;
+}
+
+function updateCandleFromTick(point) {
+  const bucket = Math.floor(point.time / candleIntervalSec) * candleIntervalSec;
+  const last = candles[candles.length - 1];
+  if (last && last.time === bucket) {
+    last.high = Math.max(last.high, point.value);
+    last.low = Math.min(last.low, point.value);
+    last.close = point.value;
+  } else {
+    candles.push({ time: bucket, open: point.value, high: point.value, low: point.value, close: point.value });
+    if (candles.length > CHART_CACHE_MAX_POINTS) candles.shift();
+  }
+  if (chartType !== 'line' && activeSeries) {
+    activeSeries.update(candles[candles.length - 1]);
+  }
+}
+
+function renderChartData() {
+  if (!activeSeries) return;
+  if (chartType === 'line') {
+    activeSeries.setData(priceHistory);
+    if (priceHistory.length) hideSkeleton();
+  } else {
+    candles = buildCandlesFromHistory(priceHistory, candleIntervalSec);
+    activeSeries.setData(candles);
+    if (candles.length) hideSkeleton();
+  }
+}
+
+function switchChartType(type) {
+  if (type === chartType) return;
+  chartType = type;
+  localStorage.setItem('lumit_chart_type', type);
+
+  document.querySelectorAll('#chart-type-menu .sub-btn').forEach(b =>
+    b.classList.toggle('active', b.getAttribute('data-chart-type') === type));
+
+  if (activeSeries) chart.removeSeries(activeSeries);
+  activeSeries = createSeriesForType(type);
+  renderChartData();
+  activeSeries.setMarkers(tradeMarkers);
+}
+
+function setTimeframe(seconds) {
+  candleIntervalSec = seconds;
+  localStorage.setItem('lumit_candle_interval', String(seconds));
+  document.querySelectorAll('[data-tf]').forEach(b =>
+    b.classList.toggle('active', parseInt(b.getAttribute('data-tf'), 10) === seconds));
+  if (chartType !== 'line') renderChartData();
+}
+
 // DRF возвращает ошибки по-разному: {error}, {detail} или {поле: [сообщения]}.
 // Сводим к читаемой строке, чтобы видеть реальную причину, а не «Ошибка».
 function describeApiError(data) {
@@ -120,20 +248,21 @@ function selectPair(pair) {
     b.classList.toggle('active', b.getAttribute('data-pair') === pair));
 
   tradeMarkers = [];
-  if (lineSeries) lineSeries.setMarkers([]);
   document.getElementById('current-pair').innerText = pair;
 
   const cached = loadCachedHistory(pair);
   priceHistory = cached.slice();
+  candles = [];
 
-  if (lineSeries) {
+  if (activeSeries) {
+    activeSeries.setMarkers([]);
     if (cached.length) {
-      lineSeries.setData(cached);
+      renderChartData();
       lastChartTime = cached[cached.length - 1].time;
       hideSkeleton();
       document.getElementById('status-bar').innerText = 'Рынок: ' + pair + ' (кэш)';
     } else {
-      lineSeries.setData([]);
+      activeSeries.setData([]);
       lastChartTime = 0;
       document.getElementById('status-bar').innerText = 'Рынок: ' + pair;
     }
@@ -174,13 +303,22 @@ function toggleLeft() {
   document.getElementById('left-bar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('active');
 }
+
 function closePanels() {
   document.getElementById('left-bar').classList.remove('open');
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('overlay').classList.remove('active');
 }
 
+document.addEventListener('click', (e) => {
+  const switcher = document.getElementById('account-switcher');
+  if (switcher && !switcher.contains(e.target)) {
+    switcher.classList.remove('open');
+  }
+});
+
 window.addEventListener('load', function () {
+  updateAccountUI();
   console.log('Загрузка LUMIT Trading Engine (REST)...');
   const chartElement = document.getElementById('chart');
 
@@ -212,7 +350,14 @@ window.addEventListener('load', function () {
       rightPriceScale: { borderColor: 'rgba(255,255,255,0.1)' },
       crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
     });
-    lineSeries = chart.addLineSeries({ color: '#007AFF', lineWidth: 2, priceLineVisible: false });
+
+    activeSeries = createSeriesForType(chartType);
+
+    document.querySelector(`#chart-type-menu .sub-btn[data-chart-type="${chartType}"]`)
+      ?.classList.add('active');
+    document.querySelector('#chart-type-menu .sub-btn[data-chart-type="line"]')
+      ?.classList.toggle('active', chartType === 'line');
+    document.querySelector(`.sub-btn[data-tf="${candleIntervalSec}"]`)?.classList.add('active');
     console.log('✅ График создан');
   } catch (error) {
     console.error('Ошибка создания графика:', error);
@@ -267,12 +412,18 @@ async function pollPrice() {
     lastChartTime = t;
 
     const point = { time: t, value: price };
-    lineSeries.update(point);
 
     priceHistory.push(point);
     if (priceHistory.length > CHART_CACHE_MAX_POINTS) {
       priceHistory = priceHistory.slice(-CHART_CACHE_MAX_POINTS);
     }
+    
+    if (chartType === 'line') {
+      activeSeries.update(point);
+    } else {
+      updateCandleFromTick(point);
+    }
+
     maybePersistHistory();
 
     document.getElementById('current-price').innerText = `$${fmtPrice(price)}`;
@@ -289,8 +440,10 @@ async function loadBalance() {
     const res = await fetch(`${API}/api/accounts/${ACCOUNT_ID}/`);
     if (!res.ok) return;
     const acc = await res.json();
-    balance = parseFloat(acc.balance);
-    document.getElementById('balance-amount-header').innerText = fmtMoney(balance);
+    // Бэкенд отдаёт раздельные балансы; balance оставлен как фолбэк
+    balances.demo = parseFloat(acc.demo_balance ?? acc.balance ?? 0);
+    balances.real = parseFloat(acc.real_balance ?? 0);
+    updateAccountUI();
   } catch (err) {
     console.error('Ошибка загрузки баланса:', err);
   }
@@ -319,6 +472,7 @@ async function sendTrade(type) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         account_id: ACCOUNT_ID,
+        account_type: accountType,
         asset_pair: currentPair,
         amount: amount,
         direction: direction,
@@ -363,7 +517,7 @@ function onTradeOpened(trade, type, time) {
     id: t.tradeId,
   };
   tradeMarkers.push(marker);
-  lineSeries.setMarkers(tradeMarkers);
+  activeSeries.setMarkers(tradeMarkers);
 
   document.getElementById('status-bar').innerText =
     `Сделка открыта: ${type === 'higher' ? '▲' : '▼'} $${t.amount}`;
@@ -427,7 +581,7 @@ function onTradeResult(trade, local) {
       text: `Exit: ${fmtPrice(parseFloat(trade.exit_price))}`,
       id: `${trade.id}_exit`,
     });
-    lineSeries.setMarkers(tradeMarkers);
+    activeSeries.setMarkers(tradeMarkers);
   }
 
   const resultText = win ? '✅ ВЫИГРЫШ' : '❌ ПРОИГРЫШ';
@@ -443,7 +597,7 @@ function onTradeResult(trade, local) {
 function resetDemo() {
   activeTrades = [];
   tradeMarkers = [];
-  if (lineSeries) lineSeries.setMarkers([]);
+  if (activeSeries) activeSeries.setMarkers([]);
   renderActiveTrades();
   loadBalance();
   document.getElementById('status-bar').innerText = 'Баланс обновлён';

@@ -51,9 +51,30 @@
             <span class="stat-value" id="win-rate">0%</span>
           </div>
         </div>
-        <div class="balance-block">
-          <span class="balance-label">Демо-баланс</span>
-          <span class="balance-amount" id="balance-amount-header">$0.00</span>
+        <div class="account-switcher" id="account-switcher">
+          <button class="account-trigger" id="account-trigger" onclick="toggleAccountMenu(event)">
+            <span class="account-badge" id="account-badge">DEMO</span>
+            <span class="balance-amount" id="balance-amount-header">$0.00</span>
+            <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+              <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="account-dropdown" id="account-dropdown">
+            <button class="account-option active" data-account-type="demo" onclick="selectAccountType('demo')">
+              <span class="account-option-dot demo-dot"></span>
+              <span class="account-option-text">
+                <span class="account-option-label">Демо-счёт</span>
+                <span class="account-option-balance" id="account-balance-demo">$0.00</span>
+              </span>
+            </button>
+            <button class="account-option" data-account-type="real" onclick="selectAccountType('real')">
+              <span class="account-option-dot real-dot"></span>
+              <span class="account-option-text">
+                <span class="account-option-label">Реальный счёт</span>
+                <span class="account-option-balance" id="account-balance-real">$0.00</span>
+              </span>
+            </button>
+          </div>
         </div>
         <button class="right-btn" title="Уведомления">
           <svg class="bell-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
@@ -84,8 +105,8 @@
             </svg>
           </button>
           <div class="submenu">
-            <button class="sub-btn"><span class="sub-icon">1м</span> 1 минута</button>
-            <button class="sub-btn"><span class="sub-icon">5м</span> 5 минут</button>
+            <button class="sub-btn active" data-tf="60" onclick="setTimeframe(60)"><span class="sub-icon">1м</span> 1 минута</button>
+            <button class="sub-btn" data-tf="300" onclick="setTimeframe(300)"><span class="sub-icon">5м</span> 5 минут</button>
           </div>
         </div>
         <div class="category-item">
@@ -118,8 +139,8 @@
               <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
-          <div class="submenu">
-            <button class="sub-btn">
+          <div class="submenu" id="chart-type-menu">
+            <button class="sub-btn active" data-chart-type="line" onclick="switchChartType('line')">
               <span class="sub-icon">
                 <svg class="trend-up-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
                   <path d="M23 6l-9.5 9.5-5-5L1 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -127,13 +148,21 @@
               </span>
               Линия
             </button>
-            <button class="sub-btn">
+            <button class="sub-btn" data-chart-type="candles" onclick="switchChartType('candles')">
               <span class="sub-icon">
                 <svg class="bar-chart-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
                   <path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </span>
               Свечи
+            </button>
+            <button class="sub-btn" data-chart-type="bars" onclick="switchChartType('bars')">
+              <span class="sub-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                  <path d="M6 4v16M6 9h4M6 15h4M18 4v16M14 8h4M14 16h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              Бары
             </button>
           </div>
         </div>

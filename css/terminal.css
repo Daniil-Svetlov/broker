@@ -236,26 +236,133 @@ header {
     color: var(--red);
 }
 
-.balance-block {
+.account-switcher {
+    position: relative;
+}
+
+.account-trigger {
     display: flex;
-    flex-direction: column;
-    padding: 8px 16px;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
     border-radius: var(--radius-sm);
     background: rgba(48, 209, 88, 0.1);
     border: 1px solid rgba(48, 209, 88, 0.2);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.3s;
 }
 
-.balance-label {
-    font-size: 10px;
+.account-trigger:hover {
+    background: rgba(48, 209, 88, 0.16);
+}
+
+.account-trigger .arrow {
+    width: 10px;
+    height: 10px;
     color: var(--text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    transition: transform 0.3s;
 }
 
-.balance-amount {
-    font-weight: 700;
-    font-size: 16px;
+.account-switcher.open .account-trigger .arrow {
+    transform: rotate(90deg);
+}
+
+.account-badge {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 3px 7px;
+    border-radius: 6px;
+    background: rgba(0, 122, 255, 0.15);
+    color: var(--accent);
+}
+
+.account-badge.real {
+    background: rgba(255, 159, 10, 0.18);
+    color: var(--orange);
+}
+
+.account-switcher .balance-amount {
     color: var(--green);
+    font-size: 15px;
+}
+
+.account-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 220px;
+    padding: 6px;
+    border-radius: var(--radius-md);
+    z-index: 1100;
+    background: rgba(20, 20, 20, 0.9);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+.account-switcher.open .account-dropdown {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.account-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: all 0.2s;
+}
+
+.account-option:hover {
+    background: var(--glass-bg);
+}
+
+.account-option.active {
+    background: rgba(0, 122, 255, 0.1);
+    border-color: rgba(0, 122, 255, 0.2);
+}
+
+.account-option-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.account-option-dot.demo-dot {
+    background: var(--accent);
+}
+
+.account-option-dot.real-dot {
+    background: var(--orange);
+}
+
+.account-option-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.account-option-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.account-option-balance {
+    font-size: 12px;
+    color: var(--text-tertiary);
     font-variant-numeric: tabular-nums;
 }
 
