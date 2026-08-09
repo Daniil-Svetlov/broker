@@ -17,8 +17,8 @@ const ACCOUNT_OK = !!ACCOUNT_ID && ACCOUNT_ID !== '__ACCOUNT_ID__';
 
 // --- кэш свечей для мгновенного рендера при повторном заходе ---
 const CHART_CACHE_PREFIX = 'lumit_chart_cache_';
-const CHART_CACHE_MAX_POINTS = 300;    
-const CHART_CACHE_SAVE_INTERVAL_MS = 5000; 
+const CHART_CACHE_MAX_POINTS = 300;
+const CHART_CACHE_SAVE_INTERVAL_MS = 5000;
 
 let priceHistory = [];
 let lastCacheSaveAt = 0;
@@ -40,6 +40,125 @@ let tradeMarkers = [];
 let lastChartTime = 0;
 // Статистика сессии (бэкенд агрегатов не отдаёт — считаем локально).
 let stats = { wins: 0, total: 0, profit: 0 };
+
+let drawTool = 'none';        // 'none' | 'hline' | 'trend' | 'rect' | 'fib' | 'erase'
+let drawings = [];
+let pendingPoints = [];
+let hoverPoint = null;
+let drawCanvas = null;
+let drawCtx = null;
+
+let indicators = [];
+let subCharts = {};
+
+const DEFAULT_PARAMS = {
+  SMA: { period: 14, color: '#FF9F0A', lineWidth: 2 },
+  EMA: { period: 14, color: '#5856D6', lineWidth: 2 },
+  BB: { period: 20, stdDev: 2, color: '#00D4AA', lineWidth: 1 },
+  RSI: { period: 14, color: '#FF9F0A', lineWidth: 2 },
+  MACD: { fast: 12, slow: 26, signal: 9, colorMacd: '#007AFF', colorSignal: '#FF9F0A' },
+};
+
+function genIndId() { return 'ind_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }
+
+// --- унифицированный ряд закрытий под текущий режим графика ---
+function getClosesSeries() {
+  if (chartType === 'line') {
+    return priceHistory.map(p => ({ time: p.time, close: p.value }));
+  }
+  return candles.map(c => ({ time: c.time, close: c.close }));
+}
+
+// --- матем. расчёты ---
+function calcSMA(closes, period) {
+  const out = [];
+  for (let i = period - 1; i < closes.length; i++) {
+    let sum = 0;
+    for (let j = i - period + 1; j <= i; j++) sum += closes[j].close;
+    out.push({ time: closes[i].time, value: sum / period });
+  }
+  return out;
+}
+
+function calcEMA(closes, period) {
+  const out = [];
+  const k = 2 / (period + 1);
+  let prev = null;
+  closes.forEach((c, i) => {
+    if (i === period - 1) {
+      let sum = 0;
+      for (let j = 0; j < period; j++) sum += closes[j].close;
+      prev = sum / period;
+      out.push({ time: c.time, value: prev });
+    } else if (i >= period) {
+      prev = c.close * k + prev * (1 - k);
+      out.push({ time: c.time, value: prev });
+    }
+  });
+  return out;
+}
+
+function calcRSI(closes, period) {
+  const out = [];
+  if (closes.length < period + 1) return out;
+  let gains = 0, losses = 0;
+  for (let i = 1; i <= period; i++) {
+    const diff = closes[i].close - closes[i - 1].close;
+    if (diff >= 0) gains += diff; else losses -= diff;
+  }
+  let avgGain = gains / period, avgLoss = losses / period;
+  out.push({ time: closes[period].time, value: rsiFromAvg(avgGain, avgLoss) });
+  for (let i = period + 1; i < closes.length; i++) {
+    const diff = closes[i].close - closes[i - 1].close;
+    const gain = diff > 0 ? diff : 0;
+    const loss = diff < 0 ? -diff : 0;
+    avgGain = (avgGain * (period - 1) + gain) / period;
+    avgLoss = (avgLoss * (period - 1) + loss) / period;
+    out.push({ time: closes[i].time, value: rsiFromAvg(avgGain, avgLoss) });
+  }
+  return out;
+}
+function rsiFromAvg(avgGain, avgLoss) {
+  if (avgLoss === 0) return 100;
+  const rs = avgGain / avgLoss;
+  return 100 - 100 / (1 + rs);
+}
+
+function calcBollinger(closes, period, stdDevMult) {
+  const upper = [], mid = [], lower = [];
+  for (let i = period - 1; i < closes.length; i++) {
+    let sum = 0;
+    for (let j = i - period + 1; j <= i; j++) sum += closes[j].close;
+    const mean = sum / period;
+    let variance = 0;
+    for (let j = i - period + 1; j <= i; j++) variance += (closes[j].close - mean) ** 2;
+    const sd = Math.sqrt(variance / period);
+    const t = closes[i].time;
+    mid.push({ time: t, value: mean });
+    upper.push({ time: t, value: mean + stdDevMult * sd });
+    lower.push({ time: t, value: mean - stdDevMult * sd });
+  }
+  return { upper, mid, lower };
+}
+
+function calcMACD(closes, fast, slow, signal) {
+  const emaFast = calcEMA(closes, fast);
+  const emaSlow = calcEMA(closes, slow);
+  const slowMap = new Map(emaSlow.map(p => [p.time, p.value]));
+  const macdLine = emaFast
+    .filter(p => slowMap.has(p.time))
+    .map(p => ({ time: p.time, close: p.value - slowMap.get(p.time) }));
+  const signalLine = calcEMA(macdLine, signal).map(p => ({ time: p.time, value: p.value }));
+  const signalMap = new Map(signalLine.map(p => [p.time, p.value]));
+  const hist = macdLine
+    .filter(p => signalMap.has(p.time))
+    .map(p => ({ time: p.time, value: p.close - signalMap.get(p.time) }));
+  return {
+    macd: macdLine.map(p => ({ time: p.time, value: p.close })),
+    signal: signalLine,
+    hist,
+  };
+}
 
 function toggleAccountMenu(evt) {
   if (evt) evt.stopPropagation();
@@ -203,6 +322,8 @@ function switchChartType(type) {
   activeSeries = createSeriesForType(type);
   renderChartData();
   activeSeries.setMarkers(tradeMarkers);
+  redrawAll();
+  recomputeAndRenderIndicators();
 }
 
 function setTimeframe(seconds) {
@@ -228,7 +349,7 @@ function describeApiError(data) {
 }
 
 // --- меню/панели (без изменений относительно main) ---
-document.querySelectorAll('.main-category').forEach(button => {
+document.querySelectorAll('.main-category:not([data-no-submenu])').forEach(button => {
   button.addEventListener('click', () => {
     const submenu = button.nextElementSibling;
     button.classList.toggle('open');
@@ -254,6 +375,11 @@ function selectPair(pair) {
   priceHistory = cached.slice();
   candles = [];
 
+  // фигуры рисования свои на каждую пару
+  drawings = loadDrawings(pair);
+  pendingPoints = [];
+  hoverPoint = null;
+
   if (activeSeries) {
     activeSeries.setMarkers([]);
     if (cached.length) {
@@ -267,6 +393,8 @@ function selectPair(pair) {
       document.getElementById('status-bar').innerText = 'Рынок: ' + pair;
     }
   }
+  redrawAll();
+  recomputeAndRenderIndicators();
 }
 
 // Список валютных пар берём из Django (/api/assets/), а не из захардкоженного HTML —
@@ -352,6 +480,10 @@ window.addEventListener('load', function () {
     });
 
     activeSeries = createSeriesForType(chartType);
+    initDrawingLayer();
+
+    indicators = loadIndicatorsConfig();
+    renderActiveIndicatorsPanel();
 
     document.querySelector(`#chart-type-menu .sub-btn[data-chart-type="${chartType}"]`)
       ?.classList.add('active');
@@ -377,6 +509,7 @@ window.addEventListener('load', function () {
     if (chart) {
       chart.applyOptions({ width: chartElement.clientWidth, height: chartElement.clientHeight });
     }
+    resizeDrawCanvas();
   });
 
   document.getElementById('btnUp').addEventListener('click', () => sendTrade('higher'));
@@ -392,8 +525,556 @@ window.addEventListener('load', function () {
 
   window.addEventListener('beforeunload', () => {
     saveCachedHistory(currentPair, priceHistory);
-  });  
+  });
 });
+
+// Рисование
+// --- инициализация слоя рисования (вызывается один раз после создания chart/activeSeries) ---
+function initDrawingLayer() {
+  drawCanvas = document.getElementById('drawing-canvas');
+  drawCtx = drawCanvas.getContext('2d');
+  resizeDrawCanvas();
+
+  drawCanvas.addEventListener('click', (evt) => {
+    const rect = drawCanvas.getBoundingClientRect();
+    const x = evt.clientX - rect.left;
+    const y = evt.clientY - rect.top;
+    if (drawTool === 'erase') { eraseNearest(x, y); return; }
+    onCanvasClick(x, y);
+  });
+
+  drawCanvas.addEventListener('mousemove', (evt) => {
+    if (pendingPoints.length !== 1) return;
+    const rect = drawCanvas.getBoundingClientRect();
+    const x = evt.clientX - rect.left;
+    const y = evt.clientY - rect.top;
+    hoverPoint = pixelToPoint(x, y);
+    redrawAll();
+  });
+
+  document.addEventListener('keydown', (evt) => {
+    if (evt.key === 'Escape' && drawTool !== 'none') {
+      pendingPoints = [];
+      setDrawTool(drawTool);
+    }
+  });
+
+  chart.timeScale().subscribeVisibleTimeRangeChange(redrawAll);
+}
+
+function resizeDrawCanvas() {
+  if (!drawCanvas) return;
+  const chartEl = document.getElementById('chart');
+  drawCanvas.width = chartEl.clientWidth;
+  drawCanvas.height = chartEl.clientHeight;
+  redrawAll();
+}
+
+// --- выбор активного инструмента ---
+function setDrawTool(tool) {
+  drawTool = (drawTool === tool) ? 'none' : tool;
+  pendingPoints = [];
+  hoverPoint = null;
+
+  document.querySelectorAll('#drawing-menu .sub-btn[data-tool]').forEach(b =>
+    b.classList.toggle('active', b.getAttribute('data-tool') === drawTool));
+
+  drawCanvas.classList.toggle('tool-active', drawTool !== 'none');
+
+  chart.applyOptions({
+    handleScroll: drawTool === 'none',
+    handleScale: drawTool === 'none',
+  });
+
+  redrawAll();
+}
+
+// --- перевод координат: пиксель канваса <-> логическая точка {time, price} ---
+function pointToPixel(pt) {
+  const x = chart.timeScale().timeToCoordinate(pt.time);
+  const y = activeSeries.priceToCoordinate(pt.price);
+  if (x === null || y === null) return null;
+  return { x, y };
+}
+
+function pixelToPoint(x, y) {
+  const time = chart.timeScale().coordinateToTime(x);
+  const price = activeSeries.coordinateToPrice(y);
+  return { time: time ?? lastChartTime, price };
+}
+
+// --- обработка клика по канвасу ---
+function onCanvasClick(x, y) {
+  if (drawTool === 'none' || drawTool === 'erase') return;
+  const pt = pixelToPoint(x, y);
+  if (pt.price === null || pt.price === undefined) return;
+
+  if (drawTool === 'hline') {
+    drawings.push({ id: genId(), type: 'hline', price: pt.price });
+    pendingPoints = [];
+    saveDrawings(currentPair);
+    redrawAll();
+    return;
+  }
+
+  // trend / rect / fib — двухточечные фигуры: первый клик, затем второй
+  pendingPoints.push(pt);
+  if (pendingPoints.length === 2) {
+    drawings.push({ id: genId(), type: drawTool, p1: pendingPoints[0], p2: pendingPoints[1] });
+    pendingPoints = [];
+    hoverPoint = null;
+    saveDrawings(currentPair);
+  }
+  redrawAll();
+}
+
+function genId() {
+  return 'd_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+}
+
+// --- отрисовка всех фигур ---
+function redrawAll() {
+  if (!drawCtx || !chart || !activeSeries) return;
+  drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+  drawings.forEach(shape => drawShape(drawCtx, shape));
+
+  if (pendingPoints.length === 1 && hoverPoint) {
+    drawShape(drawCtx, { type: drawTool, p1: pendingPoints[0], p2: hoverPoint, preview: true });
+  }
+}
+
+function drawShape(ctx, shape) {
+  ctx.save();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = shape.preview ? 'rgba(0,122,255,0.5)' : '#00D4AA';
+  ctx.setLineDash(shape.preview ? [4, 4] : []);
+
+  if (shape.type === 'hline') {
+    const y = activeSeries.priceToCoordinate(shape.price);
+    if (y === null) { ctx.restore(); return; }
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(drawCanvas.width, y);
+    ctx.stroke();
+    ctx.fillStyle = '#00D4AA';
+    ctx.font = '11px Inter, sans-serif';
+    ctx.fillText(fmtPrice(shape.price), 6, y - 4);
+    ctx.restore();
+    return;
+  }
+
+  const a = pointToPixel(shape.p1);
+  const b = pointToPixel(shape.p2);
+  if (!a || !b) { ctx.restore(); return; }
+
+  if (shape.type === 'trend') {
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  } else if (shape.type === 'rect') {
+    const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
+    const w = Math.abs(b.x - a.x), h = Math.abs(b.y - a.y);
+    ctx.fillStyle = 'rgba(0, 212, 170, 0.12)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeRect(x, y, w, h);
+  } else if (shape.type === 'fib') {
+    const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+    const x0 = Math.min(a.x, b.x), x1 = Math.max(a.x, b.x);
+    const priceHigh = Math.max(shape.p1.price, shape.p2.price);
+    const priceLow = Math.min(shape.p1.price, shape.p2.price);
+    levels.forEach(lv => {
+      const price = priceHigh - (priceHigh - priceLow) * lv;
+      const y = activeSeries.priceToCoordinate(price);
+      if (y === null) return;
+      ctx.strokeStyle = (lv === 0 || lv === 1) ? '#FF9F0A' : 'rgba(0, 212, 170, 0.7)';
+      ctx.beginPath();
+      ctx.moveTo(x0, y);
+      ctx.lineTo(x1, y);
+      ctx.stroke();
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.font = '10px Inter, sans-serif';
+      ctx.fillText(`${(lv * 100).toFixed(1)}%  ${fmtPrice(price)}`, x1 + 4, y + 3);
+    });
+  }
+  ctx.restore();
+}
+
+// --- удаление фигуры под курсором ---
+function eraseNearest(x, y) {
+  const THRESH = 8;
+  for (let i = drawings.length - 1; i >= 0; i--) {
+    if (hitTest(drawings[i], x, y, THRESH)) {
+      drawings.splice(i, 1);
+      saveDrawings(currentPair);
+      redrawAll();
+      return;
+    }
+  }
+}
+
+function hitTest(shape, x, y, thresh) {
+  if (shape.type === 'hline') {
+    const py = activeSeries.priceToCoordinate(shape.price);
+    return py !== null && Math.abs(py - y) <= thresh;
+  }
+  const a = pointToPixel(shape.p1);
+  const b = pointToPixel(shape.p2);
+  if (!a || !b) return false;
+
+  if (shape.type === 'rect') {
+    const minX = Math.min(a.x, b.x) - thresh, maxX = Math.max(a.x, b.x) + thresh;
+    const minY = Math.min(a.y, b.y) - thresh, maxY = Math.max(a.y, b.y) + thresh;
+    const onVerticalBorder = x >= minX && x <= maxX &&
+      (Math.abs(y - Math.min(a.y, b.y)) <= thresh || Math.abs(y - Math.max(a.y, b.y)) <= thresh);
+    const onHorizontalBorder = y >= minY && y <= maxY &&
+      (Math.abs(x - Math.min(a.x, b.x)) <= thresh || Math.abs(x - Math.max(a.x, b.x)) <= thresh);
+    return onVerticalBorder || onHorizontalBorder;
+  }
+  return distToSegment(x, y, a.x, a.y, b.x, b.y) <= thresh;
+}
+
+function distToSegment(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1, dy = y2 - y1;
+  const lenSq = dx * dx + dy * dy;
+  let t = lenSq === 0 ? 0 : ((px - x1) * dx + (py - y1) * dy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+  const cx = x1 + t * dx, cy = y1 + t * dy;
+  return Math.hypot(px - cx, py - cy);
+}
+
+function drawingsKeyFor(pair) {
+  return 'lumit_drawings_' + pair.replace('/', '_');
+}
+
+function saveDrawings(pair) {
+  try {
+    localStorage.setItem(drawingsKeyFor(pair), JSON.stringify(drawings));
+  } catch (err) {
+    console.warn('Не удалось сохранить рисунки:', err);
+  }
+}
+
+function loadDrawings(pair) {
+  try {
+    const raw = localStorage.getItem(drawingsKeyFor(pair));
+    return raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    console.warn('Кэш рисунков повреждён, игнорирую:', err);
+    return [];
+  }
+}
+
+function clearDrawings() {
+  drawings = [];
+  saveDrawings(currentPair);
+  redrawAll();
+}
+
+// модалка выбора и добавление индикатора
+function openIndicatorModal() {
+  document.getElementById('indicator-modal-overlay').classList.add('open');
+}
+
+function closeIndicatorModal() {
+  document.getElementById('indicator-modal-overlay').classList.remove('open');
+}
+
+function closeIndicatorModalOnOverlay(evt) {
+  if (evt.target.id === 'indicator-modal-overlay') closeIndicatorModal();
+}
+
+function switchIndicatorTab(cat) {
+  document.querySelectorAll('.indicator-tab').forEach(t =>
+    t.classList.toggle('active', t.getAttribute('data-cat') === cat));
+  ['trend', 'oscillator', 'volume'].forEach(c =>
+    document.getElementById(`indicator-list-${c}`).style.display = c === cat ? 'flex' : 'none');
+}
+
+function addIndicator(type) {
+  const ind = {
+    id: genIndId(),
+    type,
+    params: { ...DEFAULT_PARAMS[type] },
+    visible: true,
+  };
+  indicators.push(ind);
+  saveIndicators();
+  closeIndicatorModal();
+  renderActiveIndicatorsPanel();
+  recomputeAndRenderIndicators();
+}
+
+function removeIndicator(id) {
+  const ind = indicators.find(i => i.id === id);
+  if (ind) destroyIndicatorSeries(ind);
+  indicators = indicators.filter(i => i.id !== id);
+  saveIndicators();
+  renderActiveIndicatorsPanel();
+  recomputeAndRenderIndicators();
+}
+
+function toggleIndicatorVisibility(id) {
+  const ind = indicators.find(i => i.id === id);
+  if (!ind) return;
+  ind.visible = !ind.visible;
+  saveIndicators();
+  renderActiveIndicatorsPanel();
+  recomputeAndRenderIndicators();
+}
+
+// sub-panes для RSI/MACD
+function ensureSubPane(key, label) {
+  if (subCharts[key]) return subCharts[key];
+  const container = document.getElementById('sub-panes');
+  const paneEl = document.createElement('div');
+  paneEl.className = 'sub-pane';
+  paneEl.id = `sub-pane-${key}`;
+  const labelEl = document.createElement('div');
+  labelEl.className = 'sub-pane-label';
+  labelEl.innerText = label;
+  paneEl.appendChild(labelEl);
+  container.appendChild(paneEl);
+
+  const subChart = LightweightCharts.createChart(paneEl, {
+    autoSize: true,
+    layout: { background: { color: 'transparent' }, textColor: 'rgba(255,255,255,0.5)' },
+    grid: { vertLines: { color: 'rgba(255,255,255,0.04)' }, horzLines: { color: 'rgba(255,255,255,0.04)' } },
+    timeScale: { visible: false }, // время синхронизируем с главным графиком
+    rightPriceScale: { borderColor: 'rgba(255,255,255,0.1)' },
+  });
+
+  chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+    if (range) subChart.timeScale().setVisibleLogicalRange(range);
+  });
+
+  subCharts[key] = { chart: subChart, el: paneEl };
+  return subCharts[key];
+}
+
+function destroySubPaneIfEmpty(key) {
+  const stillUsed = indicators.some(i =>
+    (key === 'rsi' && i.type === 'RSI') || (key === 'macd' && i.type === 'MACD'));
+  if (stillUsed || !subCharts[key]) return;
+  subCharts[key].chart.remove();
+  subCharts[key].el.remove();
+  delete subCharts[key];
+}
+
+// создание/обновление серий индикаторов
+function destroyIndicatorSeries(ind) {
+  const removeFrom = (chartInst, series) => { if (series) chartInst.removeSeries(series); };
+  if (ind.type === 'SMA' || ind.type === 'EMA') {
+    removeFrom(chart, ind.series?.line);
+  } else if (ind.type === 'BB') {
+    removeFrom(chart, ind.series?.upper);
+    removeFrom(chart, ind.series?.mid);
+    removeFrom(chart, ind.series?.lower);
+  } else if (ind.type === 'RSI' && subCharts.rsi) {
+    removeFrom(subCharts.rsi.chart, ind.series?.line);
+    destroySubPaneIfEmpty('rsi');
+  } else if (ind.type === 'MACD' && subCharts.macd) {
+    removeFrom(subCharts.macd.chart, ind.series?.macd);
+    removeFrom(subCharts.macd.chart, ind.series?.signal);
+    removeFrom(subCharts.macd.chart, ind.series?.hist);
+    destroySubPaneIfEmpty('macd');
+  }
+  ind.series = {};
+}
+
+function recomputeAndRenderIndicators() {
+  const closes = getClosesSeries();
+  indicators.forEach(ind => renderOneIndicator(ind, closes));
+}
+
+function renderOneIndicator(ind, closes) {
+  const p = ind.params;
+
+  if (ind.type === 'SMA' || ind.type === 'EMA') {
+    if (!ind.series) ind.series = {};
+    if (!ind.series.line) {
+      ind.series.line = chart.addLineSeries({ color: p.color, lineWidth: p.lineWidth, priceLineVisible: false });
+    } else {
+      ind.series.line.applyOptions({ color: p.color, lineWidth: p.lineWidth });
+    }
+    const data = ind.type === 'SMA' ? calcSMA(closes, p.period) : calcEMA(closes, p.period);
+    ind.series.line.setData(ind.visible ? data : []);
+    return;
+  }
+
+  if (ind.type === 'BB') {
+    if (!ind.series) ind.series = {};
+    if (!ind.series.upper) {
+      ind.series.upper = chart.addLineSeries({ color: p.color, lineWidth: p.lineWidth, priceLineVisible: false });
+      ind.series.mid = chart.addLineSeries({ color: p.color, lineWidth: p.lineWidth, lineStyle: 2, priceLineVisible: false });
+      ind.series.lower = chart.addLineSeries({ color: p.color, lineWidth: p.lineWidth, priceLineVisible: false });
+    } else {
+      [ind.series.upper, ind.series.mid, ind.series.lower].forEach(s => s.applyOptions({ color: p.color, lineWidth: p.lineWidth }));
+    }
+    const { upper, mid, lower } = calcBollinger(closes, p.period, p.stdDev);
+    ind.series.upper.setData(ind.visible ? upper : []);
+    ind.series.mid.setData(ind.visible ? mid : []);
+    ind.series.lower.setData(ind.visible ? lower : []);
+    return;
+  }
+
+  if (ind.type === 'RSI') {
+    const pane = ensureSubPane('rsi', 'RSI');
+    if (!ind.series) ind.series = {};
+    if (!ind.series.line) {
+      ind.series.line = pane.chart.addLineSeries({ color: p.color, lineWidth: p.lineWidth, priceLineVisible: false });
+      pane.chart.addLineSeries({ color: 'rgba(255,255,255,0.15)', lineWidth: 1 }).setData(
+        closes.length ? [{ time: closes[0].time, value: 70 }, { time: closes[closes.length - 1].time, value: 70 }] : []
+      ); // визуальные уровни 70/30 — упрощённо, без хранения ссылки (статичные)
+    } else {
+      ind.series.line.applyOptions({ color: p.color, lineWidth: p.lineWidth });
+    }
+    const data = calcRSI(closes, p.period);
+    ind.series.line.setData(ind.visible ? data : []);
+    return;
+  }
+
+  if (ind.type === 'MACD') {
+    const pane = ensureSubPane('macd', 'MACD');
+    if (!ind.series) ind.series = {};
+    if (!ind.series.macd) {
+      ind.series.hist = pane.chart.addHistogramSeries({ priceLineVisible: false });
+      ind.series.macd = pane.chart.addLineSeries({ color: p.colorMacd, lineWidth: 2, priceLineVisible: false });
+      ind.series.signal = pane.chart.addLineSeries({ color: p.colorSignal, lineWidth: 2, priceLineVisible: false });
+    } else {
+      ind.series.macd.applyOptions({ color: p.colorMacd });
+      ind.series.signal.applyOptions({ color: p.colorSignal });
+    }
+    const { macd, signal, hist } = calcMACD(closes, p.fast, p.slow, p.signal);
+    const histColored = hist.map(h => ({ time: h.time, value: h.value, color: h.value >= 0 ? 'rgba(48,209,88,0.5)' : 'rgba(255,69,58,0.5)' }));
+    ind.series.hist.setData(ind.visible ? histColored : []);
+    ind.series.macd.setData(ind.visible ? macd : []);
+    ind.series.signal.setData(ind.visible ? signal : []);
+    return;
+  }
+}
+
+// панель активных индикаторов
+const INDICATOR_LABELS = { SMA: 'SMA', EMA: 'EMA', BB: 'Bollinger', RSI: 'RSI', MACD: 'MACD' };
+
+function renderActiveIndicatorsPanel() {
+  const panel = document.getElementById('active-indicators-panel');
+  panel.innerHTML = indicators.map(ind => {
+    const label = `${INDICATOR_LABELS[ind.type]} ${ind.params.period ?? ''}`.trim();
+    const dotColor = ind.params.color || ind.params.colorMacd || '#00D4AA';
+    return `
+      <div class="indicator-chip ${ind.visible ? '' : 'hidden-ind'}">
+        <span class="indicator-chip-dot" style="background:${dotColor}"></span>
+        <span onclick="openIndicatorSettings('${ind.id}')" style="cursor:pointer">${label}</span>
+        <button class="indicator-chip-btn" title="Показать/скрыть" onclick="toggleIndicatorVisibility('${ind.id}')">${ind.visible ? '👁' : '🚫'}</button>
+        <button class="indicator-chip-btn" title="Удалить" onclick="removeIndicator('${ind.id}')">✕</button>
+      </div>`;
+  }).join('');
+}
+
+// модалка настроек индикатора
+function openIndicatorSettings(id) {
+  const ind = indicators.find(i => i.id === id);
+  if (!ind) return;
+  const modal = document.getElementById('indicator-settings-modal');
+  modal.innerHTML = buildSettingsForm(ind);
+  document.getElementById('indicator-settings-overlay').classList.add('open');
+  modal.dataset.editingId = id;
+}
+function closeIndicatorSettings() {
+  document.getElementById('indicator-settings-overlay').classList.remove('open');
+}
+function closeIndicatorSettingsOnOverlay(evt) {
+  if (evt.target.id === 'indicator-settings-overlay') closeIndicatorSettings();
+}
+
+function buildSettingsForm(ind) {
+  const p = ind.params;
+  let fields = '';
+  if (ind.type === 'SMA' || ind.type === 'EMA') {
+    fields = `
+      <div class="settings-row"><label>Период</label><input type="number" id="set-period" value="${p.period}" min="2" max="500"></div>
+      <div class="settings-row"><label>Цвет линии</label><input type="color" id="set-color" value="${p.color}"></div>
+      <div class="settings-row"><label>Толщина</label><input type="number" id="set-width" value="${p.lineWidth}" min="1" max="6"></div>`;
+  } else if (ind.type === 'BB') {
+    fields = `
+      <div class="settings-row"><label>Период</label><input type="number" id="set-period" value="${p.period}" min="2" max="500"></div>
+      <div class="settings-row"><label>Стандартных отклонений</label><input type="number" id="set-stddev" value="${p.stdDev}" min="0.5" max="5" step="0.1"></div>
+      <div class="settings-row"><label>Цвет</label><input type="color" id="set-color" value="${p.color}"></div>`;
+  } else if (ind.type === 'RSI') {
+    fields = `
+      <div class="settings-row"><label>Период</label><input type="number" id="set-period" value="${p.period}" min="2" max="100"></div>
+      <div class="settings-row"><label>Цвет линии</label><input type="color" id="set-color" value="${p.color}"></div>`;
+  } else if (ind.type === 'MACD') {
+    fields = `
+      <div class="settings-row"><label>Быстрая EMA</label><input type="number" id="set-fast" value="${p.fast}" min="2" max="100"></div>
+      <div class="settings-row"><label>Медленная EMA</label><input type="number" id="set-slow" value="${p.slow}" min="2" max="200"></div>
+      <div class="settings-row"><label>Сигнальная линия</label><input type="number" id="set-signal" value="${p.signal}" min="2" max="100"></div>
+      <div class="settings-row"><label>Цвет MACD</label><input type="color" id="set-color-macd" value="${p.colorMacd}"></div>
+      <div class="settings-row"><label>Цвет сигнала</label><input type="color" id="set-color-signal" value="${p.colorSignal}"></div>`;
+  }
+  return `
+    <div class="indicator-modal-header"><h3>Настройки: ${INDICATOR_LABELS[ind.type]}</h3>
+      <button class="modal-close-btn" onclick="closeIndicatorSettings()">✕</button></div>
+    ${fields}
+    <div class="settings-actions">
+      <button class="settings-cancel-btn" onclick="closeIndicatorSettings()">Отмена</button>
+      <button class="settings-save-btn" onclick="saveIndicatorSettings()">Сохранить</button>
+    </div>`;
+}
+
+function saveIndicatorSettings() {
+  const modal = document.getElementById('indicator-settings-modal');
+  const id = modal.dataset.editingId;
+  const ind = indicators.find(i => i.id === id);
+  if (!ind) return;
+  const val = (elId) => document.getElementById(elId)?.value;
+
+  if (ind.type === 'SMA' || ind.type === 'EMA') {
+    ind.params.period = parseInt(val('set-period'), 10) || ind.params.period;
+    ind.params.color = val('set-color') || ind.params.color;
+    ind.params.lineWidth = parseInt(val('set-width'), 10) || ind.params.lineWidth;
+  } else if (ind.type === 'BB') {
+    ind.params.period = parseInt(val('set-period'), 10) || ind.params.period;
+    ind.params.stdDev = parseFloat(val('set-stddev')) || ind.params.stdDev;
+    ind.params.color = val('set-color') || ind.params.color;
+  } else if (ind.type === 'RSI') {
+    ind.params.period = parseInt(val('set-period'), 10) || ind.params.period;
+    ind.params.color = val('set-color') || ind.params.color;
+  } else if (ind.type === 'MACD') {
+    ind.params.fast = parseInt(val('set-fast'), 10) || ind.params.fast;
+    ind.params.slow = parseInt(val('set-slow'), 10) || ind.params.slow;
+    ind.params.signal = parseInt(val('set-signal'), 10) || ind.params.signal;
+    ind.params.colorMacd = val('set-color-macd') || ind.params.colorMacd;
+    ind.params.colorSignal = val('set-color-signal') || ind.params.colorSignal;
+  }
+
+  saveIndicators();
+  closeIndicatorSettings();
+  renderActiveIndicatorsPanel();
+  recomputeAndRenderIndicators();
+}
+
+function saveIndicators() {
+  try {
+    const plain = indicators.map(({ id, type, params, visible }) => ({ id, type, params, visible }));
+    localStorage.setItem('lumit_indicators', JSON.stringify(plain));
+  } catch (err) {
+    console.warn('Не удалось сохранить индикаторы:', err);
+  }
+}
+
+function loadIndicatorsConfig() {
+  try {
+    const raw = localStorage.getItem('lumit_indicators');
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(i => ({ ...i, series: {} })) : [];
+  } catch (err) {
+    console.warn('Конфиг индикаторов повреждён, игнорирую:', err);
+    return [];
+  }
+}
 
 // --- живая цена: опрос Go quotes-service ---
 async function pollPrice() {
@@ -417,7 +1098,7 @@ async function pollPrice() {
     if (priceHistory.length > CHART_CACHE_MAX_POINTS) {
       priceHistory = priceHistory.slice(-CHART_CACHE_MAX_POINTS);
     }
-    
+
     if (chartType === 'line') {
       activeSeries.update(point);
     } else {
@@ -425,9 +1106,10 @@ async function pollPrice() {
     }
 
     maybePersistHistory();
-
     document.getElementById('current-price').innerText = `$${fmtPrice(price)}`;
     hideSkeleton();
+    redrawAll();
+    recomputeAndRenderIndicators();
   } catch (err) {
     console.error('Ошибка опроса цены:', err);
   }

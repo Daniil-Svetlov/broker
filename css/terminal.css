@@ -626,12 +626,69 @@ header {
     font-size: 16px;
 }
 
+.draw-icon {
+    width: 23px;
+    height: 23px;
+}
+
+#drawing-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    pointer-events: none;
+}
+
+#drawing-canvas.tool-active {
+    pointer-events: auto;
+    cursor: crosshair;
+}
+
+#drawing-menu .sub-btn.active {
+    background: rgba(0, 122, 255, 0.12);
+    color: var(--accent);
+}
+
 /* --- CHART --- */
 #chart {
     flex: 1;
     position: relative;
     z-index: 5;
     min-width: 0;
+}
+
+/* --- CHART COLUMN / SUB-PANES --- */
+.chart-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+#chart {
+    flex: 1 1 auto;
+}
+
+.sub-panes {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.sub-pane {
+    height: 140px;
+    border-top: 1px solid var(--glass-border);
+    position: relative;
+}
+
+.sub-pane-label {
+    position: absolute;
+    top: 6px;
+    left: 10px;
+    z-index: 5;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    letter-spacing: 0.5px;
 }
 
 /* --- CHART SKELETON LOADER --- */
@@ -720,6 +777,57 @@ header {
     font-weight: 600;
     color: var(--text-tertiary);
     letter-spacing: .3px;
+}
+
+/* --- ACTIVE INDICATORS PANEL --- */
+.active-indicators {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 18;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.indicator-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    background: rgba(15, 15, 15, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    font-size: 11px;
+    font-weight: 600;
+    pointer-events: auto;
+}
+
+.indicator-chip.hidden-ind {
+    opacity: 0.4;
+}
+
+.indicator-chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.indicator-chip-btn {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px;
+    line-height: 1;
+}
+
+.indicator-chip-btn:hover {
+    color: var(--text-primary);
 }
 
 /* --- TRADE PANEL --- */
@@ -966,6 +1074,176 @@ header {
 .currency-trend-icon {
     width: 30px;
     height: 30px;
+}
+
+/* --- MODALS --- */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0, 0, 0, 0.55);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.indicator-modal,
+.indicator-settings-modal {
+    width: 380px;
+    max-width: 92vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+}
+
+.indicator-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.indicator-modal-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.modal-close-btn {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.indicator-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.indicator-tab {
+    flex: 1;
+    padding: 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.indicator-tab.active {
+    background: rgba(0, 122, 255, 0.15);
+    color: var(--accent);
+    border-color: rgba(0, 122, 255, 0.3);
+}
+
+.indicator-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.indicator-catalog-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    cursor: pointer;
+    text-align: left;
+}
+
+.indicator-catalog-item:hover {
+    background: var(--glass-bg-hover);
+}
+
+.indicator-catalog-name {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.indicator-catalog-desc {
+    font-size: 11px;
+    color: var(--text-tertiary);
+}
+
+.indicator-empty-note {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    padding: 10px;
+}
+
+.settings-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.settings-row label {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.settings-row input[type="number"] {
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.settings-row input[type="color"] {
+    width: 100%;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    background: none;
+}
+
+.settings-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.settings-actions button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.settings-save-btn {
+    background: var(--accent);
+    border: none;
+    color: white;
+}
+
+.settings-cancel-btn {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
 }
 
 .mobile-btn {
