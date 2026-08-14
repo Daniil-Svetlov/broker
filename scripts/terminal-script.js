@@ -36,10 +36,15 @@ let chart = null;
 let balance = 0;
 let activeTrades = [];
 let countdownIntervals = [];
-let tradeMarkers = [];
 let lastChartTime = 0;
 // Статистика сессии (бэкенд агрегатов не отдаёт — считаем локально).
 let stats = { wins: 0, total: 0, profit: 0 };
+
+const activeTradeLines = new Map();
+
+// Векторные SVG-значки (без эмодзи)
+const SVG_CHECK = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+const SVG_CROSS = `<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
 let drawTool = 'none';        // 'none' | 'hline' | 'trend' | 'rect' | 'fib' | 'erase'
 let drawings = [];
@@ -310,6 +315,45 @@ function renderChartData() {
   }
 }
 
+// --- overlay-слой сделок: контейнер поверх canvas графика ---
+function getOverlayContainer() {
+  const chartEl = document.getElementById('chart');
+  chartEl.style.position = 'relative';
+
+  let overlay = chartEl.querySelector('.chart-trade-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.className = 'chart-trade-overlay';
+    overlay.style.cssText = `
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      pointer-events: none !important;
+      z-index: 99 !important;
+      overflow: hidden !important;
+    `;
+    chartEl.appendChild(overlay);
+  }
+  return overlay;
+}
+
+function clearAllTradeVisuals() {
+  activeTradeLines.forEach((visual) => {
+    clearInterval(visual.intervalId);
+    if (visual.dot) visual.dot.remove();
+    if (visual.badge) visual.badge.remove();
+    if (activeSeries && visual.priceLine) {
+      try { activeSeries.removePriceLine(visual.priceLine); } catch (err) { /* серия уже могла смениться */ }
+    }
+  });
+  activeTradeLines.clear();
+
+  const overlay = document.querySelector('.chart-trade-overlay');
+  if (overlay) overlay.innerHTML = '';
+}
+
 function switchChartType(type) {
   if (type === chartType) return;
   chartType = type;
@@ -321,7 +365,21 @@ function switchChartType(type) {
   if (activeSeries) chart.removeSeries(activeSeries);
   activeSeries = createSeriesForType(type);
   renderChartData();
-  activeSeries.setMarkers(tradeMarkers);
+
+  // Серия пересоздана — старые priceLine на ней уже невалидны.
+  // Пересоздаём их на новой серии и пересчитываем позиции dot/badge.
+  activeTradeLines.forEach((visual) => {
+    visual.priceLine = activeSeries.createPriceLine({
+      price: visual.startPrice,
+      color: visual.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      axisLabelVisible: true,
+      title: fmtPrice(visual.startPrice),
+    });
+    visual.updatePositions();
+  });
+
   redrawAll();
   recomputeAndRenderIndicators();
 }
@@ -368,7 +426,7 @@ function selectPair(pair) {
   document.querySelectorAll('.sub-btn[data-pair]').forEach(b =>
     b.classList.toggle('active', b.getAttribute('data-pair') === pair));
 
-  tradeMarkers = [];
+  clearAllTradeVisuals();
   document.getElementById('current-pair').innerText = pair;
 
   const cached = loadCachedHistory(pair);
@@ -381,7 +439,6 @@ function selectPair(pair) {
   hoverPoint = null;
 
   if (activeSeries) {
-    activeSeries.setMarkers([]);
     if (cached.length) {
       renderChartData();
       lastChartTime = cached[cached.length - 1].time;
@@ -1176,33 +1233,135 @@ async function sendTrade(type) {
   }
 }
 
+// Открытие сделки: линия цены входа + точка (dot) + плашка с таймером (badge) на графике.
+// Координаты пересчитываются при скролле/зуме и при смене типа графика (см. switchChartType).
 function onTradeOpened(trade, type, time) {
   const startPrice = parseFloat(trade.entry_price);
+  const isUp = type === 'higher';
+  const lineColor = isUp ? '#00e676' : '#ff5252';
+
   const t = {
     tradeId: trade.id,
-    type: type, // higher/lower — для разметки
+    type: type,
     amount: parseFloat(trade.amount),
     startPrice: startPrice,
     pair: trade.asset_pair,
     expirationTime: time,
     expiresAt: Date.now() + time * 1000,
+    openTimeSec: lastChartTime || Math.floor(Date.now() / 1000), // время последней тикнувшей цены
   };
   activeTrades.push(t);
   renderActiveTrades();
 
-  const marker = {
-    time: Math.floor(Date.now() / 1000),
-    position: 'inBar',
-    color: type === 'higher' ? '#30D158' : '#FF453A',
-    shape: type === 'higher' ? 'arrowUp' : 'arrowDown',
-    text: `${type === 'higher' ? '▲' : '▼'} $${t.amount} @ ${fmtPrice(startPrice)}`,
-    id: t.tradeId,
+  // Пунктирная линия цены входа
+  const priceLine = activeSeries.createPriceLine({
+    price: startPrice,
+    color: lineColor,
+    lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.Dashed,
+    axisLabelVisible: true,
+    title: `${fmtPrice(startPrice)}`,
+  });
+
+  const overlay = getOverlayContainer();
+
+  // Точка ТВХ
+  const dot = document.createElement('div');
+  dot.style.cssText = `
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background-color: ${lineColor};
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 8px ${lineColor};
+    z-index: 100;
+    display: none;
+  `;
+
+  // Плашка таймера
+  const badge = document.createElement('div');
+  badge.style.cssText = `
+    position: absolute;
+    transform: translate(-50%, -100%);
+    margin-top: -8px;
+    background: rgba(18, 24, 38, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 3px 7px;
+    color: #ffffff;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    white-space: nowrap;
+    z-index: 101;
+  `;
+  badge.innerHTML = `
+    <div style="color: ${lineColor}; font-size: 11px;">
+      ${isUp ? '▲' : '▼'} $${t.amount}
+    </div>
+    <div id="badge-timer-${t.tradeId}" style="color: rgba(255,255,255,0.7); font-size: 10px;">${time}s</div>
+  `;
+
+  overlay.appendChild(dot);
+  overlay.appendChild(badge);
+
+  // Функция позиционирования — использует ГЛОБАЛЬНЫЕ chart/activeSeries,
+  // поэтому корректно работает и после смены типа графика (line/candles/bars).
+  const updatePositions = () => {
+    if (!chart || !activeSeries) return;
+
+    const y = activeSeries.priceToCoordinate(startPrice);
+    let x = chart.timeScale().timeToCoordinate(t.openTimeSec);
+
+    if (x === null || isNaN(x)) {
+      const chartWidth = document.getElementById('chart').clientWidth;
+      x = chartWidth - 65;
+    }
+
+    if (y !== null && !isNaN(y)) {
+      dot.style.left = `${x}px`;
+      dot.style.top = `${y}px`;
+      badge.style.left = `${x}px`;
+      badge.style.top = `${y}px`;
+      dot.style.display = 'block';
+      badge.style.display = 'flex';
+    }
   };
-  tradeMarkers.push(marker);
-  activeSeries.setMarkers(tradeMarkers);
+
+  chart.timeScale().subscribeVisibleLogicalRangeChange(updatePositions);
+  requestAnimationFrame(updatePositions);
+
+  const lineTimer = setInterval(() => {
+    const leftSec = Math.max(0, Math.ceil((t.expiresAt - Date.now()) / 1000));
+    const timerEl = document.getElementById(`badge-timer-${t.tradeId}`);
+    if (timerEl) timerEl.innerText = `${leftSec}s`;
+
+    updatePositions();
+
+    if (leftSec <= 0) {
+      clearInterval(lineTimer);
+    }
+  }, 200);
+
+  activeTradeLines.set(t.tradeId, {
+    priceLine,
+    intervalId: lineTimer,
+    dot,
+    badge,
+    startPrice,
+    color: lineColor,
+    openTimeSec: t.openTimeSec,
+    updatePositions,
+  });
 
   document.getElementById('status-bar').innerText =
-    `Сделка открыта: ${type === 'higher' ? '▲' : '▼'} $${t.amount}`;
+    `Сделка открыта: ${isUp ? '▲' : '▼'} $${t.amount}`;
   loadBalance(); // ставка уже списана на бэке
   watchTrade(t);
 }
@@ -1238,35 +1397,119 @@ function watchTrade(t) {
   countdownIntervals.push(timer);
 }
 
+// Закрытие сделки: убираем dot/badge/priceLine открытой сделки, показываем
+// анимированный бейдж результата (иконка + сумма) в точке выхода, который
+// плавно исчезает через 4 секунды.
 function onTradeResult(trade, local) {
   activeTrades = activeTrades.filter(x => x.tradeId !== trade.id);
   renderActiveTrades();
 
   const win = trade.status === 'WIN';
-  const payout = parseFloat(trade.payout || 0);
-  // Чистый результат: на выигрыш payout включает возврат ставки.
+  const payout = win ? parseFloat(trade.payout || (local.amount * 1.9)) : 0;
   const profit = win ? payout - local.amount : -local.amount;
+
   stats.total += 1;
   if (win) stats.wins += 1;
   stats.profit += profit;
   updateStats();
 
-  const idx = tradeMarkers.findIndex(m => m.id === trade.id);
-  if (idx !== -1) {
-    tradeMarkers[idx].color = win ? '#30D158' : '#FF453A';
-    tradeMarkers[idx].text = `${win ? '✅' : '❌'} ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`;
-    tradeMarkers.push({
-      time: Math.floor(Date.now() / 1000),
-      position: 'inBar',
-      color: win ? '#30D158' : '#FF453A',
-      shape: 'circle',
-      text: `Exit: ${fmtPrice(parseFloat(trade.exit_price))}`,
-      id: `${trade.id}_exit`,
-    });
-    activeSeries.setMarkers(tradeMarkers);
+  // 1. Очищаем визуальные элементы открытой сделки
+  const visual = activeTradeLines.get(trade.id);
+  if (visual) {
+    clearInterval(visual.intervalId);
+    if (activeSeries) {
+      try { activeSeries.removePriceLine(visual.priceLine); } catch (err) { /* серия могла смениться */ }
+    }
+    if (visual.dot) visual.dot.remove();
+    if (visual.badge) visual.badge.remove();
+    activeTradeLines.delete(trade.id);
   }
 
-  const resultText = win ? '✅ ВЫИГРЫШ' : '❌ ПРОИГРЫШ';
+  // 2. Бейдж результата (иконка + сумма)
+  const overlay = getOverlayContainer();
+  const resultBadge = document.createElement('div');
+
+  const mainColor = win ? '#00e676' : '#ff5252';
+
+  resultBadge.style.cssText = `
+    position: absolute;
+    transform: translate(-50%, -50%) scale(1);
+    display: none;
+    align-items: center;
+    gap: 6px;
+    background: rgba(18, 24, 38, 0.95);
+    border: 1px solid ${mainColor};
+    border-radius: 20px;
+    padding: 3px 10px 3px 4px;
+    box-shadow: 0 0 15px ${win ? 'rgba(0, 230, 118, 0.4)' : 'rgba(255, 82, 82, 0.4)'};
+    z-index: 105;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    white-space: nowrap;
+  `;
+
+  const iconMarkup = win ? SVG_CHECK : SVG_CROSS;
+  resultBadge.innerHTML = `
+    <div style="
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: ${mainColor};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 8px ${mainColor};
+      flex-shrink: 0;
+    ">
+      ${iconMarkup}
+    </div>
+    <span style="
+      color: ${mainColor};
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+    ">
+      +$${payout.toFixed(0)}
+    </span>
+  `;
+
+  const svgEl = resultBadge.querySelector('svg');
+  if (svgEl) {
+    svgEl.style.cssText = 'width: 12px; height: 12px; stroke: #ffffff; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round;';
+  }
+
+  overlay.appendChild(resultBadge);
+
+  const exitPrice = parseFloat(trade.exit_price || local.startPrice);
+  const exitTimeSec = lastChartTime || Math.floor(Date.now() / 1000);
+
+  const updateBadgePos = () => {
+    if (!chart || !activeSeries) return;
+
+    const y = activeSeries.priceToCoordinate(exitPrice);
+    let x = chart.timeScale().timeToCoordinate(exitTimeSec);
+
+    if (x === null || isNaN(x)) {
+      const chartWidth = document.getElementById('chart').clientWidth;
+      x = chartWidth - 65;
+    }
+
+    if (y !== null && !isNaN(y)) {
+      resultBadge.style.left = `${x}px`;
+      resultBadge.style.top = `${y}px`;
+      resultBadge.style.display = 'flex';
+    }
+  };
+
+  chart.timeScale().subscribeVisibleLogicalRangeChange(updateBadgePos);
+  requestAnimationFrame(updateBadgePos);
+
+  setTimeout(() => {
+    resultBadge.style.opacity = '0';
+    resultBadge.style.transform = 'translate(-50%, -50%) scale(0.6)';
+    setTimeout(() => resultBadge.remove(), 500);
+  }, 4000);
+
+  const resultText = win ? 'ВЫИГРЫШ' : 'ПРОИГРЫШ';
   document.getElementById('status-bar').innerText =
     `${resultText}: ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`;
   loadBalance();
@@ -1275,11 +1518,10 @@ function onTradeResult(trade, local) {
   }, 4000);
 }
 
-// В REST-бэке нет «сброса демо». Просто перечитываем баланс и чистим разметку.
+// В REST-бэке нет «сброса демо». Просто перечитываем баланс и чистим визуал сделок.
 function resetDemo() {
   activeTrades = [];
-  tradeMarkers = [];
-  if (activeSeries) activeSeries.setMarkers([]);
+  clearAllTradeVisuals();
   renderActiveTrades();
   loadBalance();
   document.getElementById('status-bar').innerText = 'Баланс обновлён';

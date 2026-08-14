@@ -232,7 +232,6 @@ setInterval(() => {
 }, 3000);
 
 function openModal() {
-    closeLogin();
     document.getElementById('modal-overlay').classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -301,100 +300,41 @@ function handleRegister(event) {
 
     if (!isValid) return;
 
-    submitAuth(form, `${API_BASE}/api/register/`, {
+
+    console.log('Регистрация...', {
         name: nameInput.value.trim(),
         email: emailInput.value.trim(),
-        password: passwordInput.value,
-    }, emailInput, 'Аккаунт создан!');
-}
+        password: passwordInput.value
+    });
 
-// --- адрес бэка из config.js (с фолбэком на относительный путь для same-origin) ---
-const API_BASE = 'https://broker-production-5adc.up.railway.app';
-
-// Общий отправитель для регистрации и входа: POST в Django, сохраняем счёт,
-// уходим в терминал. Ошибку от бэка показываем под полем email.
-async function submitAuth(form, url, payload, emailInput, successText, passwordInput) {
     const btn = form.querySelector('.modal-btn');
-    const btnText = btn ? btn.querySelector('span') : null;
-    const original = btnText ? btnText.innerText : (btn ? btn.innerText : '');
-    if (btn) btn.disabled = true;
-    if (btnText) btnText.innerText = 'Подождите…';
 
-    try {
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
-        const data = await res.json().catch(() => ({}));
+    if (btn) {
+        const btnText = btn.querySelector('span');
+        const originalText = btnText ? btnText.innerText : btn.innerText;
 
-        if (!res.ok) {
-            const msg = data.error || data.detail
-                || (data.email && data.email[0])
-                || (data.password && data.password[0])
-                || (data.name && data.name[0])
-                || 'Не удалось выполнить запрос';
-            // Ошибку про пароль показываем под полем пароля, остальное — под email.
-            const target = (passwordInput && /парол/i.test(msg)) ? passwordInput : emailInput;
-            showError(target, msg);
-            return;
+        if (btnText) {
+            btnText.innerText = 'Аккаунт создан!';
+        } else {
+            btn.innerText = 'Аккаунт создан!';
         }
 
-        // Счёт создан/найден — кладём его id, дальше терминал тянет баланс из БД.
-        localStorage.setItem('lumit_account_id', data.account_id);
-        if (data.username) localStorage.setItem('lumit_username', data.username);
-        if (data.email) localStorage.setItem('lumit_email', data.email);
-
-        if (btnText) btnText.innerText = successText;
-        if (btn) btn.classList.add('success');
+        btn.classList.add('success');
         form.reset();
-        setTimeout(() => { window.location.href = 'terminal.html'; }, 600);
-        return;
-    } catch (err) {
-        showError(emailInput, 'Нет связи с сервером. Попробуйте позже.');
-    } finally {
-        if (btn && !btn.classList.contains('success')) {
-            btn.disabled = false;
-            if (btnText) btnText.innerText = original;
-        }
+
+        setTimeout(() => {
+            if (btnText) {
+                btnText.innerText = originalText;
+            } else {
+                btn.innerText = originalText;
+            }
+            btn.classList.remove('success');
+            if (typeof closeModal === 'function') {
+                closeModal();
+            }
+            alert('Аккаунт создан! Добро пожаловать в LUMIT Trade.');
+        }, 1000);
     }
-}
-
-// --- ВХОД ---
-function openLogin() {
-    closeModal();
-    document.getElementById('login-overlay').classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeLogin() {
-    document.getElementById('login-overlay').classList.remove('active');
-    document.body.style.overflow = '';
-}
-
-function handleLogin(event) {
-    event.preventDefault();
-    const form = event.target;
-    const emailInput = document.getElementById('loginEmail');
-    const passwordInput = document.getElementById('loginPassword');
-    clearError(emailInput);
-    clearError(passwordInput);
-
-    let isValid = true;
-    if (emailInput.value.trim() === '') {
-        showError(emailInput, 'Введите email');
-        isValid = false;
-    }
-    if (passwordInput.value === '') {
-        showError(passwordInput, 'Введите пароль');
-        isValid = false;
-    }
-    if (!isValid) return;
-
-    submitAuth(form, `${API_BASE}/api/login/`, {
-        email: emailInput.value.trim(),
-        password: passwordInput.value,
-    }, emailInput, 'Готово!', passwordInput);
 }
 
 document.querySelectorAll('.form-group input').forEach(element => {
@@ -405,10 +345,6 @@ document.getElementById('modal-overlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeModal();
 });
 
-document.getElementById('login-overlay').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) closeLogin();
-});
-
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeModal(); closeLogin(); }
+    if (e.key === 'Escape') closeModal();
 });
