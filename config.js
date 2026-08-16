@@ -4,9 +4,9 @@
 //   localStorage.setItem('lumit_account_id', '<uuid>')  // ручной вход для отладки
 window.LUMIT_CONFIG = {
   // Go quotes-service — живая цена для графика.
-  quotesBase: 'https://zippy-mercy-production.up.railway.app',
+  quotesBase: 'http://localhost:8090',
   // Django REST — регистрация/вход, сделки, баланс.
-  apiBase: 'https://broker-production-5adc.up.railway.app',
+  apiBase: 'http://localhost:8000',
   // Счёт берётся из localStorage после регистрации/входа (общего демо больше нет).
   accountId: '',
   // Период опроса цены и статуса сделок, мс.

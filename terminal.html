@@ -51,9 +51,30 @@
             <span class="stat-value" id="win-rate">0%</span>
           </div>
         </div>
-        <div class="balance-block">
-          <span class="balance-label">Демо-баланс</span>
-          <span class="balance-amount" id="balance-amount-header">$0.00</span>
+        <div class="account-switcher" id="account-switcher">
+          <button class="account-trigger" id="account-trigger" onclick="toggleAccountMenu(event)">
+            <span class="account-badge" id="account-badge">DEMO</span>
+            <span class="balance-amount" id="balance-amount-header">$0.00</span>
+            <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+              <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="account-dropdown" id="account-dropdown">
+            <button class="account-option active" data-account-type="demo" onclick="selectAccountType('demo')">
+              <span class="account-option-dot demo-dot"></span>
+              <span class="account-option-text">
+                <span class="account-option-label">Демо-счёт</span>
+                <span class="account-option-balance" id="account-balance-demo">$0.00</span>
+              </span>
+            </button>
+            <button class="account-option" data-account-type="real" onclick="selectAccountType('real')">
+              <span class="account-option-dot real-dot"></span>
+              <span class="account-option-text">
+                <span class="account-option-label">Реальный счёт</span>
+                <span class="account-option-balance" id="account-balance-real">$0.00</span>
+              </span>
+            </button>
+          </div>
         </div>
         <button class="right-btn" title="Уведомления">
           <svg class="bell-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
@@ -84,8 +105,8 @@
             </svg>
           </button>
           <div class="submenu">
-            <button class="sub-btn"><span class="sub-icon">1м</span> 1 минута</button>
-            <button class="sub-btn"><span class="sub-icon">5м</span> 5 минут</button>
+            <button class="sub-btn active" data-tf="60" onclick="setTimeframe(60)"><span class="sub-icon">1м</span> 1 минута</button>
+            <button class="sub-btn" data-tf="300" onclick="setTimeframe(300)"><span class="sub-icon">5м</span> 5 минут</button>
           </div>
         </div>
         <div class="category-item">
@@ -118,8 +139,8 @@
               <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
-          <div class="submenu">
-            <button class="sub-btn">
+          <div class="submenu" id="chart-type-menu">
+            <button class="sub-btn active" data-chart-type="line" onclick="switchChartType('line')">
               <span class="sub-icon">
                 <svg class="trend-up-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
                   <path d="M23 6l-9.5 9.5-5-5L1 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -127,7 +148,7 @@
               </span>
               Линия
             </button>
-            <button class="sub-btn">
+            <button class="sub-btn" data-chart-type="candles" onclick="switchChartType('candles')">
               <span class="sub-icon">
                 <svg class="bar-chart-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
                   <path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -135,9 +156,80 @@
               </span>
               Свечи
             </button>
+            <button class="sub-btn" data-chart-type="bars" onclick="switchChartType('bars')">
+              <span class="sub-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                  <path d="M6 4v16M6 9h4M6 15h4M18 4v16M14 8h4M14 16h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              Бары
+            </button>
+                        <!-- Меню выбора таймфрейма -->
+            <div class="menu-category">
+              <button class="main-category">
+                <span class="icon">⏱️</span> Таймфрейм
+              </button>
+              <div class="submenu" id="timeframe-menu">
+                <button class="sub-btn" data-tf="5" onclick="setTimeframe(5)">5 секунд</button>
+                <button class="sub-btn" data-tf="10" onclick="setTimeframe(10)">10 секунд</button>
+                <button class="sub-btn active" data-tf="60" onclick="setTimeframe(60)">1 минута</button>
+                <button class="sub-btn" data-tf="300" onclick="setTimeframe(300)">5 минут</button>
+                <button class="sub-btn" data-tf="900" onclick="setTimeframe(900)">15 минут</button>
+                <button class="sub-btn" data-tf="3600" onclick="setTimeframe(3600)">1 час</button>
+              </div>
+            </div>
           </div>
         </div>
+        <div class="category-item">
+          <button class="main-category" data-no-submenu onclick="openIndicatorModal()">
+            <div class="category-name">
+              <svg class="indicator-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                <path d="M3 12h3l2-7 4 14 3-10 2 6h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>Индикаторы</span>
+            </div>
+          </button>
+        </div>
         <div class="category-divider"></div>
+        <div class="category-item">
+          <button class="main-category">
+            <div class="category-name">
+              <svg class="draw-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                <path d="M12 19l7-7 3 3-7 7-3-3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>Рисование</span>
+            </div>
+            <svg class="arrow" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+              <path d="M5 3l14 9-14 9V3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="submenu" id="drawing-menu">
+            <button class="sub-btn" data-tool="hline" onclick="setDrawTool('hline')">
+              <span class="sub-icon">—</span> Гориз. линия
+            </button>
+            <button class="sub-btn" data-tool="trend" onclick="setDrawTool('trend')">
+              <span class="sub-icon">╱</span> Трендовая линия
+            </button>
+            <button class="sub-btn" data-tool="rect" onclick="setDrawTool('rect')">
+              <span class="sub-icon">▭</span> Прямоугольник
+            </button>
+            <button class="sub-btn" data-tool="fib" onclick="setDrawTool('fib')">
+              <span class="sub-icon">Fib</span> Фибоначчи
+            </button>
+            <button class="sub-btn" data-tool="erase" onclick="setDrawTool('erase')">
+              <span class="sub-icon">✕</span> Удалить фигуру
+            </button>
+            <button class="sub-btn" onclick="clearDrawings()">
+              <span class="sub-icon">
+                <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                  <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              Очистить всё
+            </button>
+          </div>
+        </div>
         <div class="category-item">
           <button class="main-category">
             <div class="category-name">
@@ -195,7 +287,24 @@
           </a>
         </div>
       </div>
-      <div id="chart"></div>
+      <div class="chart-column">
+        <div id="chart">
+          <canvas id="drawing-canvas"></canvas>
+          <div class="chart-skeleton" id="chart-skeleton">
+            <div class="skel-bars">
+              <div class="skel-bar"></div>
+              <div class="skel-bar"></div>
+              <div class="skel-bar"></div>
+              <div class="skel-bar"></div>
+              <div class="skel-bar"></div>
+              <div class="skel-bar"></div>
+            </div>
+            <div class="skel-text">Загрузка графика…</div>
+          </div>
+          <div class="active-indicators" id="active-indicators-panel"></div>
+        </div>
+        <div class="sub-panes" id="sub-panes"></div>
+      </div>
       <div class="sidebar" id="sidebar">
         <div class="trade-info-card">
           <div class="trade-info-row">
@@ -241,6 +350,51 @@
           </svg>
           <span>Обновить баланс</span>
         </button>
+      </div>
+    </div>
+    <div class="modal-overlay" id="indicator-modal-overlay" onclick="closeIndicatorModalOnOverlay(event)">
+      <div class="indicator-modal glass-strong">
+        <div class="indicator-modal-header">
+          <h3>Индикаторы</h3>
+          <button class="modal-close-btn" onclick="closeIndicatorModal()">✕</button>
+        </div>
+        <div class="indicator-tabs">
+          <button class="indicator-tab active" data-cat="trend" onclick="switchIndicatorTab('trend')">Трендовые</button>
+          <button class="indicator-tab" data-cat="oscillator" onclick="switchIndicatorTab('oscillator')">Осцилляторы</button>
+          <button class="indicator-tab" data-cat="volume" onclick="switchIndicatorTab('volume')">Объём</button>
+        </div>
+        <div class="indicator-list" id="indicator-list-trend">
+          <button class="indicator-catalog-item" onclick="addIndicator('SMA')">
+            <span class="indicator-catalog-name">SMA</span>
+            <span class="indicator-catalog-desc">Простая скользящая средняя</span>
+          </button>
+          <button class="indicator-catalog-item" onclick="addIndicator('EMA')">
+            <span class="indicator-catalog-name">EMA</span>
+            <span class="indicator-catalog-desc">Экспоненциальная скользящая средняя</span>
+          </button>
+          <button class="indicator-catalog-item" onclick="addIndicator('BB')">
+            <span class="indicator-catalog-name">Bollinger Bands</span>
+            <span class="indicator-catalog-desc">Канал волатильности</span>
+          </button>
+        </div>
+        <div class="indicator-list" id="indicator-list-oscillator" style="display:none">
+          <button class="indicator-catalog-item" onclick="addIndicator('RSI')">
+            <span class="indicator-catalog-name">RSI</span>
+            <span class="indicator-catalog-desc">Индекс относительной силы</span>
+          </button>
+          <button class="indicator-catalog-item" onclick="addIndicator('MACD')">
+            <span class="indicator-catalog-name">MACD</span>
+            <span class="indicator-catalog-desc">Схождение/расхождение скользящих средних</span>
+          </button>
+        </div>
+        <div class="indicator-list" id="indicator-list-volume" style="display:none">
+          <div class="indicator-empty-note">Бэкенд пока не отдаёт объём тиками — раздел будет заполнен позже.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="indicator-settings-overlay" onclick="closeIndicatorSettingsOnOverlay(event)">
+      <div class="indicator-settings-modal glass-strong" id="indicator-settings-modal">
+        <!-- содержимое рендерится в JS под конкретный индикатор -->
       </div>
     </div>
     <button class="mobile-btn" id="mobile-left" onclick="toggleLeft()">

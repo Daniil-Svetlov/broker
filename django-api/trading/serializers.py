@@ -26,26 +26,35 @@ class QuoteSerializer(serializers.ModelSerializer):
         model = Quote
         fields = ["id", "asset", "bid", "ask", "timestamp"]
 
-
 class TradeSerializer(serializers.ModelSerializer):
+    timestamp = serializers.SerializerMethodField()
+    expire_at = serializers.SerializerMethodField()
+
     class Meta:
         model = Trade
         fields = [
             "id",
-            "user",
-            "account",
+            "account_id",
             "asset_pair",
             "amount",
-            "direction",
-            "entry_price",
+            "direction",       # "UP" или "DOWN"
+            "entry_price",      # Цена входа (float)
             "exit_price",
+            "status",           # "OPEN", "WIN", "LOSS"
+            "duration",         # Время в секундах
             "payout",
-            "status",
-            "duration",
             "created_at",
-            "settled_at",
+            "timestamp",        # Время открытия в Unix Sec (для графика)
+            "expire_at",         # Время окончания в Unix Sec
         ]
 
+    def get_timestamp(self, obj):
+        # Преобразуем время создания в секунды Unix Timestamp
+        return int(obj.created_at.timestamp())
+
+    def get_expire_at(self, obj):
+        # Рассчитываем точное время закрытия сделки
+        return int(obj.created_at.timestamp()) + obj.duration
 
 class OpenTradeSerializer(serializers.Serializer):
     """Входные данные на открытие сделки (POST /api/trades/)."""

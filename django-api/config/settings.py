@@ -39,7 +39,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    # "django.middleware.csrf.CsrfViewMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -49,7 +49,7 @@ ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",  # <-- Убедись, что тут написано django.template.backends.django.DjangoTemplates
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -61,7 +61,6 @@ TEMPLATES = [
         },
     },
 ]
-
 
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
@@ -119,18 +118,3 @@ QUOTES_SERVICE_TIMEOUT = float(env("QUOTES_SERVICE_TIMEOUT", "5"))
 # Минимальная и максимальная длительность опциона (секунды).
 TRADE_MIN_DURATION = int(env("TRADE_MIN_DURATION", "5"))
 TRADE_MAX_DURATION = int(env("TRADE_MAX_DURATION", "3600"))
-
-# --- Настройки безопасности для Railway HTTPS/Proxy ---
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-USE_X_FORWARDED_HOST = True
-USE_X_FORWARDED_PORT = True
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://broker-production-5adc.up.railway.app",
-    "https://frontend-production-f820.up.railway.app",
-]
-
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SAMESITE = 'None'

@@ -65,6 +65,10 @@ class Quote(models.Model):
     class Meta:
         db_table = "quotes"
         ordering = ["-timestamp"]
+        # ДОБАВЛЯЕМ СОСТАВНОЙ ИНДЕКС:
+        indexes = [
+            models.Index(fields=['asset', '-timestamp'], name='idx_quote_asset_time'),
+        ]
 
 
 class Trade(models.Model):
