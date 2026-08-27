@@ -1,13 +1,21 @@
+function switchPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const pageEl = document.getElementById('page-' + pageId);
+    if (pageEl) pageEl.classList.add('active');
+    const navEl = document.querySelector('.nav-item[data-page="' + pageId + '"]');
+    if (navEl) navEl.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.innerWidth <= 900) toggleSidebar();
+}
+
 document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const pageId = btn.dataset.page;
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById('page-' + pageId).classList.add('active');
-        btn.classList.add('active');
-        if (window.innerWidth <= 900) toggleSidebar();
-    });
+    btn.addEventListener('click', () => switchPage(btn.dataset.page));
 });
+
+function goToDeposit() {
+    switchPage('deposit');
+}
 
 // --- MOBILE SIDEBAR ---
 function toggleSidebar() {
@@ -132,6 +140,7 @@ async function loadAccount() {
         setText('pf-currency', acc.currency || 'USD');
         setText('pf-account-type', acc.account_type === 'DEMO' ? 'Демо-счёт' : 'Реальный счёт');
         setText('pf-member', acc.account_type === 'DEMO' ? 'Демо-аккаунт LUMIT Trade' : 'Аккаунт LUMIT Trade');
+        setText('deposit-account-badge', acc.account_type === 'DEMO' ? 'Демо-счёт' : 'Реальный счёт');
     } catch (err) {
         console.error('Не удалось загрузить счёт:', err);
     }
@@ -236,4 +245,106 @@ if (ACCOUNT_ID) {
     fillIdentity();
     loadAccount();
     loadTrades();
+}
+
+// --- DEPOSIT PAGE ---
+const depositAmountInput = document.getElementById('deposit-amount');
+let selectedPaymentMethod = 'visa';
+
+function updateDepositSummary() {
+    const amount = Math.max(0, Number(depositAmountInput?.value) || 0);
+    setText('deposit-summary-amount', money(amount));
+    setText('deposit-summary-total', money(amount));
+}
+
+document.querySelectorAll('.quick-amount-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (depositAmountInput) depositAmountInput.value = btn.dataset.amount;
+        updateDepositSummary();
+    });
+});
+
+document.querySelectorAll('.payment-method-row').forEach(row => {
+    row.addEventListener('click', () => {
+        document.querySelectorAll('.payment-method-row').forEach(r => r.classList.remove('selected'));
+        row.classList.add('selected');
+        selectedPaymentMethod = row.dataset.method;
+    });
+});
+
+if (depositAmountInput) {
+    depositAmountInput.addEventListener('input', updateDepositSummary);
+    updateDepositSummary();
+}
+
+async function submitDeposit() {
+    const amount = Number(depositAmountInput?.value);
+    if (!amount || amount < 10) {
+        showNotification('Минимальная сумма пополнения — $10');
+        return;
+    }
+    try {
+        // TODO: подключить реальный эндпоинт пополнения на бэкенде, например:
+        // await fetch(`${API}/api/accounts/${ACCOUNT_ID}/deposit/`, {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ amount, method: selectedPaymentMethod })
+        // });
+        showNotification('Заявка на пополнение $' + amount + ' создана');
+    } catch (err) {
+        console.error('Не удалось создать пополнение:', err);
+        showNotification('Ошибка при пополнении');
+    }
+}
+
+// --- PAYMENT HISTORY ---
+function paymentMethodLabel(method) {
+    const map = { visa: 'Visa •••• 4242', btc: 'Bitcoin Wallet', usdt: 'USDT (TRC-20)' };
+    return map[method] || method || '—';
+}
+
+function paymentStatusBadge(status) {
+    if (status === 'SUCCESS') return { cls: 'win', text: 'Успешно' };
+    if (status === 'FAILED') return { cls: 'loss', text: 'Отклонён' };
+    return { cls: 'pending', text: 'В обработке' };
+}
+
+function paymentRow(p) {
+    const typeClass = p.type === 'WITHDRAW' ? 'withdraw' : 'deposit';
+    const typeText = p.type === 'WITHDRAW' ? 'Вывод' : 'Пополнение';
+    const status = paymentStatusBadge(p.status);
+    const sign = p.type === 'WITHDRAW' ? '-' : '+';
+    return `
+      <tr>
+        <td><span class="payment-type-badge ${typeClass}">${typeText}</span></td>
+        <td>${paymentMethodLabel(p.method)}</td>
+        <td style="font-weight:600">${sign}${money(p.amount)}</td>
+        <td><span class="result-badge ${status.cls}">${status.text}</span></td>
+        <td style="color:var(--text-secondary)">${fmtDate(p.created_at)}</td>
+      </tr>`;
+}
+
+async function loadPayments() {
+    const body = document.getElementById('payments-body');
+    if (!body) return;
+    try {
+        const res = await fetch(`${API}/api/accounts/${ACCOUNT_ID}/payments/`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const payments = await res.json();
+
+        if (!payments.length) {
+            body.innerHTML = '<tr><td colspan="5" style="color:var(--text-secondary)">Платежей пока нет</td></tr>';
+        } else {
+            body.innerHTML = payments.map(paymentRow).join('');
+        }
+    } catch (err) {
+        console.error('Не удалось загрузить платежи:', err);
+        body.innerHTML = '<tr><td colspan="5" style="color:var(--text-secondary)">Ошибка загрузки</td></tr>';
+    }
+}
+
+if (ACCOUNT_ID) {
+    loadPayments();
 }

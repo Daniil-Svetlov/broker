@@ -277,10 +277,6 @@ h1 {
     animation: fadeInUp 0.8s ease-out 0.1s both;
 }
 
-.content {
-    width: 100%;
-}
-
 .panel {
     display: flex;
     flex-direction: column;
@@ -805,45 +801,4 @@ h1 {
 
 .best-user {
     justify-content: space-between;
-}
-
-/* ==========================================
-   FIX: Размеры иконок и верстка форума
-   ========================================== */
-
-/* 1. Жестко ограничиваем размеры SVG, кнопок-иконок и картинок */
-svg, 
-.icon, 
-img, 
-button svg, 
-a svg {
-    width: 24px !important;
-    height: 24px !important;
-    min-width: 24px !important;
-    min-height: 24px !important;
-    max-width: 24px !important;
-    max-height: 24px !important;
-    object-fit: contain;
-}
-
-/* 2. Чиним родительский контейнер (выравнивание) */
-.sidebar, 
-.forum-nav, 
-.categories-list, 
-.menu {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 12px !important;
-    width: auto !important;
-}
-
-/* 3. Выравниваем текст рядом с иконками */
-.menu-item, 
-.category-item, 
-.nav-btn {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    font-size: 14px;
 }

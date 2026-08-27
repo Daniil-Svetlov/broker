@@ -708,6 +708,115 @@ body {
     color: var(--orange);
 }
 
+/* --- QUICK AMOUNTS --- */
+.quick-amounts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.quick-amount-btn {
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.quick-amount-btn:hover {
+    background: var(--glass-bg-hover);
+}
+
+.quick-amount-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+.payment-method-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border);
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.payment-method-row:hover {
+    background: var(--glass-bg);
+}
+
+.payment-method-row.selected {
+    border-color: var(--accent);
+    background: rgba(0, 122, 255, 0.08);
+}
+
+.payment-method-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--glass-border-light);
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.3s;
+}
+
+.payment-method-row.selected .payment-method-check {
+    border-color: var(--accent);
+    background: var(--accent);
+}
+
+.payment-method-row.selected .payment-method-check::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: white;
+}
+
+#deposit-amount::-webkit-outer-spin-button,
+#deposit-amount::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+#deposit-amount[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* --- PAYMENT TYPE BADGE --- */
+.payment-type-badge {
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.payment-type-badge.deposit {
+    background: rgba(48, 209, 88, 0.15);
+    color: var(--green);
+}
+
+.payment-type-badge.withdraw {
+    background: rgba(255, 69, 58, 0.15);
+    color: var(--red);
+}
+
 /* --- SETTINGS --- */
 .settings-section {
     margin-bottom: 32px;
