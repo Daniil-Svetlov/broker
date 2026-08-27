@@ -57,20 +57,20 @@
             </svg>
             Кошелёк
           </button>
-          <a href="/pay" class="nav-item">
+          <button class="nav-item" data-page="deposit">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="1" x2="12" y2="23" />
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </svg>
             Пополнение
-          </a>
-          <a href="/historypay" class="nav-item">
+          </button>
+          <button class="nav-item" data-page="paymenthistory">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 8v4l3 3" />
               <circle cx="12" cy="12" r="10" />
             </svg>
             История платежей
-          </a>
+          </button>
           <button class="nav-item" data-page="settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="3" />
@@ -126,8 +126,7 @@
                 <div class="balance-change up" id="pf-account-type">Демо-счёт</div>
               </div>
               <div class="balance-actions">
-                <a href="/pay" class="btn-balance btn-deposit"
-                  style="text-decoration:none;text-align:center;">Пополнить</a>
+                <button class="btn-balance btn-deposit" onclick="goToDeposit()">Пополнить</button>
                 <button class="btn-balance btn-withdraw">Вывести</button>
               </div>
             </div>
@@ -281,8 +280,7 @@
                 <div class="balance-change up" id="pf-currency">USD</div>
               </div>
               <div class="balance-actions">
-                <a href="/pay" class="btn-balance btn-deposit"
-                  style="text-decoration:none;text-align:center;">Пополнить</a>
+                <button class="btn-balance btn-deposit" onclick="goToDeposit()">Пополнить</button>
                 <button class="btn-balance btn-withdraw">Вывести</button>
               </div>
             </div>
@@ -324,6 +322,108 @@
                 </div>
                 <span class="card-badge">Стейблкоин</span>
               </div>
+            </div>
+          </div>
+        </div>
+        <!-- DEPOSIT PAGE -->
+        <div class="page" id="page-deposit">
+          <div class="page-header">
+            <div>
+              <h1>Пополнение</h1>
+              <p>Пополните баланс вашего счёта</p>
+            </div>
+          </div>
+          <div class="profile-grid">
+            <div class="profile-card glass">
+              <div class="card-header">
+                <div class="card-title">Сумма пополнения</div>
+                <div class="card-badge" id="deposit-account-badge">—</div>
+              </div>
+              <div class="form-group full">
+                <label>Введите сумму, $</label>
+                <input type="number" id="deposit-amount" min="10" step="1" value="100" placeholder="100">
+              </div>
+              <div class="quick-amounts">
+                <button type="button" class="quick-amount-btn active" data-amount="50">$50</button>
+                <button type="button" class="quick-amount-btn" data-amount="100">$100</button>
+                <button type="button" class="quick-amount-btn" data-amount="250">$250</button>
+                <button type="button" class="quick-amount-btn" data-amount="500">$500</button>
+                <button type="button" class="quick-amount-btn" data-amount="1000">$1000</button>
+              </div>
+              <button class="btn-save" style="width:100%;margin-top:24px;" onclick="submitDeposit()">Пополнить счёт</button>
+            </div>
+
+            <div class="profile-card glass">
+              <div class="card-header">
+                <div class="card-title">Способ оплаты</div>
+              </div>
+              <div class="payment-method-row selected" data-method="visa">
+                <div class="setting-info">
+                  <h4>Visa •••• 4242</h4>
+                  <p>Истекает 12/28</p>
+                </div>
+                <span class="payment-method-check"></span>
+              </div>
+              <div class="payment-method-row" data-method="btc">
+                <div class="setting-info">
+                  <h4>Bitcoin Wallet</h4>
+                  <p>bc1q...x7k9</p>
+                </div>
+                <span class="payment-method-check"></span>
+              </div>
+              <div class="payment-method-row" data-method="usdt">
+                <div class="setting-info">
+                  <h4>USDT (TRC-20)</h4>
+                  <p>TXq...mP3z</p>
+                </div>
+                <span class="payment-method-check"></span>
+              </div>
+              <button class="btn-balance btn-withdraw" style="width:100%;margin-top:8px;" onclick="switchPage('wallet')">+ Добавить способ оплаты</button>
+            </div>
+
+            <div class="profile-card glass full-width">
+              <div class="card-header">
+                <div class="card-title">Итог</div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><h4>Сумма</h4></div>
+                <div id="deposit-summary-amount" style="font-weight:700;font-size:16px;">$100.00</div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><h4>Комиссия</h4></div>
+                <div style="color:var(--text-secondary);">$0.00</div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><h4>К зачислению</h4></div>
+                <div id="deposit-summary-total" style="font-weight:700;font-size:18px;color:var(--green);">$100.00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- PAYMENT HISTORY PAGE -->
+        <div class="page" id="page-paymenthistory">
+          <div class="page-header">
+            <div>
+              <h1>История платежей</h1>
+              <p>Все ваши пополнения и выводы</p>
+            </div>
+          </div>
+          <div class="profile-card glass">
+            <div class="table-wrapper">
+              <table class="trades-table">
+                <thead>
+                  <tr>
+                    <th>Тип</th>
+                    <th>Способ оплаты</th>
+                    <th>Сумма</th>
+                    <th>Статус</th>
+                    <th>Дата</th>
+                  </tr>
+                </thead>
+                <tbody id="payments-body">
+                  <tr><td colspan="5" style="color:var(--text-secondary)">Загрузка…</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
