@@ -103,7 +103,14 @@ sed -i "s|^DJANGO_SECRET_KEY=.*|DJANGO_SECRET_KEY=$(openssl rand -base64 48 | tr
    Сервер тянет тем же токеном во время деплоя. Если pull не проходит — сделать
    пакеты `broker-*` публичными (репо → Packages → Package settings) либо
    завести PAT c `read:packages` и `docker login ghcr.io` на сервере разово.
-4. **(опц.) Environment `production`** с required reviewers — тогда каждый
+4. **Сброс кеша Cloudflare после деплоя.** CF держит `.js`/`.css` на edge ~4ч —
+   без сброса юзеры видят старый фронт. Завести:
+   - переменную `CF_ZONE_ID` — Zone ID домена (дашборд CF → Overview, справа внизу).
+   - секрет `CLOUDFLARE_API_TOKEN` — токен с правом **Zone → Cache Purge** на зону
+     (My Profile → API Tokens → Create Token).
+   Пока `CF_ZONE_ID` не задан, шаг `Purge Cloudflare cache` пропускается —
+   тогда сбрасывать вручную (Caching → Configuration → Purge Everything).
+5. **(опц.) Environment `production`** с required reviewers — тогда каждый
    деплой ждёт ручного подтверждения в Actions.
 
 ### Ручной деплой / откат

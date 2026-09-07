@@ -309,7 +309,7 @@ function handleRegister(event) {
 }
 
 // --- адрес бэка из config.js (с фолбэком на относительный путь для same-origin) ---
-const API_BASE = 'https://broker-production-5adc.up.railway.app';
+const API_BASE = (window.LUMIT_CONFIG && window.LUMIT_CONFIG.apiBase) || '';
 
 // Общий отправитель для регистрации и входа: POST в Django, сохраняем счёт,
 // уходим в терминал. Ошибку от бэка показываем под полем email.

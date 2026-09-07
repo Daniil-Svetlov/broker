@@ -162,6 +162,16 @@ jobs:
             docker logout ghcr.io >/dev/null 2>&1 || true
             exit \$rc
           "
+      - name: Purge Cloudflare cache
+        # Cloudflare кеширует статику (.js/.css) на edge — без сброса юзеры до 4ч
+        # видят старую версию фронта. Включается переменной CF_ZONE_ID.
+        if: vars.CF_ZONE_ID != ''
+        run: |
+          curl -fsS -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${{ vars.CF_ZONE_ID }}/purge_cache" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}'
 
   # ---------------------------------------------------------------- smoke
   smoke:
