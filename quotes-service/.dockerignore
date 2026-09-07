@@ -1,0 +1,9 @@
+# Собранный бинарь и тесты в образ не нужны (сборка идёт внутри Dockerfile).
+quotes
+/tmp/quotes
+*.test
+*_test.go
+*.out
+.env
+.env.*
+README.md

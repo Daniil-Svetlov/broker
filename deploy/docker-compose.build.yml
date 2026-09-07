@@ -1,0 +1,22 @@
+# Локальная сборка образов вместо тяги из GHCR. Наложить поверх prod-файла:
+#
+#   cd deploy
+#   IMAGE_TAG=local docker compose \
+#     -f docker-compose.prod.yml -f docker-compose.build.yml up -d --build
+#
+# Секреты берутся из deploy/.env, как и на проде.
+services:
+  api:
+    build: ../django-api
+    image: ${IMAGE_PREFIX:-ghcr.io/daniil-svetlov/broker}-api:${IMAGE_TAG:-local}
+  settler:
+    build: ../django-api
+    image: ${IMAGE_PREFIX:-ghcr.io/daniil-svetlov/broker}-api:${IMAGE_TAG:-local}
+  quotes:
+    build: ../quotes-service
+    image: ${IMAGE_PREFIX:-ghcr.io/daniil-svetlov/broker}-quotes:${IMAGE_TAG:-local}
+  nginx:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+    image: ${IMAGE_PREFIX:-ghcr.io/daniil-svetlov/broker}-web:${IMAGE_TAG:-local}

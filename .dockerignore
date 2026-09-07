@@ -1,0 +1,17 @@
+# Контекст для deploy/web.Dockerfile (образ broker-web = nginx + статика фронта).
+# Бэкенд-сервисы собираются из своих папок со своими .dockerignore.
+.git
+.github
+django-api
+quotes-service
+_local-integration
+node_modules
+**/__pycache__
+*.py[cod]
+*.md
+server.js
+schema.sql
+bootstrap.sh
+docker-compose.yml
+deploy/.env
+deploy/.env.*

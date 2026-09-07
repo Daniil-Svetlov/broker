@@ -1,0 +1,13 @@
+# Локальное окружение и артефакты — в образ не нужны и раздувают контекст сборки.
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.log
+staticfiles/
+db.sqlite3
+.env
+.env.*
+tests.py
+README.md

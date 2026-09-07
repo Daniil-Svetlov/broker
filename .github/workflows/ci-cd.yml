@@ -1,0 +1,177 @@
+name: CI/CD
+
+# PR → только проверки. Push в main → проверки, сборка образов в GHCR,
+# деплой на oriontrade.tech с health-gate и авто-откатом, затем smoke-тест.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: cicd-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/broker
+
+jobs:
+  # ---------------------------------------------------------------- checks
+  backend:
+    name: Бэкенд — проверки и тесты
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: binary
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: "1234"
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    defaults:
+      run:
+        working-directory: django-api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: django-api/requirements.txt
+      - run: pip install -r requirements.txt ruff
+      - name: Lint — реальные ошибки (pyflakes)
+        run: ruff check --select E9,F63,F7,F82 .
+      - name: Django system check
+        env: { DJANGO_SECRET_KEY: ci, DJANGO_DEBUG: "false", DJANGO_ALLOWED_HOSTS: "*" }
+        run: python manage.py check
+      - name: Миграции синхронны с моделями
+        env: { DJANGO_TEST_SQLITE: "1", DJANGO_SECRET_KEY: ci }
+        run: python manage.py makemigrations --check --dry-run
+      - name: Тесты (Postgres)
+        env:
+          DJANGO_SECRET_KEY: ci
+          DB_HOST: localhost
+          DB_PORT: "5432"
+          DB_NAME: binary
+          DB_USER: postgres
+          DB_PASSWORD: "1234"
+        run: python manage.py test -v2
+
+  quotes:
+    name: Quotes-service — проверки и тесты
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: quotes-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: quotes-service/go.sum
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - run: go vet ./...
+      - run: go build ./...
+      - run: go test ./... -race
+
+  # ---------------------------------------------------------------- build
+  build:
+    name: Сборка образов → GHCR
+    needs: [backend, quotes]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Нижний регистр в IMAGE_PREFIX
+        run: echo "IMAGE_PREFIX=${IMAGE_PREFIX,,}" >> "$GITHUB_ENV"
+      - name: Login GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: api
+        uses: docker/build-push-action@v6
+        with:
+          context: ./django-api
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ env.IMAGE_PREFIX }}-api:sha-${{ github.sha }},${{ env.IMAGE_PREFIX }}-api:main
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+      - name: quotes
+        uses: docker/build-push-action@v6
+        with:
+          context: ./quotes-service
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ env.IMAGE_PREFIX }}-quotes:sha-${{ github.sha }},${{ env.IMAGE_PREFIX }}-quotes:main
+          cache-from: type=gha,scope=quotes
+          cache-to: type=gha,mode=max,scope=quotes
+      - name: web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/web.Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ env.IMAGE_PREFIX }}-web:sha-${{ github.sha }},${{ env.IMAGE_PREFIX }}-web:main
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+  # ---------------------------------------------------------------- deploy
+  deploy:
+    name: Деплой на oriontrade.tech
+    needs: build
+    # Включается переменной репозитория DEPLOY_ENABLED=true (после добавления
+    # секретов DEPLOY_SSH_KEY / DEPLOY_HOST). До этого — job просто пропускается.
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/main'
+      && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: SSH-ключ
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id
+          chmod 600 ~/.ssh/id
+          ssh-keyscan -p 25346 "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+      - name: Копирую compose + apply.sh
+        run: |
+          scp -i ~/.ssh/id -P 25346 \
+            deploy/docker-compose.prod.yml deploy/apply.sh \
+            admin@"${{ secrets.DEPLOY_HOST }}":/opt/oriontrade/deploy/
+      - name: apply.sh (health-gate + авто-откат)
+        run: |
+          ssh -i ~/.ssh/id -p 25346 admin@"${{ secrets.DEPLOY_HOST }}" "
+            printf '%s' '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin &&
+            chmod +x /opt/oriontrade/deploy/apply.sh &&
+            /opt/oriontrade/deploy/apply.sh 'sha-${{ github.sha }}'
+            rc=\$?
+            docker logout ghcr.io >/dev/null 2>&1 || true
+            exit \$rc
+          "
+
+  # ---------------------------------------------------------------- smoke
+  smoke:
+    name: Smoke после деплоя
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Публичные эндпоинты живы
+        run: |
+          set -e
+          echo "· /api/assets/";              curl -fsS  -m 20 https://oriontrade.tech/api/assets/ | head -c 120; echo
+          echo "· /quotes/price EUR/USD";     curl -fsS  -m 20 "https://oriontrade.tech/quotes/price?symbol=EUR/USD"; echo
+          echo "· / (index)";                 curl -fsSI -m 20 https://oriontrade.tech/ | head -n 1

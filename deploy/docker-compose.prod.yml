@@ -1,0 +1,119 @@
+# Продакшн-стек OrionTrade (oriontrade.tech).
+#
+# Образы собираются в GitHub Actions и лежат в GHCR — сервер их только тянет.
+# Разворачивает deploy/apply.sh (его вызывает CI job "deploy"):
+#   IMAGE_TAG=<tag> docker compose -f docker-compose.prod.yml pull && … up -d
+#
+# Локальная сборка тех же сервисов: -f docker-compose.build.yml (см. рядом).
+# Наружу торчит только nginx:80 (до включения Cloudflare Tunnel — см. README §4).
+name: oriontrade
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-binary}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?put DB_PASSWORD in deploy/.env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-binary}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    image: ${IMAGE_PREFIX:-ghcr.io/daniil-svetlov/broker}-api:${IMAGE_TAG:-main}
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000
+                     --workers 2 --timeout 60
+                     --access-logfile - --error-logfile -"
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-binary}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?}
+      QUOTES_SERVICE_URL: http://quotes:8090
+      DJANGO_DEBUG: "false"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?put DJANGO_SECRET_KEY in deploy/.env}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-oriontrade.tech,www.oriontrade.tech,localhost,127.0.0.1}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-https://oriontrade.tech,https://www.oriontrade.tech}
+      DJANGO_SECURE_SSL_PROXY: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/assets/')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 45s
+
+  # Фоновое закрытие истёкших сделок (тот же образ, что api).
+  settler:
+    image: ${IMAGE_PREFIX:-ghcr.io/daniil-svetlov/broker}-api:${IMAGE_TAG:-main}
+    restart: unless-stopped
+    command: python manage.py settle_trades --watch --interval 1
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-binary}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?}
+      QUOTES_SERVICE_URL: http://quotes:8090
+      DJANGO_DEBUG: "false"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?}
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+
+  # Go-сервис котировок: онлайн-курсы + живые тики + HTTP /price + запись истории.
+  quotes:
+    image: ${IMAGE_PREFIX:-ghcr.io/daniil-svetlov/broker}-quotes:${IMAGE_TAG:-main}
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-binary}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?}
+      HTTP_ADDR: ":8090"
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+
+  # nginx + статика фронта (образ broker-web, статика запечена внутрь).
+  nginx:
+    image: ${IMAGE_PREFIX:-ghcr.io/daniil-svetlov/broker}-web:${IMAGE_TAG:-main}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+      - quotes
+
+  # Cloudflare Tunnel — исходящее соединение до CF в обход кривого входящего пути
+  # и NAT хостера. Стартует только при профиле tunnel (apply.sh включает его,
+  # когда в .env задан CLOUDFLARE_TUNNEL_TOKEN). Настройка маршрута — README §4.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    profiles: ["tunnel"]
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      - nginx
+
+volumes:
+  pgdata:

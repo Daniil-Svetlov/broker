@@ -37,6 +37,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    # WhiteNoise отдаёт собранную статику (Django admin) без отдельного веб-сервера.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -94,6 +96,11 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
@@ -118,3 +125,18 @@ QUOTES_SERVICE_TIMEOUT = float(env("QUOTES_SERVICE_TIMEOUT", "5"))
 # Минимальная и максимальная длительность опциона (секунды).
 TRADE_MIN_DURATION = int(env("TRADE_MIN_DURATION", "5"))
 TRADE_MAX_DURATION = int(env("TRADE_MAX_DURATION", "3600"))
+
+# --- Прод за обратным прокси (nginx) и Cloudflare ---
+# Cloudflare терминирует TLS, nginx проксирует запросы по HTTP на api:8000.
+# Заголовок X-Forwarded-Proto из Cloudflare/nginx говорит Django, что клиент
+# пришёл по HTTPS (нужно для CSRF на /admin/ и request.is_secure()).
+if env_bool("DJANGO_SECURE_SSL_PROXY", False):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    USE_X_FORWARDED_HOST = True
+    # Браузер всегда ходит по HTTPS (через Cloudflare) — куки только по HTTPS.
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+_csrf_origins = env("DJANGO_CSRF_TRUSTED_ORIGINS", "")
+if _csrf_origins:
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_origins.split(",") if o.strip()]

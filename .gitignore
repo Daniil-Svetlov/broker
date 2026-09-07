@@ -41,12 +41,12 @@ htmlcov/
 # Go
 quotes-service/quotes
 /tmp/quotes
-*.test
 *.out
-
-# Тесты — только локально, в репозиторий и прод не попадают
-*_test.go
-tests.py
 
 # Проверочная связка фронт↔бэк — только локально, в прод не идёт
 _local-integration/
+
+# Прод-секреты
+deploy/.env
+deploy/.env.*
+!deploy/.env.example
