@@ -132,9 +132,10 @@ jobs:
     needs: build
     # Включается переменной репозитория DEPLOY_ENABLED=true (после добавления
     # секретов DEPLOY_SSH_KEY / DEPLOY_HOST). До этого — job просто пропускается.
+    # push в main — деплой сам; Run workflow (workflow_dispatch) — деплой вручную.
     if: >-
-      github.event_name == 'push' && github.ref == 'refs/heads/main'
-      && vars.DEPLOY_ENABLED == 'true'
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     environment: production
     permissions:
