@@ -147,6 +147,13 @@ jobs:
           install -m 700 -d ~/.ssh
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id
           chmod 600 ~/.ssh/id
+          # Проверяем сам ключ ДО попытки соединения — если секрет побился при
+          # вставке (переносы строк/кодировка), тут явная ошибка вместо
+          # крипто-мусора из scp/ssh ("Load key ...: error in libcrypto").
+          ssh-keygen -y -f ~/.ssh/id > /dev/null || {
+            echo "::error::DEPLOY_SSH_KEY не парсится как приватный ключ OpenSSH — секрет повреждён, пересохрани его в Settings → Secrets → Actions (вставлять как есть, без изменений)"
+            exit 1
+          }
           ssh-keyscan -p 25346 "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
       - name: Копирую compose + apply.sh
         run: |
