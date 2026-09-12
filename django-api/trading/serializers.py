@@ -87,6 +87,13 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
 
+class ChangePasswordSerializer(serializers.Serializer):
+    """Смена пароля (POST /api/accounts/<id>/password/)."""
+
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(min_length=8, write_only=True)
+
+
 class AccountAuthSerializer(serializers.ModelSerializer):
     """Ответ register/login: счёт + данные пользователя для фронта."""
 

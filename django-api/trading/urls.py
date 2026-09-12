@@ -13,6 +13,11 @@ urlpatterns = [
         name="account-trades",
     ),
     path("accounts/<uuid:id>/reset/", views.reset_account_view, name="account-reset"),
+    path(
+        "accounts/<uuid:id>/password/",
+        views.change_password_view,
+        name="account-password",
+    ),
     path("trades/", views.open_trade_view, name="trade-open"),
     path("trades/<uuid:id>/", views.TradeDetailView.as_view(), name="trade-detail"),
     path("trades/<uuid:id>/settle/", views.settle_trade_view, name="trade-settle"),

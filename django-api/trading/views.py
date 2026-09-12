@@ -5,6 +5,7 @@
   GET  /api/accounts/<id>/           — счёт и баланс
   GET  /api/accounts/<id>/trades/    — история сделок счёта (?status=, ?limit=)
   POST /api/accounts/<id>/reset/     — сбросить демо-счёт к стартовому балансу
+  POST /api/accounts/<id>/password/  — сменить пароль (нужен старый)
   POST /api/trades/                  — открыть сделку
   GET  /api/trades/<id>/             — сделка
   POST /api/trades/<id>/settle/      — закрыть сделку (force, для ручного/тестов)
@@ -22,6 +23,7 @@ from .quotes_client import QuotesUnavailable, get_live_price
 from .serializers import (
     AccountAuthSerializer,
     AssetSerializer,
+    ChangePasswordSerializer,
     LoginSerializer,
     OpenTradeSerializer,
     PaySerializer,
@@ -31,6 +33,7 @@ from .serializers import (
 from .services import (
     AuthError,
     TradeError,
+    change_password,
     login_user,
     open_trade,
     register_user,
@@ -43,6 +46,12 @@ class DemoResetThrottle(AnonRateThrottle):
     """Ограничение на сброс демо-баланса — чтобы кнопку нельзя было долбить скриптом."""
 
     scope = "demo_reset"
+
+
+class PasswordChangeThrottle(AnonRateThrottle):
+    """Смена пароля требует старый пароль — ограничиваем перебор."""
+
+    scope = "password_change"
 
 
 class AssetListView(ListAPIView):
@@ -136,6 +145,24 @@ def reset_account_view(request, id):
     except TradeError as exc:
         return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
     return Response(PaySerializer(account).data)
+
+
+@api_view(["POST"])
+@throttle_classes([PasswordChangeThrottle])
+def change_password_view(request, id):
+    """Смена пароля владельца счёта («Настройки» → «Сменить пароль»)."""
+    serializer = ChangePasswordSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.validated_data
+    try:
+        change_password(
+            account_id=str(id),
+            old_password=data["old_password"],
+            new_password=data["new_password"],
+        )
+    except AuthError as exc:
+        return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(["POST"])

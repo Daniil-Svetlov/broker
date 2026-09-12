@@ -238,6 +238,29 @@ def register_user(*, name: str, email: str, password: str) -> Pay:
     )
 
 
+@transaction.atomic
+def change_password(*, account_id: str, old_password: str, new_password: str) -> None:
+    """Меняет пароль владельца счёта. Старый пароль обязателен.
+
+    Доступ к API сейчас — по UUID счёта из localStorage, поэтому проверка
+    старого пароля здесь единственное, что мешает угнать аккаунт тому, кто
+    этот UUID где-то подсмотрел.
+    """
+    try:
+        account = Pay.objects.select_related("user").get(id=account_id)
+    except Pay.DoesNotExist:
+        raise AuthError("счёт не найден")
+
+    user = account.user
+    if not check_password(old_password, user.password_hash):
+        raise AuthError("неверный текущий пароль")
+    if old_password == new_password:
+        raise AuthError("новый пароль совпадает с текущим")
+
+    user.password_hash = make_password(new_password)
+    user.save(update_fields=["password_hash"])
+
+
 def login_user(*, email: str, password: str) -> Pay:
     """Проверяет email+пароль, возвращает счёт пользователя (его DEMO-счёт)."""
     email = (email or "").strip().lower()

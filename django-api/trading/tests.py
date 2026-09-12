@@ -4,9 +4,18 @@ from unittest import mock
 
 from django.test import TestCase
 
+from django.contrib.auth.hashers import check_password, make_password
+
 from .models import Asset, Pay, Trade, User
 from .quotes_client import QuotesUnavailable, get_live_price
-from .services import TradeError, open_trade, reset_demo_account, settle_trade
+from .services import (
+    AuthError,
+    TradeError,
+    change_password,
+    open_trade,
+    reset_demo_account,
+    settle_trade,
+)
 
 
 class QuotesClientTest(TestCase):
@@ -219,3 +228,66 @@ class AccountTradesFilterTest(TestCase):
     def test_non_numeric_limit_is_rejected(self):
         response = self.client.get(self.url, {"limit": "many"})
         self.assertEqual(response.status_code, 400)
+
+
+class ChangePasswordTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(
+            username="dave",
+            email="dave@example.com",
+            password_hash=make_password("OldPass123"),
+        )
+        self.account = Pay.objects.create(
+            user=self.user, account_type="DEMO", balance=Decimal("10000.00")
+        )
+
+    def test_changes_password_when_old_one_matches(self):
+        change_password(
+            account_id=str(self.account.id),
+            old_password="OldPass123",
+            new_password="BrandNew456",
+        )
+        self.user.refresh_from_db()
+        self.assertTrue(check_password("BrandNew456", self.user.password_hash))
+
+    def test_rejects_wrong_old_password(self):
+        with self.assertRaises(AuthError):
+            change_password(
+                account_id=str(self.account.id),
+                old_password="NotTheOldOne",
+                new_password="BrandNew456",
+            )
+        self.user.refresh_from_db()
+        self.assertTrue(check_password("OldPass123", self.user.password_hash))
+
+    def test_rejects_same_password(self):
+        with self.assertRaises(AuthError):
+            change_password(
+                account_id=str(self.account.id),
+                old_password="OldPass123",
+                new_password="OldPass123",
+            )
+
+    def test_rejects_unknown_account(self):
+        with self.assertRaises(AuthError):
+            change_password(
+                account_id="00000000-0000-0000-0000-000000000000",
+                old_password="OldPass123",
+                new_password="BrandNew456",
+            )
+
+    def test_endpoint_enforces_min_length(self):
+        response = self.client.post(
+            f"/api/accounts/{self.account.id}/password/",
+            {"old_password": "OldPass123", "new_password": "short"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_endpoint_returns_204_on_success(self):
+        response = self.client.post(
+            f"/api/accounts/{self.account.id}/password/",
+            {"old_password": "OldPass123", "new_password": "BrandNew456"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 204)

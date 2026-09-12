@@ -204,6 +204,26 @@ gunzip -c ~/orion-YYYY-MM-DD.sql.gz | $C exec -T db psql -U orion binary
 docker system prune -f           # чистка (сервер ~5 ГБ)
 ```
 
+### Ретеншн котировок
+
+Таблица `quotes` растёт примерно на **14 МБ/сутки** (8 пар × тик раз в 10 с) и
+ничем не ограничена. На диске ~2.5 ГБ свободно — без очистки упрёмся примерно
+за полгода. Глубже нескольких суток график сырые тики всё равно не показывает.
+
+```bash
+$C exec -T api python manage.py purge_quotes --dry-run       # посмотреть объём
+$C exec -T api python manage.py purge_quotes --days 30       # удалить старше 30 дней
+```
+
+Поставлено в cron пользователя `admin` (sudo не нужен), ежедневно в 4:17:
+
+```cron
+17 4 * * * cd /opt/oriontrade/deploy && docker compose -f docker-compose.prod.yml exec -T api python manage.py purge_quotes --days 30 >> ~/orion-purge.log 2>&1
+```
+
+Удаление идёт пачками по 10 000 строк — одна большая `DELETE` на сотни тысяч
+строк держала бы блокировку и раздувала WAL, что на 1 CPU / 960 МБ заметно.
+
 ---
 
 ## Файлы

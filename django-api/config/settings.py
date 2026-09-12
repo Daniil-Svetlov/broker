@@ -114,6 +114,7 @@ REST_FRAMEWORK = {
     # Лимиты только для ручек, которые их явно просят (см. views.DemoResetThrottle).
     "DEFAULT_THROTTLE_RATES": {
         "demo_reset": "30/hour",
+        "password_change": "10/hour",
     },
 }
 
