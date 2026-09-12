@@ -1,12 +1,16 @@
 """Тесты логики сделок. Живая цена замокана — Go-сервис для тестов не нужен."""
+from datetime import datetime
+from datetime import timezone as dt_timezone
 from decimal import Decimal
-from unittest import mock
+from unittest import mock, skipUnless
 
+from django.db import connection
 from django.test import TestCase
 
 from django.contrib.auth.hashers import check_password, make_password
 
-from .models import Asset, Pay, Trade, User
+from .candles import CandleError, get_history
+from .models import Asset, Pay, Quote, Trade, User
 from .quotes_client import QuotesUnavailable, get_live_price
 from .services import (
     AuthError,
@@ -228,6 +232,90 @@ class AccountTradesFilterTest(TestCase):
     def test_non_numeric_limit_is_rejected(self):
         response = self.client.get(self.url, {"limit": "many"})
         self.assertEqual(response.status_code, 400)
+
+
+class CandleValidationTest(TestCase):
+    """Проверки, которые срабатывают до обращения к БД — идут на любой СУБД."""
+
+    def test_rejects_unknown_timeframe(self):
+        with self.assertRaises(CandleError):
+            get_history(pair="EUR/USD", timeframe=7, limit=10, until=1_700_000_000)
+
+    def test_rejects_zero_limit(self):
+        with self.assertRaises(CandleError):
+            get_history(pair="EUR/USD", timeframe=60, limit=0, until=1_700_000_000)
+
+    def test_rejects_unknown_pair(self):
+        with self.assertRaises(CandleError):
+            get_history(pair="XXX/YYY", timeframe=60, limit=10, until=1_700_000_000)
+
+
+@skipUnless(connection.vendor == "postgresql", "агрегация свечей написана на SQL Postgres")
+class CandleAggregationTest(TestCase):
+    """Свечи собираются из тиков по фиксированной сетке, дыры заполняются."""
+
+    BASE = 1_700_000_000  # кратно 60, чтобы сетка была ровной
+
+    def setUp(self):
+        self.asset = Asset.objects.create(symbol="EUR/USD", name="Euro / US Dollar")
+
+    def _tick(self, offset_sec, mid):
+        """Тик со сдвигом от BASE. timestamp у модели auto_now_add — правим update-ом."""
+        quote = Quote.objects.create(
+            asset=self.asset, bid=Decimal(mid) - Decimal("0.0001"), ask=Decimal(mid) + Decimal("0.0001")
+        )
+        Quote.objects.filter(id=quote.id).update(
+            timestamp=datetime.fromtimestamp(self.BASE + offset_sec, tz=dt_timezone.utc)
+        )
+
+    def test_ohlc_is_computed_from_ticks_in_bucket(self):
+        # Одна минута, четыре тика: open=1.10, high=1.13, low=1.09, close=1.11
+        for offset, mid in ((0, "1.10"), (10, "1.13"), (20, "1.09"), (30, "1.11")):
+            self._tick(offset, mid)
+
+        candles = get_history(
+            pair="EUR/USD", timeframe=60, limit=1, until=self.BASE + 59
+        )
+        self.assertEqual(len(candles), 1)
+        candle = candles[0]
+        self.assertEqual(candle.t, self.BASE)
+        self.assertAlmostEqual(float(candle.o), 1.10, places=4)
+        self.assertAlmostEqual(float(candle.h), 1.13, places=4)
+        self.assertAlmostEqual(float(candle.l), 1.09, places=4)
+        self.assertAlmostEqual(float(candle.c), 1.11, places=4)
+        self.assertEqual(candle.v, 4)
+
+    def test_gap_is_filled_with_previous_close(self):
+        # Тики только в первой и третьей минуте — вторая должна быть заполнена.
+        self._tick(0, "1.10")
+        self._tick(120, "1.20")
+
+        candles = get_history(
+            pair="EUR/USD", timeframe=60, limit=3, until=self.BASE + 179
+        )
+        self.assertEqual(len(candles), 3)
+        filler = candles[1]
+        self.assertEqual(filler.v, 0, "у заполненной свечи нет тиков")
+        self.assertEqual(filler.o, filler.h)
+        self.assertEqual(filler.h, filler.l)
+        self.assertEqual(filler.l, filler.c)
+        self.assertAlmostEqual(float(filler.c), 1.10, places=4, msg="должен быть предыдущий close")
+
+    def test_grid_is_continuous_and_ordered(self):
+        self._tick(0, "1.10")
+        candles = get_history(
+            pair="EUR/USD", timeframe=60, limit=5, until=self.BASE + 299
+        )
+        times = [c.t for c in candles]
+        self.assertEqual(times, sorted(times), "свечи должны идти по возрастанию времени")
+        steps = {b - a for a, b in zip(times, times[1:])}
+        self.assertEqual(steps, {60}, "сетка должна быть без разрывов")
+
+    def test_no_data_at_all_returns_empty(self):
+        candles = get_history(
+            pair="EUR/USD", timeframe=60, limit=5, until=self.BASE + 299
+        )
+        self.assertEqual(candles, [], "цены выдумывать нельзя")
 
 
 class ChangePasswordTest(TestCase):

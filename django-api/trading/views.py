@@ -9,8 +9,10 @@
   POST /api/trades/                  — открыть сделку
   GET  /api/trades/<id>/             — сделка
   POST /api/trades/<id>/settle/      — закрыть сделку (force, для ручного/тестов)
+  GET  /api/chart/history/?pair=&tf= — свечи OHLC для графика
   GET  /api/quotes/latest/?symbol=   — живая онлайн-цена пары
 """
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.exceptions import ValidationError
@@ -18,6 +20,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
+from . import candles
 from .models import Asset, Pay, Trade
 from .quotes_client import QuotesUnavailable, get_live_price
 from .serializers import (
@@ -193,6 +196,52 @@ def settle_trade_view(request, id):
     except TradeError as exc:
         return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
     return Response(TradeSerializer(trade).data)
+
+
+@api_view(["GET"])
+def chart_history_view(request):
+    """Стартовый пакет свечей для графика — один запрос вместо опроса тиков.
+
+    GET /api/chart/history/?pair=EUR/USD&tf=60&limit=300[&to=<unix>]
+
+    tf — длина свечи в секундах, `to` — правая граница окна (по умолчанию
+    сейчас). Пустые интервалы заполнены предыдущим close, поэтому сетка
+    непрерывная. `v` — число тиков в свече (объёма у форекса нет).
+    """
+    pair = (request.query_params.get("pair") or "").strip()
+    if not pair:
+        return Response(
+            {"error": "параметр pair обязателен"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        timeframe = int(request.query_params.get("tf") or candles.DEFAULT_TIMEFRAME)
+        limit = int(request.query_params.get("limit") or candles.DEFAULT_LIMIT)
+        until = int(request.query_params.get("to") or timezone.now().timestamp())
+    except ValueError:
+        return Response(
+            {"error": "tf, limit и to должны быть целыми числами"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        history = candles.get_history(
+            pair=pair, timeframe=timeframe, limit=limit, until=until
+        )
+    except candles.CandleError as exc:
+        return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response(
+        {
+            "pair": pair,
+            "tf": timeframe,
+            "server_time": int(timezone.now().timestamp()),
+            "candles": [
+                {"t": c.t, "o": c.o, "h": c.h, "l": c.l, "c": c.c, "v": c.v}
+                for c in history
+            ],
+        }
+    )
 
 
 @api_view(["GET"])

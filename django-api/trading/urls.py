@@ -21,5 +21,6 @@ urlpatterns = [
     path("trades/", views.open_trade_view, name="trade-open"),
     path("trades/<uuid:id>/", views.TradeDetailView.as_view(), name="trade-detail"),
     path("trades/<uuid:id>/settle/", views.settle_trade_view, name="trade-settle"),
+    path("chart/history/", views.chart_history_view, name="chart-history"),
     path("quotes/latest/", views.latest_quote_view, name="quote-latest"),
 ]
