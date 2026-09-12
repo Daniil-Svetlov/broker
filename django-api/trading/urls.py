@@ -12,6 +12,7 @@ urlpatterns = [
         views.AccountTradesView.as_view(),
         name="account-trades",
     ),
+    path("accounts/<uuid:id>/reset/", views.reset_account_view, name="account-reset"),
     path("trades/", views.open_trade_view, name="trade-open"),
     path("trades/<uuid:id>/", views.TradeDetailView.as_view(), name="trade-detail"),
     path("trades/<uuid:id>/settle/", views.settle_trade_view, name="trade-settle"),

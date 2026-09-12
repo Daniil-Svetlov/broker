@@ -107,6 +107,26 @@ def open_trade(
     )
 
 
+@transaction.atomic
+def reset_demo_account(account_id: str) -> Pay:
+    """Возвращает демо-счёт к стартовому балансу (кнопка «Обновить баланс»).
+
+    Реальные счета не трогает. Открытые сделки не отменяет — их ставка уже
+    списана, выплата при закрытии просто ляжет поверх свежего баланса.
+    """
+    try:
+        account = Pay.objects.select_for_update().get(id=account_id)
+    except Pay.DoesNotExist:
+        raise TradeError("счёт не найден")
+
+    if account.account_type != "DEMO":
+        raise TradeError("сбрасывать можно только демо-счёт")
+
+    account.balance = _money(SIGNUP_BONUS)
+    account.save(update_fields=["balance"])
+    return account
+
+
 def is_due(trade: Trade) -> bool:
     """Истёк ли срок открытой сделки."""
     if trade.status != "OPEN":

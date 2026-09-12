@@ -524,7 +524,7 @@ document.addEventListener('click', (e) => {
 
 window.addEventListener('load', function () {
   updateAccountUI();
-  console.log('Загрузка LUMIT Trading Engine (REST)...');
+  console.log('Загрузка Orion Trading Engine (REST)...');
   const chartElement = document.getElementById('chart');
 
   if (typeof LightweightCharts === 'undefined') {

@@ -6,7 +6,7 @@ from django.test import TestCase
 
 from .models import Asset, Pay, Trade, User
 from .quotes_client import QuotesUnavailable, get_live_price
-from .services import TradeError, open_trade, settle_trade
+from .services import TradeError, open_trade, reset_demo_account, settle_trade
 
 
 class QuotesClientTest(TestCase):
@@ -128,3 +128,94 @@ class TradeLogicTest(TestCase):
         self.assertEqual(again.status, "WIN")
         # Повторное закрытие не начисляет выплату второй раз.
         self.assertEqual(self.account.balance, Decimal("1080.00"))
+
+
+class ResetDemoBalanceTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(
+            username="bob", email="bob@example.com", password_hash="x"
+        )
+
+    def test_reset_returns_demo_to_start_balance(self):
+        account = Pay.objects.create(
+            user=self.user, account_type="DEMO", balance=Decimal("42.00")
+        )
+        reset_demo_account(str(account.id))
+        account.refresh_from_db()
+        self.assertEqual(account.balance, Decimal("10000.00"))
+
+    def test_reset_also_works_when_balance_is_above_start(self):
+        account = Pay.objects.create(
+            user=self.user, account_type="DEMO", balance=Decimal("99999.00")
+        )
+        reset_demo_account(str(account.id))
+        account.refresh_from_db()
+        self.assertEqual(account.balance, Decimal("10000.00"))
+
+    def test_reset_refuses_real_account(self):
+        account = Pay.objects.create(
+            user=self.user, account_type="REAL", balance=Decimal("5.00")
+        )
+        with self.assertRaises(TradeError):
+            reset_demo_account(str(account.id))
+        account.refresh_from_db()
+        self.assertEqual(account.balance, Decimal("5.00"))
+
+    def test_reset_unknown_account_raises(self):
+        with self.assertRaises(TradeError):
+            reset_demo_account("00000000-0000-0000-0000-000000000000")
+
+
+class AccountTradesFilterTest(TestCase):
+    """Фильтры ?status= и ?limit= — на них опирается терминал."""
+
+    def setUp(self):
+        self.user = User.objects.create(
+            username="carol", email="carol@example.com", password_hash="x"
+        )
+        self.account = Pay.objects.create(
+            user=self.user, account_type="DEMO", balance=Decimal("1000.00")
+        )
+        for status_value in ("OPEN", "OPEN", "WIN", "LOSS"):
+            Trade.objects.create(
+                user=self.user,
+                account=self.account,
+                asset_pair="EUR/USD",
+                amount=Decimal("10"),
+                direction="UP",
+                entry_price=Decimal("1.1"),
+                status=status_value,
+                duration=60,
+            )
+        self.url = f"/api/accounts/{self.account.id}/trades/"
+
+    def test_returns_all_by_default(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()), 4)
+
+    def test_status_open_returns_only_open(self):
+        response = self.client.get(self.url, {"status": "open"})
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(len(body), 2)
+        self.assertTrue(all(t["status"] == "OPEN" for t in body))
+
+    def test_status_closed_excludes_open(self):
+        response = self.client.get(self.url, {"status": "closed"})
+        body = response.json()
+        self.assertEqual(len(body), 2)
+        self.assertFalse(any(t["status"] == "OPEN" for t in body))
+
+    def test_limit_caps_result(self):
+        response = self.client.get(self.url, {"limit": "1"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()), 1)
+
+    def test_unknown_status_is_rejected(self):
+        response = self.client.get(self.url, {"status": "banana"})
+        self.assertEqual(response.status_code, 400)
+
+    def test_non_numeric_limit_is_rejected(self):
+        response = self.client.get(self.url, {"limit": "many"})
+        self.assertEqual(response.status_code, 400)

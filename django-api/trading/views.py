@@ -3,16 +3,19 @@
 Эндпоинты:
   GET  /api/assets/                  — список валютных пар
   GET  /api/accounts/<id>/           — счёт и баланс
-  GET  /api/accounts/<id>/trades/    — история сделок счёта
+  GET  /api/accounts/<id>/trades/    — история сделок счёта (?status=, ?limit=)
+  POST /api/accounts/<id>/reset/     — сбросить демо-счёт к стартовому балансу
   POST /api/trades/                  — открыть сделку
   GET  /api/trades/<id>/             — сделка
   POST /api/trades/<id>/settle/      — закрыть сделку (force, для ручного/тестов)
   GET  /api/quotes/latest/?symbol=   — живая онлайн-цена пары
 """
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, throttle_classes
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 
 from .models import Asset, Pay, Trade
 from .quotes_client import QuotesUnavailable, get_live_price
@@ -31,8 +34,15 @@ from .services import (
     login_user,
     open_trade,
     register_user,
+    reset_demo_account,
     settle_trade,
 )
+
+
+class DemoResetThrottle(AnonRateThrottle):
+    """Ограничение на сброс демо-баланса — чтобы кнопку нельзя было долбить скриптом."""
+
+    scope = "demo_reset"
 
 
 class AssetListView(ListAPIView):
@@ -47,10 +57,40 @@ class AccountView(RetrieveAPIView):
 
 
 class AccountTradesView(ListAPIView):
+    """История сделок счёта, новые сверху.
+
+    ?status=open|closed|win|loss — фильтр. `open` нужен терминалу, чтобы
+      сверять маркеры на графике со списком живых сделок.
+    ?limit=N — последние N сделок (виджет «последние сделки»), максимум 200.
+    """
+
     serializer_class = TradeSerializer
+    MAX_LIMIT = 200
 
     def get_queryset(self):
-        return Trade.objects.filter(account_id=self.kwargs["id"]).order_by("-created_at")
+        qs = Trade.objects.filter(account_id=self.kwargs["id"]).order_by("-created_at")
+
+        status_param = (self.request.query_params.get("status") or "").strip().upper()
+        if status_param == "OPEN":
+            qs = qs.filter(status="OPEN")
+        elif status_param == "CLOSED":
+            qs = qs.exclude(status="OPEN")
+        elif status_param in ("WIN", "LOSS"):
+            qs = qs.filter(status=status_param)
+        elif status_param:
+            raise ValidationError({"status": "допустимо: open, closed, win, loss"})
+
+        limit_param = self.request.query_params.get("limit")
+        if limit_param:
+            try:
+                limit = int(limit_param)
+            except ValueError:
+                raise ValidationError({"limit": "должно быть целым числом"})
+            if limit < 1:
+                raise ValidationError({"limit": "должно быть больше нуля"})
+            qs = qs[: min(limit, self.MAX_LIMIT)]
+
+        return qs
 
 
 class TradeDetailView(RetrieveAPIView):
@@ -85,6 +125,17 @@ def login_view(request):
     except AuthError as exc:
         return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
     return Response(AccountAuthSerializer(account).data)
+
+
+@api_view(["POST"])
+@throttle_classes([DemoResetThrottle])
+def reset_account_view(request, id):
+    """Кнопка «Обновить баланс»: демо-счёт обратно к стартовым 10000."""
+    try:
+        account = reset_demo_account(str(id))
+    except TradeError as exc:
+        return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+    return Response(PaySerializer(account).data)
 
 
 @api_view(["POST"])

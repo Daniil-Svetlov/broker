@@ -111,6 +111,10 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
+    # Лимиты только для ручек, которые их явно просят (см. views.DemoResetThrottle).
+    "DEFAULT_THROTTLE_RATES": {
+        "demo_reset": "30/hour",
+    },
 }
 
 # Кросс-доступ для фронтенда (socket.io/HTML на другом порту).

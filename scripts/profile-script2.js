@@ -139,7 +139,7 @@ async function loadAccount() {
         setText('pf-balance-wallet', Number(acc.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
         setText('pf-currency', acc.currency || 'USD');
         setText('pf-account-type', acc.account_type === 'DEMO' ? 'Демо-счёт' : 'Реальный счёт');
-        setText('pf-member', acc.account_type === 'DEMO' ? 'Демо-аккаунт LUMIT Trade' : 'Аккаунт LUMIT Trade');
+        setText('pf-member', acc.account_type === 'DEMO' ? 'Демо-аккаунт Orion Trade' : 'Аккаунт Orion Trade');
         setText('deposit-account-badge', acc.account_type === 'DEMO' ? 'Демо-счёт' : 'Реальный счёт');
     } catch (err) {
         console.error('Не удалось загрузить счёт:', err);
